@@ -379,6 +379,7 @@ class UIManager {
 
         items.forEach(li => {
             const itemId = li.dataset.id;
+            console.log(`[UI] Updating UI for item ${itemId}: status=${status}, activeId=${activeItemId}, standbyId=${standbyItemId}, match=${itemId == standbyItemId || (itemId == activeItemId && status === 'staged')}`);
             const btnPlay = li.querySelector('.btn-play-item');
             
             li.classList.remove('playing', 'standby');
@@ -398,7 +399,7 @@ class UIManager {
                 }
             } 
             // If item is Staged (standby)
-            else if (itemId == standbyItemId || (itemId == activeItemId && status === 'staged')) {
+            else if (itemId == standbyItemId) {
                 li.classList.add('standby');
                 btnPlay.innerHTML = this.icons.play;
                 btnPlay.title = 'Reproduzir';

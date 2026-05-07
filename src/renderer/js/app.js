@@ -397,12 +397,18 @@ class App {
         if (!result) return;
         if (result.newPlaylist) {
             const id = this.store.addPlaylist(result.newPlaylist.name);
-            result.newPlaylist.items.forEach(item => this.store.addItem(id, item));
+            result.newPlaylist.items.forEach(item => {
+                delete item.id;
+                this.store.addItem(id, item);
+            });
             this.ui.onPlaylistSelect(id);
         }
         if (result.newItems) {
             const { currentPlaylistId } = this.store.getState();
-            result.newItems.forEach(item => this.store.addItem(currentPlaylistId, item));
+            result.newItems.forEach(item => {
+                delete item.id;
+                this.store.addItem(currentPlaylistId, item);
+            });
         }
     }
 
