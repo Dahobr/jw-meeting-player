@@ -1,6 +1,0 @@
-# pack-refs with: peeled fully-peeled sorted 
-82f923ff30ab7376175e03daa4589496a7f3b3fa refs/heads/chore/update-version-and-icon
-67c292f0ac2983623c5c852d8c6c48b3a1cdc778 refs/heads/feature/download-error-handling
-7bd7c9a3b68dd12834150c8edf8798797cc58726 refs/heads/fix-unsupported-type-notification
-736a1e8094b02d8d69ade14a9c7c9c63328c8544 refs/heads/fix/download-error-handling
-1d2e3238cdb129037996da3c42c71e13537f0cf1 refs/heads/main
