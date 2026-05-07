@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "electron": {
+      "command": "npx",
+      "args": [
+        "electron-mcp-server"
+      ],
+      "env": {
+        "SECURITY_LEVEL": "balanced",
+        "SCREENSHOT_ENCRYPTION_KEY": "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"
+      }
+    }
+  }
+}

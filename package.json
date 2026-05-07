@@ -1,0 +1,38 @@
+{
+  "name": "jw-meeting-player",
+  "version": "1.0.1",
+  "description": "JW Meeting Player",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron main.js",
+    "build": "electron-builder --win portable",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "build": {
+    "appId": "com.jw.meeting-player",
+    "icon": "jwmp-icon.png",
+    "win": {
+      "target": "portable"
+    },
+    "extraResources": [
+      {
+        "from": "dist/bin/",
+        "to": "bin",
+        "filter": ["**/*"]
+      }
+    ]
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "adm-zip": "^0.5.17",
+    "music-metadata": "^11.12.3",
+    "sortablejs": "^1.15.7"
+  },
+  "devDependencies": {
+    "electron": "^41.1.1",
+    "electron-builder": "^26.8.1",
+    "electron-mcp-server": "^1.5.0"
+  }
+}

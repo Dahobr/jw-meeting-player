@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: media:; media-src 'self' media: data:;">
+    <title>JW Meeting Player</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header: Navigation & System Controls -->
+        <header class="app-header">
+            <div class="navigation-buttons">
+                <button id="btn-cantico">Cântico</button>
+                <button id="btn-reunioes">Reuniões</button>
+                <button id="btn-videos">Vídeos</button>
+            </div>
+            <div class="window-controls">
+                <select id="zoom-mode-select" title="Modo de integração Zoom">
+                    <option value="off">Zoom: Manual</option>
+                    <option value="script">Zoom: Semiautomático</option>
+                    <option value="auto" selected>Zoom: Automático</option>
+                </select>
+                <button id="btn-open-zoom-assets-folder" title="Abrir pasta de imagens do Zoom" class="zoom-btn">zoom</button>
+                <button id="btn-open-year-verse-folder" title="Abrir pasta do Texto do Ano">🗓️</button>
+                <button id="btn-open-folder" title="Abrir pasta de downloads">📁</button>
+            </div>
+        </header>
+
+        <!-- Main Content: Sidebar & WebView -->
+        <main class="app-content">
+            <aside class="playlist-manager">
+                <div class="manager-content">
+                    <!-- View 1: List of Playlists -->
+                    <section id="view-playlists">
+                        <div class="view-header">
+                            <h2>Playlists</h2>
+                            <div class="playlist-controls">
+                                <input type="text" id="new-playlist-name" placeholder="Nova playlist...">
+                                <button id="btn-create-playlist">+</button>
+                            </div>
+                        </div>
+                        <div id="playlist-list">
+                            <!-- Playlists will be rendered here -->
+                        </div>
+                    </section>
+
+                    <!-- View 2: Items in Selected Playlist -->
+                    <section id="view-items" style="display: none;">
+                        <div class="view-header">
+                            <button id="btn-back-to-playlists" title="Voltar">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                            </button>
+                            <h2 id="current-playlist-title">Nome da Playlist</h2>
+                        </div>
+                        <div id="current-playlist-items">
+                            <ul id="playlist-items-ul">
+                                <!-- Items will be rendered here -->
+                            </ul>
+                        </div>
+                    </section>
+                </div>
+                
+                <div class="footer-actions">
+                    <button id="btn-import-file">Importar Arquivos</button>
+                </div>
+            </aside>
+
+            <!-- WebView Area -->
+            <section class="webview-container">
+                <!-- BrowserView will be placed here by Main process -->
+                <div id="preview-area" class="preview-overlay" style="display: none;">
+                    <div class="preview-media-wrapper">
+                        <video id="preview-video" muted></video>
+                        <img id="preview-image" style="display: none;">
+                    </div>
+                    <div id="preview-controls-container" class="preview-controls">
+                        <input type="range" id="preview-seeker" value="0" step="0.1">
+                        <div class="preview-time-info">
+                            <span id="preview-time-current">00:00</span> / <span id="preview-time-total">00:00</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer: Playback Controls -->
+        <footer class="app-footer">
+            <div class="playback-controls">
+                <div class="volume-control">
+                    <span class="volume-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                    </span>
+                    <input type="range" id="volume-slider" min="0" max="100" value="50">
+                </div>
+
+                <div class="transport-buttons">
+                    <button id="btn-play-pause" class="main-transport-btn" title="Play/Pause">
+                        <svg width="24" height="24" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+                    </button>
+                    <button id="btn-stop" class="main-transport-btn" title="Parar">
+                        <svg width="24" height="24" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" fill="currentColor"/></svg>
+                    </button>
+                </div>
+
+                <div class="misc-controls">
+                    <span id="current-item-info">Nenhum item em reprodução</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Core Scripts -->
+    <script src="Sortable.min.js"></script>
+    <script src="js/playlistStore.js"></script>
+    <script src="js/ipcClient.js"></script>
+    <script src="js/uiManager.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
