@@ -36,6 +36,12 @@ class App {
                 return;
             }
 
+            // Hide BrowserView to ensure modal is visible
+            const wasWebViewVisible = (this.ui.webviewContainer.style.display !== 'none');
+            if (this.ipc && this.ipc.toggleWebView) {
+                this.ipc.toggleWebView(false);
+            }
+
             msgEl.textContent = message;
             modal.style.display = 'flex';
 
@@ -43,6 +49,15 @@ class App {
                 modal.style.display = 'none';
                 btnConfirm.onclick = null;
                 btnCancel.onclick = null;
+                
+                // Restore BrowserView if it was visible and we aren't in preview mode
+                // (preview mode also hides webview, so we check app status)
+                if (wasWebViewVisible && this.status === 'stopped') {
+                    if (this.ipc && this.ipc.toggleWebView) {
+                        this.ipc.toggleWebView(true);
+                    }
+                }
+                
                 resolve(result);
             };
 
