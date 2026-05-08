@@ -7,6 +7,7 @@ const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView, protocol, net,
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
+const { marked } = require('marked');
 
 // Register 'media' as a standard and secure protocol before app is ready
 // This is global and affects all sessions
@@ -296,6 +297,20 @@ function setupContextMenu() {
 
 ipcMain.handle('select-year-verse-image', async () => {
     return await storageManager.selectYearVerseImage(mainWindow);
+});
+
+ipcMain.handle('get-help-content', async () => {
+    try {
+        const helpPath = path.join(__dirname, 'HELP.md');
+        if (fs.existsSync(helpPath)) {
+            const mdContent = fs.readFileSync(helpPath, 'utf8');
+            return marked.parse(mdContent);
+        }
+        return '<h1>Erro</h1><p>Arquivo HELP.md não encontrado.</p>';
+    } catch (err) {
+        console.error('[Main] Error reading HELP.md:', err);
+        return `<h1>Erro</h1><p>${err.message}</p>`;
+    }
 });
 
 // App Lifecycle

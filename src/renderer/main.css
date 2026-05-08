@@ -735,6 +735,68 @@ body {
     flex-direction: column;
 }
 
+/* --- Help Overlay --- */
+.help-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-color);
+    z-index: 90;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.help-content-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+#help-html-container h1 {
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 10px;
+    margin-bottom: 30px;
+    color: var(--secondary-color);
+}
+
+#help-html-container h2 {
+    margin-top: 40px;
+    margin-bottom: 20px;
+    color: var(--secondary-color);
+    border-left: 5px solid var(--primary-color);
+    padding-left: 15px;
+}
+
+#help-html-container h3 {
+    margin-top: 30px;
+    color: var(--header-footer-color);
+}
+
+#help-html-container ul, #help-html-container ol {
+    margin-bottom: 20px;
+}
+
+#help-html-container li {
+    margin-bottom: 8px;
+}
+
+#help-html-container code {
+    background: #eee;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+}
+
+#help-html-container hr {
+    margin: 40px 0;
+    border-top: 1px solid var(--border-color);
+}
+
 .preview-media-wrapper {
     flex: 1;
     display: flex;

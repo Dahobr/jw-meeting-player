@@ -231,7 +231,15 @@ class App {
         this.ui.btnMenuZoom.onclick = () => this.ipc.openZoomAssetsFolder();
         this.ui.btnMenuYear.onclick = () => window.electronAPI.openYearVerseFolder();
         this.ui.btnMenuDownloads.onclick = () => this.ipc.openDownloadFolder();
-        this.ui.btnMenuHelp.onclick = () => window.open('https://github.com/daichidina/jw-media-downloader/blob/main/HELP.md');
+        this.ui.btnMenuHelp.onclick = async () => {
+            try {
+                this.stopMedia('help request');
+                const html = await this.ipc.getHelpContent();
+                this.ui.showHelp(html);
+            } catch (err) {
+                console.error('[App] Failed to load help content:', err);
+            }
+        };
 
         this.ui.btnImportFile.onclick = () => this.handleImport();
 

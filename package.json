@@ -18,7 +18,9 @@
       {
         "from": "dist/bin/",
         "to": "bin",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ]
   },
@@ -27,6 +29,7 @@
   "license": "ISC",
   "dependencies": {
     "adm-zip": "^0.5.17",
+    "marked": "^18.0.3",
     "music-metadata": "^11.12.3",
     "sortablejs": "^1.15.7"
   },

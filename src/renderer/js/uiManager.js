@@ -39,6 +39,10 @@ class UIManager {
         this.previewTimeCurrent = document.getElementById('preview-time-current');
         this.previewTimeTotal = document.getElementById('preview-time-total');
 
+        // Help Elements
+        this.helpView = document.getElementById('help-view');
+        this.helpContainer = document.getElementById('help-html-container');
+
         // Common SVG Icons
         this.icons = {
             play: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
@@ -86,6 +90,8 @@ class UIManager {
     showPreview(type, filePath, autoPlay = true) {
         console.log(`[UI] showPreview: ${type} -> ${filePath} (AutoPlay: ${autoPlay})`);
         
+        this.hideHelp();
+
         if (window.electronAPI && window.electronAPI.toggleWebView) {
             window.electronAPI.toggleWebView(false);
         }
@@ -142,8 +148,28 @@ class UIManager {
         
         this.previewImage.removeAttribute('src');
         
+        this.hideHelp();
+
         if (window.electronAPI && window.electronAPI.toggleWebView) {
             window.electronAPI.toggleWebView(true);
+        }
+    }
+
+    showHelp(html) {
+        console.log('[UI] showHelp called');
+        this.helpContainer.innerHTML = html;
+        this.helpView.style.display = 'flex';
+        this.previewArea.style.display = 'none'; // Ensure preview is hidden
+        
+        if (window.electronAPI && window.electronAPI.toggleWebView) {
+            window.electronAPI.toggleWebView(false);
+        }
+    }
+
+    hideHelp() {
+        if (this.helpView && this.helpView.style.display !== 'none') {
+            console.log('[UI] hideHelp called');
+            this.helpView.style.display = 'none';
         }
     }
 

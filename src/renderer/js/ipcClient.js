@@ -93,6 +93,10 @@ class IPCClient {
         return await window.electronAPI.loadPlaylists();
     }
 
+    async getHelpContent() {
+        return await window.electronAPI.getHelpContent();
+    }
+
     async deleteFile(filePath) {
         return await window.electronAPI.deleteFile(filePath);
     }
