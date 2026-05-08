@@ -38,6 +38,7 @@ class UIManager {
         this.previewControls = document.getElementById('preview-controls-container');
         this.previewTimeCurrent = document.getElementById('preview-time-current');
         this.previewTimeTotal = document.getElementById('preview-time-total');
+        this.stateLabel = document.getElementById('preview-state-label');
 
         // Help Elements
         this.helpView = document.getElementById('help-view');
@@ -141,6 +142,11 @@ class UIManager {
         console.log('[UI] hidePreview called');
         this.previewArea.style.display = 'none';
         this.previewVideo.pause();
+
+        if (this.stateLabel) {
+            this.stateLabel.textContent = '';
+            this.stateLabel.className = 'state-label';
+        }
         
         // Suppress MEDIA_ELEMENT_ERROR: Empty src attribute
         this.previewVideo.removeAttribute('src');
@@ -417,6 +423,20 @@ class UIManager {
 
     updatePlaybackStateUI(status, activeItemId, standbyItemId) {
         const items = this.itemsList.querySelectorAll('.playlist-item-li');
+
+        // Update state label
+        if (this.stateLabel) {
+            this.stateLabel.className = 'state-label'; // Reset classes
+            if (status === 'playing' || status === 'paused') {
+                this.stateLabel.textContent = 'NO AR';
+                this.stateLabel.classList.add(status);
+            } else if (status === 'staged') {
+                this.stateLabel.textContent = 'PREPARADO';
+                this.stateLabel.classList.add('staged');
+            } else {
+                this.stateLabel.textContent = '';
+            }
+        }
 
         items.forEach(li => {
             const itemId = li.dataset.id;
