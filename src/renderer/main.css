@@ -188,33 +188,41 @@ body {
 }
 
 .window-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Increased gap */
 }
 
 #zoom-mode-select {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.85em;
-  outline: none;
-  margin-right: 12px;
+    margin-right: 0; /* Align button closer to select */
 }
 
-#zoom-mode-select:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+.menu-icon {
+    width: 20px;
+    text-align: center;
+    font-size: 1.1em;
 }
 
-#zoom-mode-select option {
-  background-color: var(--secondary-color);
-  color: white;
+.help-icon {
+    color: #3498db; /* Monotone Blue */
+    font-weight: bold;
 }
 
-.window-controls button {
+.zoom-btn {
+    background-color: #3498db; /* Monotone Blue */
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 7px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: lowercase;
+}
+
+/* --- Custom Modal --- */
   background: none;
   border: none;
   font-size: 1.2em;
