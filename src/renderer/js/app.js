@@ -248,7 +248,16 @@ class App {
             if (e.key === 'Enter') this.handleCreatePlaylist();
         });
 
-        this.ui.btnBackToPlaylists.onclick = () => this.ui.switchView('playlists');
+        this.ui.btnBackToPlaylists.onclick = async () => {
+            if (this.status === 'playing' || this.status === 'paused') {
+                if (await this.showCustomConfirm('Deseja parar a reprodução e voltar às playlists?')) {
+                    this.stopMedia('navigation to playlists');
+                    this.ui.switchView('playlists');
+                }
+            } else {
+                this.ui.switchView('playlists');
+            }
+        };
 
         this.ui.onPlaylistSelect = (id) => {
             this.store.setCurrentPlaylistId(id);
