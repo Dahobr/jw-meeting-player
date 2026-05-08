@@ -23,6 +23,39 @@ class App {
         this.pendingCanPlayListener = null; 
     }
 
+    async showCustomConfirm(message) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('custom-modal');
+            const msgEl = document.getElementById('modal-message');
+            const btnConfirm = document.getElementById('modal-confirm');
+            const btnCancel = document.getElementById('modal-cancel');
+
+            if (!modal || !msgEl || !btnConfirm || !btnCancel) {
+                console.error('[App] Modal elements not found');
+                resolve(confirm(message));
+                return;
+            }
+
+            msgEl.textContent = message;
+            modal.style.display = 'flex';
+
+            const close = (result) => {
+                modal.style.display = 'none';
+                btnConfirm.onclick = null;
+                btnCancel.onclick = null;
+                resolve(result);
+            };
+
+            btnConfirm.onclick = () => close(true);
+            btnCancel.onclick = () => close(false);
+            
+            // Allow closing by clicking outside the modal content
+            modal.onclick = (e) => {
+                if (e.target === modal) close(false);
+            };
+        });
+    }
+
     async init() {
         if (this.initialized) return;
 
@@ -205,7 +238,7 @@ class App {
         };
 
         this.ui.onPlaylistDelete = async (id) => {
-            if (confirm('Deseja realmente excluir esta playlist?')) {
+            if (await this.showCustomConfirm('Deseja realmente excluir esta playlist?')) {
                 const itemsToDelete = this.store.deletePlaylist(id);
                 for (const item of itemsToDelete) {
                     if (item.filePath) await this.ipc.deleteFile(item.filePath);
@@ -233,7 +266,7 @@ class App {
         };
 
         this.ui.onItemRemove = async (playlistId, itemId) => {
-            if (confirm('Deseja realmente excluir este arquivo?')) {
+            if (await this.showCustomConfirm('Deseja realmente excluir este arquivo?')) {
                 const item = this.store.getItem(playlistId, itemId);
                 if (item && item.filePath) await this.ipc.deleteFile(item.filePath);
                 this.store.removeItem(playlistId, itemId);
