@@ -28,7 +28,7 @@
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     display: none;
-    min-width: 180px;
+    min-width: 140px;
     z-index: 100;
     padding: 4px 0;
 }
@@ -53,6 +53,33 @@
 
 .menu-item:hover {
     background-color: rgba(255,255,255,0.1);
+}
+
+.menu-icon, .help-btn, .zoom-btn {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.help-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.zoom-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    font-size: 7px;
+    font-weight: bold;
+    text-transform: lowercase;
 }
 
 hr {
@@ -190,39 +217,22 @@ body {
 .window-controls {
     display: flex;
     align-items: center;
-    gap: 15px; /* Increased gap */
+    gap: 13px;
 }
 
 #zoom-mode-select {
-    margin-right: 0; /* Align button closer to select */
-}
-
-.menu-icon {
-    width: 20px;
-    text-align: center;
-    font-size: 1.1em;
-}
-
-.help-icon {
-    color: #3498db; /* Monotone Blue */
-    font-weight: bold;
-}
-
-.zoom-btn {
-    background-color: #3498db; /* Monotone Blue */
+    margin-right: 0;
+    padding: 5px 10px; /* Restored padding */
+    background-color: rgba(255, 255, 255, 0.1);
     color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 7px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-transform: lowercase;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    outline: none;
 }
 
-/* --- Custom Modal --- */
+.window-controls button {
   background: none;
   border: none;
   font-size: 1.2em;
@@ -880,24 +890,4 @@ body {
     text-overflow: ellipsis;
     font-size: 0.9em;
     color: #eee;
-}
-
-
-.window-controls button.zoom-btn {
-    background-color: #0b5cff; /* Deeper Zoom-like Blue */
-    color: white;
-    border-radius: 50%;
-    width: 26px;
-    height: 26px;
-    font-size: 7px;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 !important;
-    margin-top: 2px;
-    margin-right: 5px;
-    text-transform: lowercase;
 }
