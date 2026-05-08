@@ -21,9 +21,16 @@
                     <option value="script">Zoom: Semiautomático</option>
                     <option value="auto" selected>Zoom: Automático</option>
                 </select>
-                <button id="btn-open-zoom-assets-folder" title="Abrir pasta de imagens do Zoom" class="zoom-btn">zoom</button>
-                <button id="btn-open-year-verse-folder" title="Abrir pasta do Texto do Ano">🗓️</button>
-                <button id="btn-open-folder" title="Abrir pasta de downloads">📁</button>
+                <div class="menu-container">
+                    <button id="btn-menu" class="menu-btn">☰</button>
+                    <div id="header-menu" class="header-menu-dropdown">
+                        <button id="btn-menu-zoom" class="menu-item">Zoom: Imagens</button>
+                        <button id="btn-menu-year" class="menu-item">Texto do Ano</button>
+                        <button id="btn-menu-downloads" class="menu-item">Downloads</button>
+                        <hr>
+                        <button id="btn-menu-help" class="menu-item">Ajuda</button>
+                    </div>
+                </div>
             </div>
         </header>
 

@@ -228,9 +228,11 @@ class App {
         this.ui.btnReunioes.onclick = () => handleNav('reunioes');
         this.ui.btnVideos.onclick = () => handleNav('videos');
         
-        this.ui.btnOpenFolder.onclick = () => this.ipc.openDownloadFolder();
-        this.ui.btnOpenYearVerseFolder.onclick = () => window.electronAPI.openYearVerseFolder();
-        this.ui.btnOpenZoomAssetsFolder.onclick = () => this.ipc.openZoomAssetsFolder();
+        this.ui.btnMenuZoom.onclick = () => this.ipc.openZoomAssetsFolder();
+        this.ui.btnMenuYear.onclick = () => window.electronAPI.openYearVerseFolder();
+        this.ui.btnMenuDownloads.onclick = () => this.ipc.openDownloadFolder();
+        this.ui.btnMenuHelp.onclick = () => window.open('https://github.com/daichidina/jw-media-downloader/blob/main/HELP.md');
+
         this.ui.btnImportFile.onclick = () => this.handleImport();
 
         this.ui.btnCreatePlaylist.onclick = () => this.handleCreatePlaylist();

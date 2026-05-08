@@ -1,5 +1,56 @@
 /* src/renderer/main.css */
 
+.menu-container {
+    position: relative;
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+.header-menu-dropdown {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: none;
+    min-width: 160px;
+    z-index: 100;
+    padding: 8px 0;
+}
+
+.header-menu-dropdown.show {
+    display: block;
+}
+
+.menu-item {
+    display: block;
+    width: 100%;
+    padding: 10px 15px;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #333;
+}
+
+.menu-item:hover {
+    background-color: #f0f0f0;
+}
+
+hr {
+    border: 0;
+    border-top: 1px solid #eee;
+    margin: 5px 0;
+}
+
 /* --- Custom Modal --- */
 .modal-overlay {
     position: fixed;

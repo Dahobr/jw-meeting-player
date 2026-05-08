@@ -49,10 +49,25 @@ class UIManager {
             trash: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>'
         };
 
+        this.btnMenu = document.getElementById('btn-menu');
+        this.headerMenu = document.getElementById('header-menu');
+        this.btnMenuZoom = document.getElementById('btn-menu-zoom');
+        this.btnMenuYear = document.getElementById('btn-menu-year');
+        this.btnMenuDownloads = document.getElementById('btn-menu-downloads');
+        this.btnMenuHelp = document.getElementById('btn-menu-help');
+
         // Global click listener to close dropdowns
-        document.addEventListener('click', () => {
+        document.addEventListener('click', (e) => {
+            if (!this.btnMenu.contains(e.target)) {
+                this.headerMenu.classList.remove('show');
+            }
             document.querySelectorAll('.item-dropdown.show').forEach(d => d.classList.remove('show'));
         });
+
+        this.btnMenu.onclick = (e) => {
+            e.stopPropagation();
+            this.headerMenu.classList.toggle('show');
+        };
     }
 
     switchView(viewName) {
