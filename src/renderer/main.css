@@ -37,6 +37,11 @@
     display: block;
 }
 
+#zoom-mode-select option {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
 .menu-item {
     display: flex;
     align-items: center;
@@ -48,7 +53,7 @@
     border: none;
     cursor: pointer;
     color: white;
-    font-size: 0.85em; /* Reduced from 0.9em */
+    font-size: 0.8em; /* Reduced from 0.85em */
 }
 
 .menu-item:hover {
@@ -232,10 +237,15 @@ body {
     outline: none;
 }
 
+#zoom-mode-select > option {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: black;
+}
+
 .window-controls button {
   background: none;
   border: none;
-  font-size: 1.2em;
+  font-size: 1.1em;
   cursor: pointer;
   color: white;
   padding: 5px;
