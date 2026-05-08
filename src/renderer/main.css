@@ -28,7 +28,7 @@
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     display: none;
-    min-width: 140px;
+    min-width: 160px; /* Increased from 140px */
     z-index: 100;
     padding: 4px 0;
 }
@@ -48,7 +48,7 @@
     border: none;
     cursor: pointer;
     color: white;
-    font-size: 0.9em;
+    font-size: 0.85em; /* Reduced from 0.9em */
 }
 
 .menu-item:hover {
