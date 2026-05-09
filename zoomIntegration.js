@@ -54,25 +54,21 @@ function stopZoomSharing(mode) {
 }
 
 /**
- * Send Alt+S using PowerShell (Windows)
+ * Send Alt+S using the lightweight C# executable (Windows)
  */
 function sendZoomShortcut() {
   if (process.platform !== 'win32') {
-    console.warn("[Zoom] Script mode is currently only implemented for Windows (PowerShell).");
+    console.warn("[Zoom] Script mode is currently only implemented for Windows.");
     return;
   }
 
-  // PowerShell command to send Alt+S
-  const psCommand = `
-    $wshell = New-Object -ComObject WScript.Shell;
-    $wshell.SendKeys('%s');
-  `;
+  const exePath = path.join(__dirname, 'scripts', 'ZoomKeySender.exe');
 
-  exec(`powershell -Command "${psCommand.replace(/\n/g, '')}"`, (error) => {
+  exec(exePath, (error) => {
     if (error) {
-      console.error(`[Zoom] PowerShell Error: ${error}`);
+      console.error(`[Zoom] KeySender Error: ${error}`);
     } else {
-      console.log("[Zoom] Alt+S sent via PowerShell.");
+      console.log("[Zoom] Alt+S sent via KeySender.exe.");
     }
   });
 }
