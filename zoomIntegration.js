@@ -33,6 +33,14 @@ function startZoomSharing(mode) {
     console.log(`[Zoom] Spawning monitor: ${exePath}`);
     const monitor = spawn(exePath, ['--mode=monitor-share']);
 
+    monitor.on('error', (err) => {
+      console.error(`[Zoom] [CRITICAL] Failed to start monitor: ${err.message}`);
+    });
+
+    monitor.stderr.on('data', (data) => {
+      console.error(`[Zoom] Monitor Error Output: ${data}`);
+    });
+
     monitor.on('close', (code) => {
       console.log(`[Zoom] Monitor finished with code ${code}`);
       zoomSharingActive = false;
@@ -40,6 +48,8 @@ function startZoomSharing(mode) {
         mainWindowRef.webContents.send('zoom-sharing-finished');
       }
     });
+  } else {
+    console.log(`[Zoom] Unknown mode: ${mode}`);
   }
   zoomSharingActive = true;
 }
