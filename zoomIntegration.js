@@ -24,11 +24,22 @@ function setupZoomIntegration(mainWin) {
 
 function startZoomSharing(mode) {
   console.log(`[Zoom] Starting sharing (Mode: ${mode})`);
-  // TODO: Implement new C# manager call
   if (mode === 'script') {
     sendZoomShortcut();
   } else if (mode === 'auto') {
-    // New logic: run ZoomControlManager
+    const { spawn } = require('child_process');
+    const exePath = path.join(__dirname, 'scripts', 'ZoomControlManager', 'ZoomControlManager.exe');
+    
+    console.log(`[Zoom] Spawning monitor: ${exePath}`);
+    const monitor = spawn(exePath, ['--mode=monitor-share']);
+
+    monitor.on('close', (code) => {
+      console.log(`[Zoom] Monitor finished with code ${code}`);
+      zoomSharingActive = false;
+      if (mainWindowRef) {
+        mainWindowRef.webContents.send('zoom-sharing-finished');
+      }
+    });
   }
   zoomSharingActive = true;
 }
@@ -38,7 +49,7 @@ function stopZoomSharing(mode) {
   if (mode === 'script') {
     sendZoomShortcut();
   } else if (mode === 'auto') {
-    // New logic: run ZoomControlManager
+    // Already handled by monitor process exit
   }
   zoomSharingActive = false;
 }
