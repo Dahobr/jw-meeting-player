@@ -11,7 +11,9 @@ function setupZoomIntegration(mainWin) {
 
   // Listen for explicit Zoom sharing state updates
   ipcMain.on('update-zoom-sharing-state', (event, isSharing) => {
+    console.log(`[Zoom] IPC Event Received: isSharing=${isSharing}`);
     const mode = storageManager.config.zoomMode;
+    console.log(`[Zoom] Current Mode: ${mode}`);
     if (mode === 'off') return;
 
     if (isSharing && !zoomSharingActive) {
