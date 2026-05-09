@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onMediaPlaybackStateChange: (callback) => ipcRenderer.on('media-playback-state-change', (_event, isPlaying) => callback(isPlaying)),
   onTriggerZoomSharingState: (callback) => ipcRenderer.on('trigger-zoom-sharing-state', (_event, isPlaying) => callback(isPlaying)),
   onZoomSharingReady: (callback) => ipcRenderer.on('zoom-sharing-ready', callback),
+  onZoomSharingFinished: (callback) => ipcRenderer.on('zoom-sharing-finished', callback),
   onSetPlaybackPlaylist: (callback) => ipcRenderer.on('set-playback-playlist', (_event, data) => callback(data)),
 
   // --- UI & View State ---
