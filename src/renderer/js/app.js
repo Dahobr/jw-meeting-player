@@ -312,7 +312,7 @@ class App {
             this.store.updateItem(itemId, { title: newName });
         };
 
-        this.ui.btnPlayPause.onclick = () => this.togglePlayback();
+        this.ui.btnFooterPlayPause.onclick = () => this.togglePlayback();
         this.ui.volumeSlider.oninput = (e) => this.ipc.playbackControl({ action: 'set-volume', volume: e.target.value / 100 });
         
         if (this.ui.zoomModeSelect) {
