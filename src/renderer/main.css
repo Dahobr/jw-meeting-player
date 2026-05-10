@@ -926,6 +926,12 @@ body {
   transform: scale(1.05);
 }
 
+.main-transport-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+
 .main-transport-btn svg {
   width: 24px;
   height: 24px;
