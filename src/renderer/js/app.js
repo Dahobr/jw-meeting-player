@@ -755,9 +755,12 @@ class App {
         
         if (isVideo) {
             // --- Video Playback ---
+            this.ui.btnFooterPlayPause.disabled = false;
+            this.ui.btnFooterPlayPause.style.opacity = '1';
+            this.ui.btnFooterPlayPause.style.cursor = 'pointer';
             this.ui.btnFooterPlayPause.innerHTML = isPlaying ? App.PAUSE_ICON : App.PLAY_ICON;
             this.ui.btnFooterPlayPause.style.display = 'inline-flex';
-            this.ui.btnFooterPlayPause.title = isPlaying ? 'Pausar' : 'Reproduzir';
+            this.ui.btnFooterPlayPause.title = isPlaying ? 'Pausar' : 'Retomar';
 
             if (isPaused || isStaged) {
                 this.ui.btnFooterPlayPause.classList.add('btn-paused-highlight');
