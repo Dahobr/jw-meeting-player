@@ -87,6 +87,61 @@ class UIManager {
     }
 
     /**
+     * Atualiza o estado visual do botão de reprodução/pausa no rodapé.
+     */
+    updateFooterPlaybackUI(status, isVideo, isPlaying) {
+        const isStaged = status === 'staged';
+        const isPaused = status === 'paused';
+
+        if (isVideo) {
+            this.btnFooterPlayPause.disabled = false;
+            this.btnFooterPlayPause.style.opacity = '1';
+            this.btnFooterPlayPause.style.cursor = 'pointer';
+            this.btnFooterPlayPause.innerHTML = isPlaying ? window.app.constructor.PAUSE_ICON : window.app.constructor.PLAY_ICON;
+            this.btnFooterPlayPause.style.display = 'inline-flex';
+            this.btnFooterPlayPause.title = isPlaying ? 'Pausar' : (isStaged ? 'Reproduzir' : 'Retomar');
+
+            if (isPaused || isStaged) {
+                this.btnFooterPlayPause.classList.add('btn-paused-highlight');
+                // btnStop might not be available if not initialized in UIManager
+                const btnStop = document.getElementById('btn-stop');
+                if (btnStop) btnStop.classList.remove('btn-paused-highlight');
+            } else {
+                this.btnFooterPlayPause.classList.remove('btn-paused-highlight');
+                const btnStop = document.getElementById('btn-stop');
+                if (btnStop) btnStop.classList.add('btn-paused-highlight');
+            }
+        } else {
+            if (isStaged) {
+                this.btnFooterPlayPause.disabled = false;
+                this.btnFooterPlayPause.style.opacity = '1';
+                this.btnFooterPlayPause.style.cursor = 'pointer';
+                this.btnFooterPlayPause.innerHTML = window.app.constructor.PLAY_ICON;
+                this.btnFooterPlayPause.style.display = 'inline-flex';
+                this.btnFooterPlayPause.title = 'Reproduzir';
+                this.btnFooterPlayPause.classList.add('btn-paused-highlight');
+                const btnStop = document.getElementById('btn-stop');
+                if (btnStop) btnStop.classList.remove('btn-paused-highlight');
+            } else if (isPlaying) {
+                this.btnFooterPlayPause.style.display = 'inline-flex';
+                this.btnFooterPlayPause.innerHTML = this.icons.play;
+                this.btnFooterPlayPause.title = 'Reproduzir';
+                this.btnFooterPlayPause.disabled = true;
+                this.btnFooterPlayPause.style.opacity = '0.5';
+                this.btnFooterPlayPause.style.cursor = 'default';
+                this.btnFooterPlayPause.classList.remove('btn-paused-highlight');
+                const btnStop = document.getElementById('btn-stop');
+                if (btnStop) btnStop.classList.add('btn-paused-highlight');
+            } else {
+                this.btnFooterPlayPause.disabled = false;
+                this.btnFooterPlayPause.style.opacity = '1';
+                this.btnFooterPlayPause.style.cursor = 'pointer';
+                this.btnFooterPlayPause.style.display = 'inline-flex';
+            }
+        }
+    }
+
+    /**
      * Show preview area and hide BrowserView
      */
     showPreview(type, filePath, autoPlay = true) {

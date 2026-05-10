@@ -753,49 +753,7 @@ class App {
             this.ui.previewControlsOverlay.style.display = shouldHideControls ? 'block' : 'none';
         }
         
-        if (isVideo) {
-            // --- Video Playback ---
-            this.ui.btnFooterPlayPause.disabled = false;
-            this.ui.btnFooterPlayPause.style.opacity = '1';
-            this.ui.btnFooterPlayPause.style.cursor = 'pointer';
-            this.ui.btnFooterPlayPause.innerHTML = isPlaying ? App.PAUSE_ICON : App.PLAY_ICON;
-            this.ui.btnFooterPlayPause.style.display = 'inline-flex';
-            this.ui.btnFooterPlayPause.title = isPlaying ? 'Pausar' : 'Retomar';
-
-            if (isPaused || isStaged) {
-                this.ui.btnFooterPlayPause.classList.add('btn-paused-highlight');
-                this.ui.btnStop.classList.remove('btn-paused-highlight');  
-            } else {
-                this.ui.btnFooterPlayPause.classList.remove('btn-paused-highlight');
-                this.ui.btnStop.classList.add('btn-paused-highlight');  
-            }
-        } else {
-            // --- Image Playback ---
-            if (isStaged) {
-                this.ui.btnFooterPlayPause.disabled = false; // Reset state
-                this.ui.btnFooterPlayPause.style.opacity = '1';
-                this.ui.btnFooterPlayPause.style.cursor = 'pointer';
-                this.ui.btnFooterPlayPause.innerHTML = App.PLAY_ICON;
-                this.ui.btnFooterPlayPause.style.display = 'inline-flex';
-                this.ui.btnFooterPlayPause.title = 'Reproduzir';
-                this.ui.btnFooterPlayPause.classList.add('btn-paused-highlight');
-                this.ui.btnStop.classList.remove('btn-paused-highlight');  
-            } else if (isPlaying) {
-                this.ui.btnFooterPlayPause.style.display = 'inline-flex';
-                this.ui.btnFooterPlayPause.innerHTML = this.ui.icons.play;
-                this.ui.btnFooterPlayPause.title = 'Reproduzir';
-                this.ui.btnFooterPlayPause.disabled = true; // Disable interaction
-                this.ui.btnFooterPlayPause.style.opacity = '0.5'; // Dim appearance
-                this.ui.btnFooterPlayPause.style.cursor = 'default';
-                this.ui.btnFooterPlayPause.classList.remove('btn-paused-highlight');
-                this.ui.btnStop.classList.add('btn-paused-highlight');  
-            } else {
-                this.ui.btnFooterPlayPause.disabled = false;
-                this.ui.btnFooterPlayPause.style.opacity = '1';
-                this.ui.btnFooterPlayPause.style.cursor = 'pointer';
-                this.ui.btnFooterPlayPause.style.display = 'inline-flex';
-            }
-        }
+        this.ui.updateFooterPlaybackUI(this.status, isVideo, isPlaying);
 
         console.log(`[UI Update] Status: ${this.status}, isVideo: ${isVideo}`);
         this.ui.updatePlaybackStateUI(this.status, this.currentMedia?.id);
