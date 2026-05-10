@@ -738,11 +738,11 @@ class App {
         }
         this.ui.updateCurrentItemInfo(statusText);
 
-        // --- Hide controls if in playlist view ---
+        // --- Hide Fotter controls if in playlist view ---
         const isPlaylistView = (this.ui.viewPlaylists.style.display !== 'none');
-        const transportButtons = document.querySelector('.transport-buttons');
-        if (transportButtons) {
-            transportButtons.style.visibility = isPlaylistView ? 'hidden' : 'visible';
+        const footerTransportButtons = document.querySelector('.transport-buttons');
+        if (footerTransportButtons) {
+            footerTransportButtons.style.visibility = isPlaylistView ? 'hidden' : 'visible';
         }
 
         // --- Control visibility and appearance of preview controls ---
