@@ -327,6 +327,7 @@ app.whenReady().then(() => {
     });
 
     initializeGlobalManagers();
+    storageManager.clearZoomCoords();
     createMainWindow();
 
     // Register will-download handler globally for all sessions once app is ready

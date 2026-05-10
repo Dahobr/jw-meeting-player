@@ -219,6 +219,18 @@ class StorageManager {
     getDownloadsDir() {
         return this.downloadsDir;
     }
+
+    clearZoomCoords() {
+        const coordsPath = path.join(this.appBaseDir, 'zoom_coords.json');
+        if (fs.existsSync(coordsPath)) {
+            try {
+                fs.unlinkSync(coordsPath);
+                console.log('[StorageManager] Zoom coordinates cleared.');
+            } catch (err) {
+                console.error('[StorageManager] Failed to clear Zoom coordinates:', err);
+            }
+        }
+    }
 }
 
 module.exports = new StorageManager();

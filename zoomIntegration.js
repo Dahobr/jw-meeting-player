@@ -1,93 +1,48 @@
-const { globalShortcut, app, ipcMain, BrowserWindow } = require('electron');
+const { app, ipcMain, BrowserWindow } = require('electron');
 const path = require('path');
-const { exec } = require('child_process');
+const { spawn } = require('child_process');
 const storageManager = require('./src/main/storageManager');
 
-let zoomSharingActive = false;
+const ZOOM_MANAGER_PATH = path.join(__dirname, 'scripts', 'ZoomControlManager', 'ZoomControlManager.exe');
+
+let isSharingWindowOpen = false;
 let mainWindowRef = null;
 
 function setupZoomIntegration(mainWin) {
   mainWindowRef = mainWin;
+// Listen for explicit Zoom sharing state updates
+ipcMain.on('update-zoom-sharing-state', (event, shouldShare) => {
+  console.log(`[Zoom] IPC Event Received: shouldShare=${shouldShare}`);
+  const mode = storageManager.config ? storageManager.config.zoomMode : 'auto';
 
-  // Listen for explicit Zoom sharing state updates
-  ipcMain.on('update-zoom-sharing-state', (event, isSharing) => {
-    console.log(`[Zoom] IPC Event Received: isSharing=${isSharing}`);
-    const mode = storageManager.config.zoomMode;
-    console.log(`[Zoom] Current Mode: ${mode}`);
-    if (mode === 'off') return;
-
-    if (isSharing && !zoomSharingActive) {
-      startZoomSharing(mode);
-    } else if (!isSharing && zoomSharingActive) {
-      stopZoomSharing(mode);
-    }
-  });
+  if (shouldShare && !isSharingWindowOpen) {
+    startZoomSharing(mode);
+  } else if (!shouldShare && isSharingWindowOpen) {
+    isSharingWindowOpen = false;
+  }
+});
 }
 
 function startZoomSharing(mode) {
-  console.log(`[Zoom] Starting sharing (Mode: ${mode})`);
-  if (mode === 'script') {
-    sendZoomShortcut();
-  } else if (mode === 'auto') {
-    const { spawn } = require('child_process');
-    const exePath = path.join(__dirname, 'scripts', 'ZoomControlManager', 'ZoomControlManager.exe');
-    
-    console.log(`[Zoom] Spawning monitor: ${exePath}`);
-    const monitor = spawn(exePath, ['--mode=monitor-share']);
-
-    monitor.on('error', (err) => {
-      console.error(`[Zoom] [CRITICAL] Failed to start monitor: ${err.message}`);
-    });
-
-    monitor.stderr.on('data', (data) => {
-      console.error(`[Zoom] Monitor Error Output: ${data}`);
-    });
-
-    monitor.on('close', (code) => {
-      console.log(`[Zoom] Monitor finished with code ${code}`);
-      zoomSharingActive = false;
-      if (mainWindowRef) {
-        mainWindowRef.webContents.send('zoom-sharing-finished');
-      }
-    });
-  } else {
-    console.log(`[Zoom] Unknown mode: ${mode}`);
-  }
-  zoomSharingActive = true;
-}
-
-function stopZoomSharing(mode) {
-  console.log(`[Zoom] Stopping sharing (Mode: ${mode})`);
-  if (mode === 'script') {
-    sendZoomShortcut();
-  } else if (mode === 'auto') {
-    // Already handled by monitor process exit
-  }
-  zoomSharingActive = false;
-}
-
-/**
- * Send Alt+S using the lightweight C# executable (Windows)
- */
-function sendZoomShortcut() {
-  if (process.platform !== 'win32') {
-    console.warn("[Zoom] Script mode is currently only implemented for Windows.");
+  if (mode === 'off') {
+    console.log('[Zoom] Sharing mode is off. Skipping automation.');
     return;
   }
 
-  const exePath = path.join(__dirname, 'scripts', 'ZoomKeySender.exe');
+  console.log(`[Zoom] Starting sharing flow (Mode: ${mode})`);
+  isSharingWindowOpen = true;
 
-  exec(exePath, (error) => {
-    if (error) {
-      console.error(`[Zoom] KeySender Error: ${error}`);
-    } else {
-      console.log("[Zoom] Alt+S sent via KeySender.exe.");
+  // Delegate EVERYTHING to C# (Alt+S + Logic)
+  // C# will handle: Key Press -> Capture/Monitor -> Window Close
+  const proc = spawn(ZOOM_MANAGER_PATH, [`--mode=${mode}`]);
+
+  proc.on('close', (code) => {
+    console.log(`[Zoom] Automation finished with code ${code}`);
+    isSharingWindowOpen = false;
+    if (mainWindowRef) {
+      mainWindowRef.webContents.send('zoom-sharing-finished');
     }
   });
 }
 
-function unregisterShortcuts() {
-  globalShortcut.unregisterAll();
-}
-
-module.exports = { setupZoomIntegration, unregisterShortcuts };
+module.exports = { setupZoomIntegration };
