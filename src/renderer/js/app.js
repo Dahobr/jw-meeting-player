@@ -797,10 +797,10 @@ class App {
                 this.ui.btnFooterPlayPause.classList.remove('btn-paused-highlight');
                 this.ui.btnStop.classList.add('btn-paused-highlight');  
             } else {
-                this.ui.btnFooterPlayPause.disabled = false; // Reset state
+                this.ui.btnFooterPlayPause.disabled = false;
                 this.ui.btnFooterPlayPause.style.opacity = '1';
                 this.ui.btnFooterPlayPause.style.cursor = 'pointer';
-                this.ui.btnFooterPlayPause.style.display = 'none';
+                this.ui.btnFooterPlayPause.style.display = 'inline-flex';
             }
         }
 
