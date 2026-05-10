@@ -97,7 +97,7 @@ function registerMediaProtocol(ses) {
 const storageManager = require('./src/main/storageManager');
 const displayManager = require('./src/main/displayManager');
 const downloadManager = require('./src/main/downloadManager');
-const { setupZoomIntegration, unregisterShortcuts } = require('./zoomIntegration');
+const { setupZoomIntegration } = require('./zoomIntegration');
 
 let mainWindow;
 let browserView;
@@ -345,7 +345,6 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
-        unregisterShortcuts();
         app.quit();
     }
 });
