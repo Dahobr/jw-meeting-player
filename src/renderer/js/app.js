@@ -4,6 +4,9 @@
  */
 
 class App {
+    static PLAY_ICON = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
+    static PAUSE_ICON = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="currentColor"/></svg>';
+
     constructor() {
         this.store = window.PlaylistStore;
         this.ui = window.uiManager;
@@ -727,9 +730,6 @@ class App {
         }
         this.ui.updateCurrentItemInfo(statusText);
 
-        const playIcon = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
-        const pauseIcon = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="currentColor"/></svg>';
-
         // --- Hide controls if in playlist view ---
         const isPlaylistView = (this.ui.viewPlaylists.style.display !== 'none');
         const transportButtons = document.querySelector('.transport-buttons');
@@ -739,12 +739,9 @@ class App {
 
         // --- Control visibility and appearance of preview controls ---
         let hideAndOverlayPreviewControls = false;
-        // Hide and overlay controls if media is stopped
         if (this.status === 'stopped') {
             hideAndOverlayPreviewControls = true;
         } else if (!isVideo && (isPlaying || isStaged)) {
-            // For images, we only hide if playing (live). Staged (standby) should show controls if any.
-            // Actually, images don't have seeker controls, so let's hide for images always unless we add them.
             hideAndOverlayPreviewControls = true;
         }
 
@@ -760,7 +757,7 @@ class App {
         
         if (isVideo) {
             // --- Video Playback ---
-            this.ui.btnFooterPlayPause.innerHTML = isPlaying ? pauseIcon : playIcon;
+            this.ui.btnFooterPlayPause.innerHTML = isPlaying ? App.PAUSE_ICON : App.PLAY_ICON;
             this.ui.btnFooterPlayPause.style.display = 'inline-flex';
             this.ui.btnFooterPlayPause.title = isPlaying ? 'Pausar' : 'Reproduzir';
 
@@ -777,7 +774,7 @@ class App {
                 this.ui.btnFooterPlayPause.disabled = false; // Reset state
                 this.ui.btnFooterPlayPause.style.opacity = '1';
                 this.ui.btnFooterPlayPause.style.cursor = 'pointer';
-                this.ui.btnFooterPlayPause.innerHTML = playIcon;
+                this.ui.btnFooterPlayPause.innerHTML = App.PLAY_ICON;
                 this.ui.btnFooterPlayPause.style.display = 'inline-flex';
                 this.ui.btnFooterPlayPause.title = 'Reproduzir';
                 this.ui.btnFooterPlayPause.classList.add('btn-paused-highlight');
