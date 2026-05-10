@@ -17,7 +17,7 @@ class UIManager {
         this.btnImportFile = document.getElementById('btn-import-file');
         this.zoomModeSelect = document.getElementById('zoom-mode-select');
         
-        this.btnPlayPause = document.getElementById('btn-play-pause');
+        this.btnFooterPlayPause = document.getElementById('btn-footer-play-pause');
         
         this.newPlaylistInput = document.getElementById('new-playlist-name');
         this.playlistList = document.getElementById('playlist-list');
@@ -421,7 +421,16 @@ class UIManager {
         }
     }
 
-    updatePlaybackStateUI(status, activeItemId, standbyItemId) {
+    /**
+     * Atualiza a interface da playlist (ícones e estado dos botões) 
+     * com base no status atual da reprodução.
+     * 
+     * Chamado principalmente por: App.updatePlaybackUI() em app.js
+     * 
+     * @param {string} status - Status atual ('playing', 'paused', 'staged', 'stopped')
+     * @param {string|number|null} activeItemId - ID do item que está sendo reproduzido ou em preparação
+     */
+    updatePlaybackStateUI(status, activeItemId) {
         const items = this.itemsList.querySelectorAll('.playlist-item-li');
 
         // Update state label
@@ -440,33 +449,31 @@ class UIManager {
 
         items.forEach(li => {
             const itemId = li.dataset.id;
-            console.log(`[UI] Updating UI for item ${itemId}: status=${status}, activeId=${activeItemId}, standbyId=${standbyItemId}, match=${itemId == standbyItemId || (itemId == activeItemId && status === 'staged')}`);
             const btnPlay = li.querySelector('.btn-play-item');
             
             li.classList.remove('playing', 'standby');
             
-            // If item is Live (playing or paused on slave)
-            if (itemId == activeItemId && (status === 'playing' || status === 'paused')) {
-                li.classList.add('playing');
-                const isVideo = li.querySelector('.item-type').textContent.toLowerCase().includes('video');
-                
-                if (status === 'playing') {
-                    btnPlay.innerHTML = isVideo ? this.icons.pause : this.icons.stop;
-                    btnPlay.title = isVideo ? 'Pausar' : 'Parar';
-                } else {
-                    // paused state
+            // If item is the active/staged one
+            if (itemId == activeItemId) {
+                if (status === 'playing' || status === 'paused') {
+                    li.classList.add('playing');
+                    const isVideo = li.querySelector('.item-type').textContent.toLowerCase().includes('video');
+                    
+                    if (status === 'playing') {
+                        btnPlay.innerHTML = isVideo ? this.icons.pause : this.icons.stop;
+                        btnPlay.title = isVideo ? 'Pausar' : 'Parar';
+                    } else {
+                        // paused state
+                        btnPlay.innerHTML = this.icons.play;
+                        btnPlay.title = 'Retomar';
+                    }
+                } else if (status === 'staged') {
+                    li.classList.add('standby');
                     btnPlay.innerHTML = this.icons.play;
-                    btnPlay.title = 'Retomar';
+                    btnPlay.title = 'Reproduzir';
                 }
-            } 
-            // If item is Staged (standby)
-            else if (itemId == standbyItemId) {
-                li.classList.add('standby');
-                btnPlay.innerHTML = this.icons.play;
-                btnPlay.title = 'Reproduzir';
-            } 
-            // Stopped or other items
-            else {
+            } else {
+                // Stopped or other items
                 btnPlay.innerHTML = this.icons.play;
                 btnPlay.title = 'Reproduzir';
             }

@@ -12,7 +12,6 @@ class App {
         this.initialized = false;
         this.isStopping = false; // Re-entrancy guard for stopMedia
         this.currentMedia = null;
-        this.standbyItemId = null;
         this.isPlaying = false;
         this.status = 'stopped'; // 'stopped', 'staged', 'playing', 'paused'
         this.isDraggingSeeker = false;
@@ -413,11 +412,27 @@ class App {
             }
         });
 
-        // Handle Zoom Sharing Ready signal to start playback
-        window.electronAPI.onZoomSharingReady(() => {
-            console.log('[App] Zoom sharing ready signal received. Starting playback.');
-            if (this.pendingCanPlayListener) {
-                this.pendingCanPlayListener();
+        // Handle Zoom Sharing Finished signal
+        window.electronAPI.onZoomSharingFinished(() => {
+            console.log('[App] Zoom sharing finished signal received.');
+            const isAuto = (this.ui.zoomModeSelect && this.ui.zoomModeSelect.value === 'auto');
+            const isVideo = this.currentMedia && this.currentMedia.mediaType && this.currentMedia.mediaType.includes('video');
+            
+            if (isVideo && isAuto) {
+                console.log('[App] Resuming video playback after Zoom setup.');
+                this.isPlayingOnSlave = true; // Ensure slave state is consistent
+                this.ui.previewVideo.play().catch(e => { 
+                    if(e.name !== 'AbortError') console.error('[App] play() failed:', e); 
+                });
+                this.ipc.playbackControl({ action: 'play' });
+                this.status = 'playing';
+                this.updatePlaybackUI();
+                this.updateAudioMuteState(); // Ensure audio is muted locally if slave is playing
+            } else {
+                console.log('[App] Zoom sharing setup complete. No auto-resume needed.');
+                if (this.pendingCanPlayListener) {
+                    this.pendingCanPlayListener();
+                }
             }
         });
     }
@@ -503,13 +518,19 @@ class App {
         this.updatePlaybackUI();
     }
 
+    getNormalizedType(item) {
+        let type = item.mediaType || '';
+        if (type === 'video') return 'video/mp4';
+        if (type === 'image') return 'image/jpeg';
+        return type;
+    }
+
     playMedia(item) {
         console.log(`[App] [PAUSE-LOG] playMedia called for: ${item.title || item.filename}`);
         this.currentMedia = item;
+        this.standbyItemId = item.id; // Set highlight immediately
         
-        let fullType = item.mediaType || '';
-        if (fullType === 'video') fullType = 'video/mp4';
-        if (fullType === 'image') fullType = 'image/jpeg';
+        const fullType = this.getNormalizedType(item);
         
         // Decide if we should wait for Zoom
         const shouldWaitZoom = (this.ui.zoomModeSelect && ['auto', 'script'].includes(this.ui.zoomModeSelect.value));
@@ -536,15 +557,13 @@ class App {
         console.log(`[App] goLive. isAuto: ${isAuto}, isSemiAuto: ${isSemiAuto}, Slave: ${this.hasSecondaryDisplay}`);
         
         const item = this.currentMedia;
-        let fullType = item.mediaType || '';
-        if (fullType === 'video') fullType = 'video/mp4';
-        if (fullType === 'image') fullType = 'image/jpeg';
+        const fullType = this.getNormalizedType(item);
 
         if (this.hasSecondaryDisplay) {
             this.ipc.loadMedia({ 
                 mediaPath: item.filePath, 
                 mediaType: fullType, 
-                autoPlay: !isAuto, // Auto mode -> wait, Semi/Manual -> play immediately
+                autoPlay: !isAuto, 
                 startTime: this.ui.previewVideo.currentTime 
             });
             this.isPlayingOnSlave = !isAuto;
@@ -555,6 +574,7 @@ class App {
 
         const startPlayback = () => {
             console.log('[App] >> STARTING PLAYBACK');
+            this.standbyItemId = null; // Clear blue highlight when actually starting
             this.ui.previewVideo.play().catch(e => { 
                 if(e.name !== 'AbortError') console.error('[App] play() failed:', e); 
             });
@@ -571,13 +591,16 @@ class App {
             console.log('[App] PAUSE ENFORCED (Auto mode). Setting up pending listener.');
             this.ui.previewVideo.pause();
             this.status = 'staged';
+            this.standbyItemId = item.id; // Keep blue highlight while staged
             this.pendingCanPlayListener = startPlayback;
         } else if (isSemiAuto) {
             console.log('[App] DELAY ENFORCED (Semi-auto mode). Delaying 3s.');
             this.status = 'staged';
+            this.standbyItemId = item.id;
             setTimeout(startPlayback, 3000);
         } else {
             // Normal behavior
+            this.standbyItemId = null;
             if (this.ui.previewVideo.readyState >= 3) {
                 startPlayback();
             } else {
@@ -587,7 +610,6 @@ class App {
             this.status = 'playing';
         }
 
-        this.standbyItemId = null;
         this.updateAudioMuteState();
         this.updatePlaybackUI();
     }
@@ -651,7 +673,6 @@ class App {
             this.ipc.updateZoomSharingState(false); // Trigger Zoom Sharing Stop
             this.status = 'stopped';
             this.currentMedia = null;
-            this.standbyItemId = null;
             this.isPlayingOnSlave = false;
             
             // 2. Handle Auto-Standby logic
@@ -739,47 +760,47 @@ class App {
         
         if (isVideo) {
             // --- Video Playback ---
-            this.ui.btnPlayPause.innerHTML = isPlaying ? pauseIcon : playIcon;
-            this.ui.btnPlayPause.style.display = 'inline-flex';
-            this.ui.btnPlayPause.title = isPlaying ? 'Pausar' : 'Reproduzir';
+            this.ui.btnFooterPlayPause.innerHTML = isPlaying ? pauseIcon : playIcon;
+            this.ui.btnFooterPlayPause.style.display = 'inline-flex';
+            this.ui.btnFooterPlayPause.title = isPlaying ? 'Pausar' : 'Reproduzir';
 
             if (isPaused || isStaged) {
-                this.ui.btnPlayPause.classList.add('btn-paused-highlight');
+                this.ui.btnFooterPlayPause.classList.add('btn-paused-highlight');
                 this.ui.btnStop.classList.remove('btn-paused-highlight');  
             } else {
-                this.ui.btnPlayPause.classList.remove('btn-paused-highlight');
+                this.ui.btnFooterPlayPause.classList.remove('btn-paused-highlight');
                 this.ui.btnStop.classList.add('btn-paused-highlight');  
             }
         } else {
             // --- Image Playback ---
             if (isStaged) {
-                this.ui.btnPlayPause.disabled = false; // Reset state
-                this.ui.btnPlayPause.style.opacity = '1';
-                this.ui.btnPlayPause.style.cursor = 'pointer';
-                this.ui.btnPlayPause.innerHTML = playIcon;
-                this.ui.btnPlayPause.style.display = 'inline-flex';
-                this.ui.btnPlayPause.title = 'Reproduzir';
-                this.ui.btnPlayPause.classList.add('btn-paused-highlight');
+                this.ui.btnFooterPlayPause.disabled = false; // Reset state
+                this.ui.btnFooterPlayPause.style.opacity = '1';
+                this.ui.btnFooterPlayPause.style.cursor = 'pointer';
+                this.ui.btnFooterPlayPause.innerHTML = playIcon;
+                this.ui.btnFooterPlayPause.style.display = 'inline-flex';
+                this.ui.btnFooterPlayPause.title = 'Reproduzir';
+                this.ui.btnFooterPlayPause.classList.add('btn-paused-highlight');
                 this.ui.btnStop.classList.remove('btn-paused-highlight');  
             } else if (isPlaying) {
-                this.ui.btnPlayPause.style.display = 'inline-flex';
-                this.ui.btnPlayPause.innerHTML = this.ui.icons.play;
-                this.ui.btnPlayPause.title = 'Reproduzir';
-                this.ui.btnPlayPause.disabled = true; // Disable interaction
-                this.ui.btnPlayPause.style.opacity = '0.5'; // Dim appearance
-                this.ui.btnPlayPause.style.cursor = 'default';
-                this.ui.btnPlayPause.classList.remove('btn-paused-highlight');
+                this.ui.btnFooterPlayPause.style.display = 'inline-flex';
+                this.ui.btnFooterPlayPause.innerHTML = this.ui.icons.play;
+                this.ui.btnFooterPlayPause.title = 'Reproduzir';
+                this.ui.btnFooterPlayPause.disabled = true; // Disable interaction
+                this.ui.btnFooterPlayPause.style.opacity = '0.5'; // Dim appearance
+                this.ui.btnFooterPlayPause.style.cursor = 'default';
+                this.ui.btnFooterPlayPause.classList.remove('btn-paused-highlight');
                 this.ui.btnStop.classList.add('btn-paused-highlight');  
             } else {
-                this.ui.btnPlayPause.disabled = false; // Reset state
-                this.ui.btnPlayPause.style.opacity = '1';
-                this.ui.btnPlayPause.style.cursor = 'pointer';
-                this.ui.btnPlayPause.style.display = 'none';
+                this.ui.btnFooterPlayPause.disabled = false; // Reset state
+                this.ui.btnFooterPlayPause.style.opacity = '1';
+                this.ui.btnFooterPlayPause.style.cursor = 'pointer';
+                this.ui.btnFooterPlayPause.style.display = 'none';
             }
         }
 
         console.log(`[UI Update] Status: ${this.status}, isVideo: ${isVideo}`);
-        this.ui.updatePlaybackStateUI(this.status, this.currentMedia?.id, this.standbyItemId);
+        this.ui.updatePlaybackStateUI(this.status, this.currentMedia?.id);
     }
 
     startBoundsMonitoring() {
