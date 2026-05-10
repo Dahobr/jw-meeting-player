@@ -753,13 +753,13 @@ class App {
             hideAndOverlayPreviewControls = true;
         }
 
-        if (this.ui.previewControls) {
+        if (this.ui.previewSeekerControls) {
             if (hideAndOverlayPreviewControls) {
-                this.ui.previewControls.style.visibility = 'hidden';
-                this.ui.previewControls.style.pointerEvents = 'none';
+                this.ui.previewSeekerControls.style.visibility = 'hidden';
+                this.ui.previewSeekerControls.style.pointerEvents = 'none';
             } else {
-                this.ui.previewControls.style.visibility = 'visible';
-                this.ui.previewControls.style.pointerEvents = 'auto';
+                this.ui.previewSeekerControls.style.visibility = 'visible';
+                this.ui.previewSeekerControls.style.pointerEvents = 'auto';
             }
         }
         
