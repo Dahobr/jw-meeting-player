@@ -713,6 +713,14 @@ class App {
         }
     }
 
+    /**
+     * Atualiza a interface da barra de reprodução (botões de controle e estado) 
+     * com base no status atual da reprodução e no tipo de mídia.
+     * 
+     * @execution_context 
+     * - Chamado por: handleStoreChange(), stopMedia(), setupPreviewListeners(), onMediaPlaybackStateChange(), etc.
+     * - Quando: Sempre que o status da reprodução ou o estado da mídia muda, ou a interface precisa ser re-renderizada.
+     */
     updatePlaybackUI() {
         const isStaged = this.status === 'staged';
         const isPlaying = this.status === 'playing';
