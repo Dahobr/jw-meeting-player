@@ -425,7 +425,9 @@ class UIManager {
      * Atualiza a interface da playlist (ícones e estado dos botões) 
      * com base no status atual da reprodução.
      * 
-     * Chamado principalmente por: App.updatePlaybackUI() em app.js
+     * @execution_context 
+     * - Chamado por: App.updatePlaybackUI() em app.js
+     * - Quando: Sempre que o status da reprodução (playing, staged, etc.) é alterado.
      * 
      * @param {string} status - Status atual ('playing', 'paused', 'staged', 'stopped')
      * @param {string|number|null} activeItemId - ID do item que está sendo reproduzido ou em preparação
