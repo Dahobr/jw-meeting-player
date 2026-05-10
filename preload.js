@@ -21,6 +21,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   mediaPlaybackStateChange: (isPlaying) => ipcRenderer.send('media-playback-state-change', isPlaying),
   updateZoomSharingState: (isSharing) => ipcRenderer.send('update-zoom-sharing-state', isSharing),
 
+  // --- Zoom Automation ---
+  spawnZoomProcess: (args) => ipcRenderer.invoke('spawn-zoom-process', args),
+  onZoomProcStdout: (callback) => ipcRenderer.on('zoom-proc-stdout', (_event, data) => callback(data)),
+  removeZoomStdoutListener: (callback) => ipcRenderer.removeListener('zoom-proc-stdout', callback),
+  
   // --- Playback Events (Main -> Renderer) ---
   onLoadMedia: (callback) => ipcRenderer.on('load-media', (_event, data) => callback(data)),
   playbackReady: () => ipcRenderer.send('playback-ready'),

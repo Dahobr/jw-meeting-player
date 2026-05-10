@@ -4,7 +4,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using System.Collections.Generic;
-using System.IO;
 using System.Web.Script.Serialization;
 
 namespace ZoomControlManager
@@ -34,71 +33,53 @@ namespace ZoomControlManager
 
         private static IntPtr hookId = IntPtr.Zero;
 
-        static string GetConfigPath()
-        {
-            string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string dir = Path.Combine(appData, "JwMeetingPlayer");
-            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-            return Path.Combine(dir, "zoom_coords.json");
-        }
-
         static void Main(string[] args)
         {
-            string mode = "sendkey";
+            string mode = "semi";
+            int x = -1, y = -1;
+
             foreach (var arg in args)
             {
                 if (arg.StartsWith("--mode=")) mode = arg.Substring(7);
+                else if (arg.StartsWith("--x=")) x = int.Parse(arg.Substring(4));
+                else if (arg.StartsWith("--y=")) y = int.Parse(arg.Substring(4));
             }
 
-            string cachePath = GetConfigPath();
-            
-            if (mode == "monitor-share" && !File.Exists(cachePath))
+            if (mode == "auto")
             {
-                CaptureLoop(cachePath);
-                MonitorShareFlow(cachePath);
+                if (x != -1 && y != -1)
+                {
+                    MonitorShareFlow(x, y);
+                }
+                else
+                {
+                    CaptureAndMonitor();
+                }
             }
-            else if (mode == "sendkey")
+            else if (mode == "semi")
             {
                 SendAltS();
             }
-            else if (mode == "capture")
-            {
-                CaptureLoop(cachePath);
-            }
-            else if (mode == "monitor-share")
-            {
-                MonitorShareFlow(cachePath);
-            }
         }
 
-        static void CaptureLoop(string path)
+        static void CaptureAndMonitor()
         {
+            Console.WriteLine("[C#] Triggering Alt+S and waiting for capture...");
+            SendAltS();
+            
+            int capturedX = -1, capturedY = -1;
+            Color capturedColor = Color.Empty;
+
             hookId = SetWindowsHookEx(WH_MOUSE_LL, (nCode, wParam, lParam) => {
                 if (nCode >= 0 && wParam == (IntPtr)WM_LBUTTONDBLCLK)
                 {
                     Point p;
                     GetCursorPos(out p);
+                    capturedX = p.X;
+                    capturedY = p.Y;
+                    capturedColor = GetAverageColor(p.X, p.Y, 4);
                     
-                    // 1. Capture color at the moment of double-click (Zoom window color)
-                    Color windowColor = GetPixelColor(p.X, p.Y);
-                    
-                    var data = new Dictionary<string, int> { { "x", p.X }, { "y", p.Y } };
-                    File.WriteAllText(path, new JavaScriptSerializer().Serialize(data));
-                    Console.WriteLine("[C#] Coords saved. Waiting for Zoom window to disappear...");
-
-                    // 2. Wait for color to CHANGE (Zoom window closed)
-                    // We check if it's NO LONGER the window color
-                    for (int i = 0; i < 200; i++) // Max 20 seconds
-                    {
-                        Thread.Sleep(100);
-                        if (!ColorsAreClose(GetPixelColor(p.X, p.Y), windowColor, 20))
-                        {
-                            Console.WriteLine("[C#] Zoom window closed detected.");
-                            break;
-                        }
-                    }
-                    
-                    Thread.Sleep(500); // Wait for transition animation
+                    Console.WriteLine(string.Format("[C#] COORDS:{0},{1}", p.X, p.Y));
                     Application.Exit();
                 }
                 return CallNextHookEx(hookId, nCode, wParam, lParam);
@@ -106,62 +87,89 @@ namespace ZoomControlManager
 
             Application.Run();
             UnhookWindowsHookEx(hookId);
+
+            if (capturedX != -1)
+            {
+                Console.WriteLine("[C#] Monitoring for completion...");
+                
+                // 1. Wait for color to stabilize (in case sharing transition is still moving)
+                for (int i = 0; i < 10; i++)
+                {
+                    Thread.Sleep(100);
+                    if (ColorsAreClose(GetAverageColor(capturedX, capturedY, 4), capturedColor, 10))
+                        break;
+                }
+
+                // 2. Monitor for change
+                for (int i = 0; i < 200; i++)
+                {
+                    Thread.Sleep(500);
+                    if (!ColorsAreClose(GetAverageColor(capturedX, capturedY, 4), capturedColor, 20))
+                    {
+                        Console.WriteLine("[C#] COMPLETED");
+                        break;
+                    }
+                }
+            }
         }
 
-        static void MonitorShareFlow(string cachePath)
+        static void MonitorShareFlow(int x, int y)
         {
-            if (!File.Exists(cachePath)) return;
-            var serializer = new JavaScriptSerializer();
-            var cache = serializer.Deserialize<Dictionary<string, int>>(File.ReadAllText(cachePath));
-            if (!cache.ContainsKey("x") || !cache.ContainsKey("y")) return;
-
-            int x = cache["x"];
-            int y = cache["y"];
-
-            // 1. Capture initial color BEFORE sending Alt+S (Desktop/Background color)
-            Color initialColor = GetPixelColor(x, y);
-            Console.WriteLine("[C#] Background color captured.");
-
-            // 2. Send Alt+S
+            Color initialColor = GetAverageColor(x, y, 4);
             SendAltS();
 
-            // 3. Wait for pixel to CHANGE (Zoom window appeared)
             bool opened = false;
             for (int i = 0; i < 50; i++)
             {
                 Thread.Sleep(200);
-                if (!ColorsAreClose(GetPixelColor(x, y), initialColor, 20))
+                if (!ColorsAreClose(GetAverageColor(x, y, 4), initialColor, 20))
                 {
                     opened = true;
-                    Console.WriteLine("[C#] Zoom window detected.");
                     break;
                 }
             }
 
             if (opened)
             {
-                Thread.Sleep(300); // Wait for stability
-
-                // 4. Double click
+                Thread.Sleep(300);
                 mouse_event(MOUSEEVENTF_LEFTDOWN, x, y, 0, 0);
                 mouse_event(MOUSEEVENTF_LEFTUP, x, y, 0, 0);
                 Thread.Sleep(100);
                 mouse_event(MOUSEEVENTF_LEFTDOWN, x, y, 0, 0);
                 mouse_event(MOUSEEVENTF_LEFTUP, x, y, 0, 0);
-                Console.WriteLine("[C#] Double-click sent.");
+                
+                Console.WriteLine("[C#] STARTED");
 
-                // 5. Wait for pixel to MATCH initial (Zoom window closed)
+                // Monitor for window closure (color returns to initial)
                 for (int i = 0; i < 200; i++) 
                 {
                     Thread.Sleep(500);
-                    if (ColorsAreClose(GetPixelColor(x, y), initialColor, 20))
+                    if (ColorsAreClose(GetAverageColor(x, y, 4), initialColor, 20))
                     {
-                        Console.WriteLine("[C#] Zoom window closed detected.");
+                        Console.WriteLine("[C#] COMPLETED");
                         break;
                     }
                 }
-                Thread.Sleep(500);
             }
+        }
+
+        static Color GetAverageColor(int x, int y, int radius)
+        {
+            int totalR = 0, totalG = 0, totalB = 0;
+            int count = 0;
+
+            for (int dx = -radius; dx <= radius; dx++)
+            {
+                for (int dy = -radius; dy <= radius; dy++)
+                {
+                    Color c = GetPixelColor(x + dx, y + dy);
+                    totalR += c.R;
+                    totalG += c.G;
+                    totalB += c.B;
+                    count++;
+                }
+            }
+            return Color.FromArgb(totalR / count, totalG / count, totalB / count);
         }
 
         static void SendAltS()

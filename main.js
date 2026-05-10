@@ -7,6 +7,7 @@ const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView, protocol, net,
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
+const { spawn } = require('child_process');
 const { marked } = require('marked');
 
 // Register 'media' as a standard and secure protocol before app is ready
@@ -311,6 +312,25 @@ ipcMain.handle('get-help-content', async () => {
         console.error('[Main] Error reading HELP.md:', err);
         return `<h1>Erro</h1><p>${err.message}</p>`;
     }
+});
+
+ipcMain.handle('spawn-zoom-process', (event, args) => {
+    const ZOOM_MANAGER_PATH = path.join(__dirname, 'scripts', 'ZoomControlManager', 'ZoomControlManager.exe');
+    const proc = spawn(ZOOM_MANAGER_PATH, args);
+
+    proc.stdout.on('data', (data) => {
+        if (mainWindow) {
+            mainWindow.webContents.send('zoom-proc-stdout', data.toString());
+        }
+    });
+
+    proc.on('close', (code) => {
+        if (mainWindow) {
+            mainWindow.webContents.send('zoom-sharing-finished');
+        }
+    });
+
+    return { pid: proc.pid };
 });
 
 // App Lifecycle

@@ -23,6 +23,7 @@ class App {
         this.isPlayingOnSlave = false;
         this.seekerDragEndTime = 0; 
         this.pendingCanPlayListener = null; 
+        this.zoomCoords = null;
     }
 
     async showCustomConfirm(message) {
@@ -536,7 +537,7 @@ class App {
         const fullType = this.getNormalizedType(item);
         
         // Decide if we should wait for Zoom
-        const shouldWaitZoom = (this.ui.zoomModeSelect && ['auto', 'script'].includes(this.ui.zoomModeSelect.value));
+        const shouldWaitZoom = (this.ui.zoomModeSelect && ['auto', 'semi'].includes(this.ui.zoomModeSelect.value));
         
         if (shouldWaitZoom) {
             console.log('[App] [PAUSE-LOG] Zoom Auto/Semi-auto mode detected. Forcing local preview autoPlay=false');
@@ -554,8 +555,43 @@ class App {
             return;
         }
         
-        const isAuto = (this.ui.zoomModeSelect && this.ui.zoomModeSelect.value === 'auto');
-        const isSemiAuto = (this.ui.zoomModeSelect && this.ui.zoomModeSelect.value === 'script');
+        // 1. Zoom sharing trigger
+        const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : 'off';
+        if (zoomMode !== 'off') {
+            console.log(`[App] Zoom sharing: Triggering sharing signal (${zoomMode})`);
+            
+            // Build arguments
+            const args = [`--mode=${zoomMode}`];
+            if (this.zoomCoords) {
+                args.push(`--x=${this.zoomCoords.x}`);
+                args.push(`--y=${this.zoomCoords.y}`);
+            }
+
+            // Register global stdout listener before spawning
+            const stdoutHandler = (data) => {
+                const line = data.toString().trim();
+                console.log(`[C# Output] ${line}`);
+                
+                if (line.startsWith('[C#] COORDS:')) {
+                    const parts = line.split(':')[1].split(',');
+                    this.zoomCoords = { x: parseInt(parts[0]), y: parseInt(parts[1]) };
+                } else if (line.includes('[C#] STARTED')) {
+                    console.log('[App] Zoom sharing started.');
+                } else if (line.includes('[C#] COMPLETED')) {
+                    console.log('[App] Zoom sharing finished, resuming playback.');
+                    if (this.pendingCanPlayListener) this.pendingCanPlayListener();
+                    // Clean up listener
+                    window.electronAPI.removeZoomStdoutListener(stdoutHandler);
+                }
+            };
+            window.electronAPI.onZoomProcStdout(stdoutHandler);
+            
+            // Spawn process
+            window.electronAPI.spawnZoomProcess(args);
+        }
+        
+        const isAuto = (zoomMode === 'auto');
+        const isSemiAuto = (zoomMode === 'semi');
         
         console.log(`[App] goLive. isAuto: ${isAuto}, isSemiAuto: ${isSemiAuto}, Slave: ${this.hasSecondaryDisplay}`);
         
@@ -571,9 +607,6 @@ class App {
             });
             this.isPlayingOnSlave = !isAuto;
         }
-
-        // Trigger Zoom Sharing Start
-        this.ipc.updateZoomSharingState(true);
 
         const startPlayback = () => {
             console.log('[App] >> STARTING PLAYBACK');
