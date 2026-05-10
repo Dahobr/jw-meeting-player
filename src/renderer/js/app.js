@@ -746,21 +746,11 @@ class App {
         }
 
         // --- Control visibility and appearance of preview controls ---
-        let hideAndOverlayPreviewControls = false;
-        if (this.status === 'stopped') {
-            hideAndOverlayPreviewControls = true;
-        } else if (!isVideo && (isPlaying || isStaged)) {
-            hideAndOverlayPreviewControls = true;
-        }
-
-        if (this.ui.previewSeekerControls) {
-            if (hideAndOverlayPreviewControls) {
-                this.ui.previewSeekerControls.style.visibility = 'hidden';
-                this.ui.previewSeekerControls.style.pointerEvents = 'none';
-            } else {
-                this.ui.previewSeekerControls.style.visibility = 'visible';
-                this.ui.previewSeekerControls.style.pointerEvents = 'auto';
-            }
+        if (this.ui.previewControlsOverlay) {
+            // 画像を表示中、または停止中の場合はオーバーレイでコントロールを隠す
+            // isVideoがfalseなら画像
+            const shouldHideControls = !isVideo;
+            this.ui.previewControlsOverlay.style.display = shouldHideControls ? 'block' : 'none';
         }
         
         if (isVideo) {

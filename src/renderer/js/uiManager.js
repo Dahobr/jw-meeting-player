@@ -36,6 +36,7 @@ class UIManager {
         this.previewImage = document.getElementById('preview-image');
         this.previewSeeker = document.getElementById('preview-seeker');
         this.previewControls = document.getElementById('preview-controls-container');
+        this.previewControlsOverlay = document.getElementById('preview-controls-overlay');
         this.previewTimeCurrent = document.getElementById('preview-time-current');
         this.previewTimeTotal = document.getElementById('preview-time-total');
         this.stateLabel = document.getElementById('preview-state-label');
@@ -435,7 +436,7 @@ class UIManager {
     updatePlaybackStateUI(status, activeItemId) {
         const items = this.itemsList.querySelectorAll('.playlist-item-li');
 
-        // Update state label
+        // Update state label ['PREPARADO', 'NO AR']
         if (this.stateLabel) {
             this.stateLabel.className = 'state-label'; // Reset classes
             if (status === 'playing' || status === 'paused') {
