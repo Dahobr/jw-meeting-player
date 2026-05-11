@@ -153,6 +153,10 @@ namespace ZoomControlManager
             {
                 Thread.Sleep(500);
                 
+                // SAVE CURRENT MOUSE POSITION
+                Point originalPos;
+                GetCursorPos(out originalPos);
+
                 // MOVE MOUSE TO TARGET COORDS
                 SetCursorPos(x, y);
                 Thread.Sleep(100);
@@ -164,6 +168,10 @@ namespace ZoomControlManager
                 mouse_event(MOUSEEVENTF_LEFTDOWN, x, y, 0, 0);
                 mouse_event(MOUSEEVENTF_LEFTUP, x, y, 0, 0);
                 
+                // RESTORE MOUSE POSITION
+                Thread.Sleep(200);
+                SetCursorPos(originalPos.X, originalPos.Y);
+
                 Console.WriteLine("[C#] STARTED");
                 Console.Out.Flush();
 
