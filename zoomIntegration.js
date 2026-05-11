@@ -13,22 +13,24 @@ function setupZoomIntegration(mainWin) {
 
   // Listen for explicit Zoom sharing state requests from Renderer
   ipcMain.on('set-zoom-sharing', (event, active, args = []) => {
-    console.log(`[Zoom] IPC Request: active=${active}, args=${JSON.stringify(args)}`);
+    const mode = storageManager.config ? storageManager.config.zoomMode : 'off';
+    console.log(`[Zoom] IPC Request: active=${active}, mode=${mode}, args=${JSON.stringify(args)}`);
     
     if (active) {
-      const mode = storageManager.config ? storageManager.config.zoomMode : 'auto';
-      startZoomSharing(mode, args);
+      if (mode !== 'off') {
+        startZoomSharing(mode, args);
+      }
     } else {
-      stopZoomSharing();
+      // Always try to stop if mode was not off, 
+      // but only send Alt+S if we are actually in a zoom-enabled mode
+      stopZoomSharing(mode);
     }
   });
 }
 
 function startZoomSharing(mode, extraArgs = []) {
-  if (mode === 'off') {
-    console.log('[Zoom] Sharing mode is off. Skipping.');
-    return;
-  }
+  // Double check mode
+  if (mode === 'off') return;
 
   // Kill any existing process before starting
   if (zoomProcess) {
@@ -37,15 +39,17 @@ function startZoomSharing(mode, extraArgs = []) {
     zoomProcess = null;
   }
 
-  console.log(`[Zoom] Starting C# Manager (Mode: ${mode})`);
+  console.log(`[Zoom] Starting C# Manager (Mode: ${mode}) Args: ${extraArgs.join(' ')}`);
   const spawnArgs = [`--mode=${mode}`, ...extraArgs];
   zoomProcess = spawn(ZOOM_MANAGER_PATH, spawnArgs);
 
-  // ... (stdout/stderr listeners remain same) ...
   zoomProcess.stdout.on('data', (data) => {
     const output = data.toString().trim();
+    console.log(`[C# Output] ${output}`);
+
     if (mainWindowRef && !mainWindowRef.isDestroyed()) {
       mainWindowRef.webContents.send('zoom-proc-stdout', output);
+      
       if (output.includes('[C#] STARTED')) {
         mainWindowRef.webContents.send('zoom-sharing-ready');
       } else if (output.includes('[C#] COMPLETED')) {
@@ -60,7 +64,7 @@ function startZoomSharing(mode, extraArgs = []) {
   });
 }
 
-function stopZoomSharing() {
+function stopZoomSharing(mode) {
   // 1. Kill the monitoring process if it exists
   if (zoomProcess) {
     console.log('[Zoom] Killing monitoring process...');
@@ -68,10 +72,12 @@ function stopZoomSharing() {
     zoomProcess = null;
   }
 
-  // 2. IMPORTANT: Send Alt+S to Zoom to STOP sharing
-  // We do this by launching the C# manager in 'semi' mode which just sends Alt+S and exits.
-  console.log('[Zoom] Sending Alt+S to stop sharing...');
-  spawn(ZOOM_MANAGER_PATH, ['--mode=semi']);
+  // 2. Send Alt+S to Zoom to STOP sharing, but only if mode was enabled
+  if (mode !== 'off') {
+    console.log(`[Zoom] Sending Alt+S to stop sharing (Last Mode: ${mode})...`);
+    // Use semi mode to just send Alt+S
+    spawn(ZOOM_MANAGER_PATH, ['--mode=semi']);
+  }
 }
 
 module.exports = { setupZoomIntegration };

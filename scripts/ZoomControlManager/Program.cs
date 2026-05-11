@@ -132,12 +132,19 @@ namespace ZoomControlManager
             if (opened)
             {
                 Thread.Sleep(300);
+                
+                // Signal that we are about to click
+                Console.WriteLine("[C#] STARTED");
+
                 mouse_event(MOUSEEVENTF_LEFTDOWN, x, y, 0, 0);
                 mouse_event(MOUSEEVENTF_LEFTUP, x, y, 0, 0);
                 Thread.Sleep(100);
                 mouse_event(MOUSEEVENTF_LEFTDOWN, x, y, 0, 0);
                 mouse_event(MOUSEEVENTF_LEFTUP, x, y, 0, 0);
                 
+                // Double check if color changed after click (meaning it was clicked)
+                // but we already sent STARTED, which is what triggers the resume.
+                // Sending again just in case.
                 Console.WriteLine("[C#] STARTED");
 
                 // Monitor for window closure (color returns to initial)
