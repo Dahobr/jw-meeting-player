@@ -314,25 +314,6 @@ ipcMain.handle('get-help-content', async () => {
     }
 });
 
-ipcMain.handle('spawn-zoom-process', (event, args) => {
-    const ZOOM_MANAGER_PATH = path.join(__dirname, 'scripts', 'ZoomControlManager', 'ZoomControlManager.exe');
-    const proc = spawn(ZOOM_MANAGER_PATH, args);
-
-    proc.stdout.on('data', (data) => {
-        if (mainWindow) {
-            mainWindow.webContents.send('zoom-proc-stdout', data.toString());
-        }
-    });
-
-    proc.on('close', (code) => {
-        if (mainWindow) {
-            mainWindow.webContents.send('zoom-sharing-finished');
-        }
-    });
-
-    return { pid: proc.pid };
-});
-
 // App Lifecycle
 app.whenReady().then(() => {
     // Register for the default session

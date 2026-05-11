@@ -416,29 +416,44 @@ class App {
             }
         });
 
-        // Handle Zoom Sharing Finished signal
-        window.electronAPI.onZoomSharingFinished(() => {
-            console.log('[App] Zoom sharing finished signal received.');
-            const isAuto = (this.ui.zoomModeSelect && this.ui.zoomModeSelect.value === 'auto');
-            const isVideo = this.currentMedia && this.currentMedia.mediaType && this.currentMedia.mediaType.includes('video');
-            
-            if (isVideo && isAuto) {
-                console.log('[App] Resuming video playback after Zoom setup.');
-                this.isPlayingOnSlave = true; // Ensure slave state is consistent
-                this.ui.previewVideo.play().catch(e => { 
-                    if(e.name !== 'AbortError') console.error('[App] play() failed:', e); 
-                });
-                this.ipc.playbackControl({ action: 'play' });
-                this.status = 'playing';
-                this.updatePlaybackUI();
-                this.updateAudioMuteState(); // Ensure audio is muted locally if slave is playing
-            } else {
-                console.log('[App] Zoom sharing setup complete. No auto-resume needed.');
-                if (this.pendingCanPlayListener) {
-                    this.pendingCanPlayListener();
-                }
+        // Handle Zoom Signals
+        window.electronAPI.onZoomProcStdout((data) => {
+            if (data.includes('[C#] COORDS:')) {
+                const parts = data.split(':')[1].split(',');
+                this.zoomCoords = { x: parseInt(parts[0]), y: parseInt(parts[1]) };
+                console.log('[App] Updated Zoom Coords:', this.zoomCoords);
             }
         });
+
+        window.electronAPI.onZoomSharingReady(() => {
+            console.log('[App] Zoom sharing READY (STARTED) signal received.');
+            if (this.status === 'paused' && this.currentMedia?.mediaType?.includes('video')) {
+                console.log('[App] Auto-resuming playback from Zoom signal.');
+                this.resumePlayback();
+            }
+        });
+
+        window.electronAPI.onZoomSharingFinished(() => {
+            console.log('[App] Zoom sharing FINISHED signal received.');
+            // This is usually when the window is closed or sharing stops
+        });
+    }
+
+    resumePlayback() {
+        if (!this.currentMedia || !this.currentMedia.mediaType.includes('video')) return;
+
+        this.ui.previewVideo.play().catch(e => { 
+            if(e.name !== 'AbortError') console.error('[App] play() failed:', e); 
+        });
+
+        if (this.hasSecondaryDisplay) {
+            this.ipc.playbackControl({ action: 'play' });
+            this.isPlayingOnSlave = true;
+        }
+
+        this.status = 'playing';
+        this.updatePlaybackUI();
+        this.updateAudioMuteState();
     }
 
     async saveBrowserImage(url) {
@@ -530,125 +545,80 @@ class App {
     }
 
     playMedia(item) {
-        console.log(`[App] [PAUSE-LOG] playMedia called for: ${item.title || item.filename}`);
+        console.log(`[App] playMedia called for: ${item.title || item.filename}`);
         this.currentMedia = item;
-        this.standbyItemId = item.id; // Set highlight immediately
+        this.standbyItemId = null; // Clear standby highlight
         
         const fullType = this.getNormalizedType(item);
-        
-        // Decide if we should wait for Zoom
-        const shouldWaitZoom = (this.ui.zoomModeSelect && ['auto', 'semi'].includes(this.ui.zoomModeSelect.value));
-        
-        if (shouldWaitZoom) {
-            console.log('[App] [PAUSE-LOG] Zoom Auto/Semi-auto mode detected. Forcing local preview autoPlay=false');
-        }
-        
-        this.ui.showPreview(fullType, item.filePath, !shouldWaitZoom);
-        
-        this.status = shouldWaitZoom ? 'staged' : 'playing'; 
-        this.goLive();
-    }
-
-    goLive() {
-        if (!this.currentMedia) {
-            console.warn('[App] goLive called without currentMedia');
-            return;
-        }
-        
-        // 1. Zoom sharing trigger
+        const isVideo = fullType.includes('video');
         const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : 'off';
-        if (zoomMode !== 'off') {
-            console.log(`[App] Zoom sharing: Triggering sharing signal (${zoomMode})`);
+        const shouldWaitZoom = (isVideo && zoomMode !== 'off');
+
+        console.log(`[App] Playing ${fullType}. ZoomMode: ${zoomMode}, Wait: ${shouldWaitZoom}`);
+
+        // 1. Show Preview
+        // Even if waiting for Zoom, we load the media. 
+        // For videos, we'll force a pause immediately.
+        this.ui.showPreview(fullType, item.filePath, !shouldWaitZoom);
+
+        if (shouldWaitZoom) {
+            // --- VIDEO WITH ZOOM WAIT ---
+            // 1. Set status to paused (UI will show NO AR and RETOMAR)
+            this.status = 'paused';
+            this.isPlaying = false;
             
-            // Build arguments
-            const args = [`--mode=${zoomMode}`];
-            if (this.zoomCoords) {
-                args.push(`--x=${this.zoomCoords.x}`);
-                args.push(`--y=${this.zoomCoords.y}`);
+            // 2. Load on slave in paused state
+            if (this.hasSecondaryDisplay) {
+                this.ipc.loadMedia({ 
+                    mediaPath: item.filePath, 
+                    mediaType: fullType, 
+                    autoPlay: false 
+                });
+                this.isPlayingOnSlave = false;
             }
 
-            // Register global stdout listener before spawning
-            const stdoutHandler = (data) => {
-                const line = data.toString().trim();
-                console.log(`[C# Output] ${line}`);
-                
-                if (line.startsWith('[C#] COORDS:')) {
-                    const parts = line.split(':')[1].split(',');
-                    this.zoomCoords = { x: parseInt(parts[0]), y: parseInt(parts[1]) };
-                } else if (line.includes('[C#] STARTED')) {
-                    console.log('[App] Zoom sharing started.');
-                } else if (line.includes('[C#] COMPLETED')) {
-                    console.log('[App] Zoom sharing finished, resuming playback.');
-                    if (this.pendingCanPlayListener) this.pendingCanPlayListener();
-                    // Clean up listener
-                    window.electronAPI.removeZoomStdoutListener(stdoutHandler);
-                }
-            };
-            window.electronAPI.onZoomProcStdout(stdoutHandler);
-            
-            // Spawn process
-            window.electronAPI.spawnZoomProcess(args);
-        }
-        
-        const isAuto = (zoomMode === 'auto');
-        const isSemiAuto = (zoomMode === 'semi');
-        
-        console.log(`[App] goLive. isAuto: ${isAuto}, isSemiAuto: ${isSemiAuto}, Slave: ${this.hasSecondaryDisplay}`);
-        
-        const item = this.currentMedia;
-        const fullType = this.getNormalizedType(item);
+            // 3. Trigger Zoom Sharing
+            this.triggerZoomSharing(zoomMode);
+        } else {
+            // --- IMAGE OR VIDEO WITHOUT ZOOM WAIT ---
+            this.status = 'playing';
+            this.isPlaying = true;
 
-        if (this.hasSecondaryDisplay) {
-            this.ipc.loadMedia({ 
-                mediaPath: item.filePath, 
-                mediaType: fullType, 
-                autoPlay: !isAuto, 
-                startTime: this.ui.previewVideo.currentTime 
-            });
-            this.isPlayingOnSlave = !isAuto;
-        }
-
-        const startPlayback = () => {
-            console.log('[App] >> STARTING PLAYBACK');
-            this.standbyItemId = null; // Clear blue highlight when actually starting
-            this.ui.previewVideo.play().catch(e => { 
-                if(e.name !== 'AbortError') console.error('[App] play() failed:', e); 
-            });
             if (this.hasSecondaryDisplay) {
-                this.ipc.playbackControl({ action: 'play' });
+                this.ipc.loadMedia({ 
+                    mediaPath: item.filePath, 
+                    mediaType: fullType, 
+                    autoPlay: true 
+                });
                 this.isPlayingOnSlave = true;
             }
-            this.status = 'playing';
-            this.updatePlaybackUI();
-            this.pendingCanPlayListener = null;
-        };
 
-        if (isAuto) {
-            console.log('[App] PAUSE ENFORCED (Auto mode). Setting up pending listener.');
-            this.ui.previewVideo.pause();
-            this.status = 'staged';
-            this.standbyItemId = item.id; // Keep blue highlight while staged
-            this.pendingCanPlayListener = startPlayback;
-        } else if (isSemiAuto) {
-            console.log('[App] DELAY ENFORCED (Semi-auto mode). Delaying 3s.');
-            this.status = 'staged';
-            this.standbyItemId = item.id;
-            setTimeout(startPlayback, 3000);
-        } else {
-            // Normal behavior
-            this.standbyItemId = null;
-            if (this.ui.previewVideo.readyState >= 3) {
-                startPlayback();
-            } else {
-                this.pendingCanPlayListener = startPlayback;
-                this.ui.previewVideo.addEventListener('canplay', this.pendingCanPlayListener);
+            if (isVideo) {
+                this.ui.previewVideo.play().catch(e => {
+                    if(e.name !== 'AbortError') console.error('[App] Local play failed:', e);
+                });
             }
-            this.status = 'playing';
         }
 
         this.updateAudioMuteState();
         this.updatePlaybackUI();
     }
+
+    triggerZoomSharing(mode) {
+        console.log(`[App] Triggering Zoom Sharing (${mode})`);
+        
+        const args = [];
+        if (this.zoomCoords) {
+            args.push(`--x=${this.zoomCoords.x}`);
+            args.push(`--y=${this.zoomCoords.y}`);
+        }
+
+        // We use the new update-zoom-sharing-state with args
+        this.ipc.updateZoomSharingState(true, args);
+    }
+
+    // goLive was absorbed into playMedia for simplicity.
+    // Removed to avoid confusion.
 
     updateAudioMuteState() {
         if (this.ui.previewVideo) {
@@ -657,14 +627,8 @@ class App {
     }
 
     togglePlayback() {
-        if (this.status === 'stopped') {
-            if (this.currentMedia) this.goLive();
-            return;
-        }
-
-        // If in staged state, always go live
-        if (this.status === 'staged') {
-            this.goLive();
+        if (this.status === 'stopped' || this.status === 'staged') {
+            if (this.currentMedia) this.playMedia(this.currentMedia);
             return;
         }
 
@@ -672,19 +636,25 @@ class App {
         const isVideo = this.currentMedia?.mediaType?.includes('video');
         if (isVideo) {
             if (this.ui.previewVideo.paused) {
-                this.ui.previewVideo.play().catch(e => { if(e.name !== 'AbortError') console.error(e); });
-                this.ipc.playbackControl({ action: 'play' });
-                this.status = 'playing';
+                this.resumePlayback();
             } else {
-                this.ui.previewVideo.pause();
-                this.ipc.playbackControl({ action: 'pause' });
-                this.status = 'paused';
+                this.pausePlayback();
             }
-            this.updatePlaybackUI();
         } else {
             // It's an image. If it's live, treat toggle as stop.
             this.stopMedia('toggle click on image');
         }
+    }
+
+    pausePlayback() {
+        if (!this.currentMedia || !this.currentMedia.mediaType.includes('video')) return;
+
+        this.ui.previewVideo.pause();
+        if (this.hasSecondaryDisplay) {
+            this.ipc.playbackControl({ action: 'pause' });
+        }
+        this.status = 'paused';
+        this.updatePlaybackUI();
     }
 
     stopMedia(reason = 'unknown') {
