@@ -223,7 +223,6 @@ class App {
         console.log('[App] Setting up UI callbacks...');
 
         const handleNav = (key) => {
-            try { this.stopMedia(`navigation to ${key}`); } catch (e) {}
             this.ipc.navigateSite(key);
         };
 
@@ -236,7 +235,6 @@ class App {
         this.ui.btnMenuDownloads.onclick = () => this.ipc.openDownloadFolder();
         this.ui.btnMenuHelp.onclick = async () => {
             try {
-                this.stopMedia('help request');
                 const html = await this.ipc.getHelpContent();
                 this.ui.showHelp(html);
             } catch (err) {
