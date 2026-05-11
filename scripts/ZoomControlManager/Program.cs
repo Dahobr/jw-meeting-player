@@ -4,7 +4,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using System.Collections.Generic;
-using System.Web.Script.Serialization;
 
 namespace ZoomControlManager
 {
@@ -14,6 +13,9 @@ namespace ZoomControlManager
         static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo);
         private const int MOUSEEVENTF_LEFTDOWN = 0x02;
         private const int MOUSEEVENTF_LEFTUP = 0x04;
+
+        [DllImport("user32.dll")]
+        static extern bool SetCursorPos(int x, int y);
 
         [DllImport("user32.dll")]
         static extern bool GetCursorPos(out Point lpPoint);
@@ -27,11 +29,24 @@ namespace ZoomControlManager
         [DllImport("user32.dll")]
         static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
 
+        [DllImport("user32.dll")]
+        static extern uint GetDoubleClickTime();
+
+        [DllImport("user32.dll")]
+        static extern IntPtr GetDC(IntPtr hwnd);
+
+        [DllImport("user32.dll")]
+        static extern int ReleaseDC(IntPtr hwnd, IntPtr hdc);
+
+        [DllImport("gdi32.dll")]
+        static extern uint GetPixel(IntPtr hdc, int nXPos, int nYPos);
+
         private delegate IntPtr MouseHookDelegate(int nCode, IntPtr wParam, IntPtr lParam);
         private const int WH_MOUSE_LL = 14;
-        private const int WM_LBUTTONDBLCLK = 0x0203;
+        private const int WM_LBUTTONDOWN = 0x0201;
 
         private static IntPtr hookId = IntPtr.Zero;
+        private static DateTime lastClickTime = DateTime.MinValue;
 
         static void Main(string[] args)
         {
@@ -64,23 +79,34 @@ namespace ZoomControlManager
 
         static void CaptureAndMonitor()
         {
-            Console.WriteLine("[C#] Triggering Alt+S and waiting for capture...");
+            Console.WriteLine("[C#] Triggering Alt+S and waiting for double-click capture...");
+            Console.Out.Flush();
             SendAltS();
             
             int capturedX = -1, capturedY = -1;
             Color capturedColor = Color.Empty;
+            uint dbClickTime = GetDoubleClickTime();
 
             hookId = SetWindowsHookEx(WH_MOUSE_LL, (nCode, wParam, lParam) => {
-                if (nCode >= 0 && wParam == (IntPtr)WM_LBUTTONDBLCLK)
+                if (nCode >= 0 && wParam == (IntPtr)WM_LBUTTONDOWN)
                 {
-                    Point p;
-                    GetCursorPos(out p);
-                    capturedX = p.X;
-                    capturedY = p.Y;
-                    capturedColor = GetAverageColor(p.X, p.Y, 4);
-                    
-                    Console.WriteLine(string.Format("[C#] COORDS:{0},{1}", p.X, p.Y));
-                    Application.Exit();
+                    DateTime now = DateTime.Now;
+                    if ((now - lastClickTime).TotalMilliseconds <= dbClickTime)
+                    {
+                        // Double-click detected!
+                        Point p;
+                        GetCursorPos(out p);
+                        capturedX = p.X;
+                        capturedY = p.Y;
+                        capturedColor = GetColorAt(p.X, p.Y);
+                        
+                        Console.WriteLine(string.Format("[C#] COORDS:{0},{1}", p.X, p.Y));
+                        // Crucial: Also send STARTED here so JS resumes playback immediately
+                        Console.WriteLine("[C#] STARTED");
+                        Console.Out.Flush();
+                        Application.Exit();
+                    }
+                    lastClickTime = now;
                 }
                 return CallNextHookEx(hookId, nCode, wParam, lParam);
             }, IntPtr.Zero, 0);
@@ -90,23 +116,17 @@ namespace ZoomControlManager
 
             if (capturedX != -1)
             {
-                Console.WriteLine("[C#] Monitoring for completion...");
+                Console.WriteLine("[C#] Monitoring for completion (window close)...");
+                Console.Out.Flush();
                 
-                // 1. Wait for color to stabilize (in case sharing transition is still moving)
-                for (int i = 0; i < 10; i++)
-                {
-                    Thread.Sleep(100);
-                    if (ColorsAreClose(GetAverageColor(capturedX, capturedY, 4), capturedColor, 10))
-                        break;
-                }
-
-                // 2. Monitor for change
+                // Monitor for window closure
                 for (int i = 0; i < 200; i++)
                 {
                     Thread.Sleep(500);
-                    if (!ColorsAreClose(GetAverageColor(capturedX, capturedY, 4), capturedColor, 20))
+                    if (!ColorsAreClose(GetColorAt(capturedX, capturedY), capturedColor, 20))
                     {
                         Console.WriteLine("[C#] COMPLETED");
+                        Console.Out.Flush();
                         break;
                     }
                 }
@@ -115,14 +135,14 @@ namespace ZoomControlManager
 
         static void MonitorShareFlow(int x, int y)
         {
-            Color initialColor = GetAverageColor(x, y, 4);
+            Color initialColor = GetColorAt(x, y);
             SendAltS();
 
             bool opened = false;
             for (int i = 0; i < 50; i++)
             {
                 Thread.Sleep(200);
-                if (!ColorsAreClose(GetAverageColor(x, y, 4), initialColor, 20))
+                if (!ColorsAreClose(GetColorAt(x, y), initialColor, 20))
                 {
                     opened = true;
                     break;
@@ -131,67 +151,51 @@ namespace ZoomControlManager
 
             if (opened)
             {
-                Thread.Sleep(300);
+                Thread.Sleep(500);
                 
-                // Signal that we are about to click
-                Console.WriteLine("[C#] STARTED");
+                // MOVE MOUSE TO TARGET COORDS
+                SetCursorPos(x, y);
+                Thread.Sleep(100);
 
+                // Double click automatically
                 mouse_event(MOUSEEVENTF_LEFTDOWN, x, y, 0, 0);
                 mouse_event(MOUSEEVENTF_LEFTUP, x, y, 0, 0);
                 Thread.Sleep(100);
                 mouse_event(MOUSEEVENTF_LEFTDOWN, x, y, 0, 0);
                 mouse_event(MOUSEEVENTF_LEFTUP, x, y, 0, 0);
                 
-                // Double check if color changed after click (meaning it was clicked)
-                // but we already sent STARTED, which is what triggers the resume.
-                // Sending again just in case.
                 Console.WriteLine("[C#] STARTED");
+                Console.Out.Flush();
 
-                // Monitor for window closure (color returns to initial)
+                // Monitor for window closure
                 for (int i = 0; i < 200; i++) 
                 {
                     Thread.Sleep(500);
-                    if (ColorsAreClose(GetAverageColor(x, y, 4), initialColor, 20))
+                    if (ColorsAreClose(GetColorAt(x, y), initialColor, 20))
                     {
                         Console.WriteLine("[C#] COMPLETED");
+                        Console.Out.Flush();
                         break;
                     }
                 }
             }
         }
 
-        static Color GetAverageColor(int x, int y, int radius)
+        public static Color GetColorAt(int x, int y)
         {
-            int totalR = 0, totalG = 0, totalB = 0;
-            int count = 0;
+            IntPtr hdc = GetDC(IntPtr.Zero);
+            uint pixel = GetPixel(hdc, x, y);
+            ReleaseDC(IntPtr.Zero, hdc);
 
-            for (int dx = -radius; dx <= radius; dx++)
-            {
-                for (int dy = -radius; dy <= radius; dy++)
-                {
-                    Color c = GetPixelColor(x + dx, y + dy);
-                    totalR += c.R;
-                    totalG += c.G;
-                    totalB += c.B;
-                    count++;
-                }
-            }
-            return Color.FromArgb(totalR / count, totalG / count, totalB / count);
+            byte r = (byte)(pixel & 0x000000FF);
+            byte g = (byte)((pixel & 0x0000FF00) >> 8);
+            byte b = (byte)((pixel & 0x00FF0000) >> 16);
+            return Color.FromArgb(r, g, b);
         }
 
         static void SendAltS()
         {
             SendKeys.SendWait("%s");
-        }
-
-        static Color GetPixelColor(int x, int y)
-        {
-            using (var bitmap = new Bitmap(1, 1))
-            using (var g = Graphics.FromImage(bitmap))
-            {
-                g.CopyFromScreen(x, y, 0, 0, new Size(1, 1));
-                return bitmap.GetPixel(0, 0);
-            }
         }
 
         static bool ColorsAreClose(Color c1, Color c2, int tolerance)

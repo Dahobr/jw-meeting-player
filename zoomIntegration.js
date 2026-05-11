@@ -43,17 +43,28 @@ function startZoomSharing(mode, extraArgs = []) {
   const spawnArgs = [`--mode=${mode}`, ...extraArgs];
   zoomProcess = spawn(ZOOM_MANAGER_PATH, spawnArgs);
 
+  let buffer = '';
   zoomProcess.stdout.on('data', (data) => {
-    const output = data.toString().trim();
-    console.log(`[C# Output] ${output}`);
+    buffer += data.toString();
+    const lines = buffer.split(/\r?\n/);
+    buffer = lines.pop(); // Keep partial line in buffer
 
-    if (mainWindowRef && !mainWindowRef.isDestroyed()) {
-      mainWindowRef.webContents.send('zoom-proc-stdout', output);
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      if (!trimmedLine) continue;
       
-      if (output.includes('[C#] STARTED')) {
-        mainWindowRef.webContents.send('zoom-sharing-ready');
-      } else if (output.includes('[C#] COMPLETED')) {
-        mainWindowRef.webContents.send('zoom-sharing-finished');
+      console.log(`[C# Output] ${trimmedLine}`);
+
+      if (mainWindowRef && !mainWindowRef.isDestroyed()) {
+        mainWindowRef.webContents.send('zoom-proc-stdout', trimmedLine);
+        
+        if (trimmedLine.includes('[C#] STARTED')) {
+          console.log('[Zoom Integration] Signal: STARTED');
+          mainWindowRef.webContents.send('zoom-sharing-ready');
+        } else if (trimmedLine.includes('[C#] COMPLETED')) {
+          console.log('[Zoom Integration] Signal: COMPLETED');
+          mainWindowRef.webContents.send('zoom-sharing-finished');
+        }
       }
     }
   });

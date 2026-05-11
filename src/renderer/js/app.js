@@ -421,15 +421,17 @@ class App {
             if (data.includes('[C#] COORDS:')) {
                 const parts = data.split(':')[1].split(',');
                 this.zoomCoords = { x: parseInt(parts[0]), y: parseInt(parts[1]) };
-                console.log('[App] Updated Zoom Coords:', this.zoomCoords);
+                console.log('[App] >>> SAVED ZOOM COORDS:', this.zoomCoords);
             }
         });
 
         window.electronAPI.onZoomSharingReady(() => {
-            console.log('[App] Zoom sharing READY (STARTED) signal received.');
+            console.log('[App] >>> Zoom sharing READY (STARTED) signal received.');
             if (this.status === 'paused' && this.currentMedia?.mediaType?.includes('video')) {
-                console.log('[App] Auto-resuming playback from Zoom signal.');
+                console.log('[App] >>> Auto-resuming video playback.');
                 this.resumePlayback();
+            } else {
+                console.log('[App] Zoom signal ignored. Status:', this.status, 'Media:', this.currentMedia?.mediaType);
             }
         });
 
