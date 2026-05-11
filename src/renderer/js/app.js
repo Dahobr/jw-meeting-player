@@ -547,49 +547,47 @@ class App {
     playMedia(item) {
         console.log(`[App] playMedia called for: ${item.title || item.filename}`);
         this.currentMedia = item;
-        this.standbyItemId = null; // Clear standby highlight
+        this.standbyItemId = null;
         
         const fullType = this.getNormalizedType(item);
         const isVideo = fullType.includes('video');
         const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : 'off';
-        const shouldWaitZoom = (isVideo && zoomMode !== 'off');
+        
+        // --- ZOOM INTEGRATION TRIGGER ---
+        const useZoom = (zoomMode !== 'off');
 
-        console.log(`[App] Playing ${fullType}. ZoomMode: ${zoomMode}, Wait: ${shouldWaitZoom}`);
+        console.log(`[App] Playing ${fullType}. ZoomMode: ${zoomMode}, UseZoom: ${useZoom}`);
 
         // 1. Show Preview
-        // Even if waiting for Zoom, we load the media. 
-        // For videos, we'll force a pause immediately.
-        this.ui.showPreview(fullType, item.filePath, !shouldWaitZoom);
+        this.ui.showPreview(fullType, item.filePath, !useZoom || !isVideo);
 
-        if (shouldWaitZoom) {
-            // --- VIDEO WITH ZOOM WAIT ---
-            // 1. Set status to paused (UI will show NO AR and RETOMAR)
-            this.status = 'paused';
-            this.isPlaying = false;
-            
-            // 2. Load on slave in paused state
-            if (this.hasSecondaryDisplay) {
-                this.ipc.loadMedia({ 
-                    mediaPath: item.filePath, 
-                    mediaType: fullType, 
-                    autoPlay: false 
-                });
-                this.isPlayingOnSlave = false;
+        if (useZoom) {
+            if (isVideo) {
+                // Video: Start in paused state to wait for Zoom
+                this.status = 'paused';
+                this.isPlaying = false;
+                if (this.hasSecondaryDisplay) {
+                    this.ipc.loadMedia({ mediaPath: item.filePath, mediaType: fullType, autoPlay: false });
+                    this.isPlayingOnSlave = false;
+                }
+            } else {
+                // Image: Show immediately, but also trigger Zoom sharing
+                this.status = 'playing';
+                this.isPlaying = true;
+                if (this.hasSecondaryDisplay) {
+                    this.ipc.loadMedia({ mediaPath: item.filePath, mediaType: fullType, autoPlay: true });
+                    this.isPlayingOnSlave = true;
+                }
             }
-
-            // 3. Trigger Zoom Sharing
+            // Trigger Alt+S via C#
             this.triggerZoomSharing(zoomMode);
         } else {
-            // --- IMAGE OR VIDEO WITHOUT ZOOM WAIT ---
+            // Normal behavior without Zoom
             this.status = 'playing';
             this.isPlaying = true;
 
             if (this.hasSecondaryDisplay) {
-                this.ipc.loadMedia({ 
-                    mediaPath: item.filePath, 
-                    mediaType: fullType, 
-                    autoPlay: true 
-                });
+                this.ipc.loadMedia({ mediaPath: item.filePath, mediaType: fullType, autoPlay: true });
                 this.isPlayingOnSlave = true;
             }
 
@@ -606,15 +604,12 @@ class App {
 
     triggerZoomSharing(mode) {
         console.log(`[App] Triggering Zoom Sharing (${mode})`);
-        
         const args = [];
         if (this.zoomCoords) {
             args.push(`--x=${this.zoomCoords.x}`);
             args.push(`--y=${this.zoomCoords.y}`);
         }
-
-        // We use the new update-zoom-sharing-state with args
-        this.ipc.updateZoomSharingState(true, args);
+        this.ipc.setZoomSharing(true, args);
     }
 
     // goLive was absorbed into playMedia for simplicity.
@@ -676,8 +671,9 @@ class App {
             
             // 1. Stop actual playback
             this.ipc.playbackControl({ action: 'stop' });
-            this.ipc.updateZoomSharingState(false); // Trigger Zoom Sharing Stop
+            this.ipc.setZoomSharing(false); // Trigger Zoom Sharing Stop (Alt+S)
             this.status = 'stopped';
+
             this.currentMedia = null;
             this.isPlayingOnSlave = false;
             

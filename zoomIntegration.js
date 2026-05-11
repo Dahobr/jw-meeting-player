@@ -11,11 +11,11 @@ let mainWindowRef = null;
 function setupZoomIntegration(mainWin) {
   mainWindowRef = mainWin;
 
-  // Listen for explicit Zoom sharing state updates from Renderer
-  ipcMain.on('update-zoom-sharing-state', (event, shouldShare, args = []) => {
-    console.log(`[Zoom] IPC Event: shouldShare=${shouldShare}, args=${JSON.stringify(args)}`);
+  // Listen for explicit Zoom sharing state requests from Renderer
+  ipcMain.on('set-zoom-sharing', (event, active, args = []) => {
+    console.log(`[Zoom] IPC Request: active=${active}, args=${JSON.stringify(args)}`);
     
-    if (shouldShare) {
+    if (active) {
       const mode = storageManager.config ? storageManager.config.zoomMode : 'auto';
       startZoomSharing(mode, args);
     } else {
@@ -26,62 +26,52 @@ function setupZoomIntegration(mainWin) {
 
 function startZoomSharing(mode, extraArgs = []) {
   if (mode === 'off') {
-    console.log('[Zoom] Sharing mode is off. Skipping automation.');
+    console.log('[Zoom] Sharing mode is off. Skipping.');
     return;
   }
 
-  // If already running, don't start another one unless specifically requested
+  // Kill any existing process before starting
   if (zoomProcess) {
-    console.warn('[Zoom] Process already running. Stopping previous one.');
-    stopZoomSharing();
+    console.log('[Zoom] Process already running. Stopping it first.');
+    zoomProcess.kill();
+    zoomProcess = null;
   }
 
   console.log(`[Zoom] Starting C# Manager (Mode: ${mode})`);
-  
   const spawnArgs = [`--mode=${mode}`, ...extraArgs];
   zoomProcess = spawn(ZOOM_MANAGER_PATH, spawnArgs);
 
+  // ... (stdout/stderr listeners remain same) ...
   zoomProcess.stdout.on('data', (data) => {
     const output = data.toString().trim();
-    console.log(`[C# Output] ${output}`);
-
     if (mainWindowRef && !mainWindowRef.isDestroyed()) {
-      // Send raw output for logging/debugging
       mainWindowRef.webContents.send('zoom-proc-stdout', output);
-
-      // Specific triggers
       if (output.includes('[C#] STARTED')) {
-        console.log('[Zoom] Signal: STARTED detected');
         mainWindowRef.webContents.send('zoom-sharing-ready');
       } else if (output.includes('[C#] COMPLETED')) {
-        console.log('[Zoom] Signal: COMPLETED detected');
         mainWindowRef.webContents.send('zoom-sharing-finished');
-      } else if (output.includes('[C#] COORDS:')) {
-        // Coords are handled via stdout log in app.js usually, 
-        // but we can make it more explicit if needed.
       }
     }
-  });
-
-  zoomProcess.stderr.on('data', (data) => {
-    console.error(`[C# Error] ${data.toString()}`);
   });
 
   zoomProcess.on('close', (code) => {
     console.log(`[Zoom] Process exited with code ${code}`);
     zoomProcess = null;
-    if (mainWindowRef && !mainWindowRef.isDestroyed()) {
-      mainWindowRef.webContents.send('zoom-sharing-finished');
-    }
   });
 }
 
 function stopZoomSharing() {
+  // 1. Kill the monitoring process if it exists
   if (zoomProcess) {
-    console.log('[Zoom] Killing C# Process...');
+    console.log('[Zoom] Killing monitoring process...');
     zoomProcess.kill();
     zoomProcess = null;
   }
+
+  // 2. IMPORTANT: Send Alt+S to Zoom to STOP sharing
+  // We do this by launching the C# manager in 'semi' mode which just sends Alt+S and exits.
+  console.log('[Zoom] Sending Alt+S to stop sharing...');
+  spawn(ZOOM_MANAGER_PATH, ['--mode=semi']);
 }
 
 module.exports = { setupZoomIntegration };

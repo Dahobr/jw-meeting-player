@@ -43,8 +43,8 @@ class IPCClient {
         window.electronAPI.mediaPlaybackStateChange(isPlaying);
     }
 
-    updateZoomSharingState(isSharing, args = []) {
-        window.electronAPI.updateZoomSharingState(isSharing, args);
+    setZoomSharing(active, args = []) {
+        window.electronAPI.setZoomSharing(active, args);
     }
 
     onLoadMedia(callback) {
