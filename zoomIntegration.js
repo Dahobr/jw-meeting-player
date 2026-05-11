@@ -59,7 +59,7 @@ function startZoomSharing(mode, extraArgs = []) {
         } else if (trimmedLine.includes('[C#] COMPLETED')) {
           console.log('[Zoom] Signal: COMPLETED');
           mainWindowRef.webContents.send('zoom-sharing-finished');
-          isSharing = false;
+          // isSharing = false;
         }
       }
     }
@@ -68,7 +68,7 @@ function startZoomSharing(mode, extraArgs = []) {
   zoomProcess.on('close', (code) => {
     console.log(`[Zoom] Process exited with code ${code}`);
     zoomProcess = null;
-    isSharing = false;
+    // isSharing = false;
   });
 }
 
