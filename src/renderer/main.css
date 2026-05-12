@@ -161,7 +161,7 @@ hr {
   --secondary-color: #2c3e50;
   --success-color: #27ae60;
   --danger-color: #e74c3c;
-  --bg-color: #f4f7f6;
+  --bg-color: transparent; /* Changed to see SiteView */
   --sidebar-color: #ecf0f1;
   --header-footer-color: #34495e;
   --text-color: #333;
@@ -190,6 +190,19 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
+  background-color: transparent; /* Ensure container is transparent */
+  pointer-events: none; /* Let clicks pass through to SiteView by default */
+}
+
+/* Re-enable pointer events for interactive UI elements */
+.app-header, 
+.playlist-manager, 
+.app-footer, 
+.modal-overlay, 
+.preview-overlay, 
+.help-overlay,
+.header-menu-dropdown {
+    pointer-events: auto;
 }
 
 /* Header Styles */
