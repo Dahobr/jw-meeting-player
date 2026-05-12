@@ -51,7 +51,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // --- File System Dialogs ---
   openDownloadFolder: () => ipcRenderer.invoke('open-download-folder'),
   openYearVerseFolder: () => ipcRenderer.invoke('open-year-verse-folder'),
-  openZoomAssetsFolder: () => ipcRenderer.invoke('open-zoom-assets-folder'),
   openFileDialog: () => ipcRenderer.invoke('open-file-dialog'),
   getYearVerseImage: () => ipcRenderer.invoke('get-year-verse-image'),
   selectYearVerseImage: () => ipcRenderer.invoke('select-year-verse-image'),

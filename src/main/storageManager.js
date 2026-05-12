@@ -15,7 +15,6 @@ class StorageManager {
         
         this.downloadsDir = path.join(this.appBaseDir, 'downloads');
         this.yearVerseDir = path.join(this.appBaseDir, 'Texto do Ano');
-        this.zoomAssetsDir = path.join(this.appBaseDir, 'zoom-assets');
         
         this.ensureDirectories();
         
@@ -41,7 +40,7 @@ class StorageManager {
     }
 
     ensureDirectories() {
-        const dirs = [this.appBaseDir, this.downloadsDir, this.yearVerseDir, this.zoomAssetsDir];
+        const dirs = [this.appBaseDir, this.downloadsDir, this.yearVerseDir];
         dirs.forEach(dir => {
             if (!fs.existsSync(dir)) {
                 fs.mkdirSync(dir, { recursive: true });
@@ -61,7 +60,7 @@ class StorageManager {
         // Safety: Remove all handlers and listeners first
         const handlers = [
             'load-playlists', 'delete-file', 'open-download-folder', 
-            'open-year-verse-folder', 'open-zoom-assets-folder', 'select-year-verse-image', 
+            'open-year-verse-folder', 'select-year-verse-image', 
             'load-year-verse-image-path', 'get-year-verse-image'
         ];
         handlers.forEach(h => ipcMain.removeHandler(h));
@@ -88,12 +87,6 @@ class StorageManager {
         ipcMain.handle('open-year-verse-folder', () => {
             console.log(`[StorageManager] Opening Year Verse folder: ${this.yearVerseDir}`);
             shell.openPath(this.yearVerseDir);
-            return true;
-        });
-
-        ipcMain.handle('open-zoom-assets-folder', () => {
-            console.log(`[StorageManager] Opening Zoom assets folder: ${this.zoomAssetsDir}`);
-            shell.openPath(this.zoomAssetsDir);
             return true;
         });
 
