@@ -110,10 +110,6 @@ class IPCClient {
         return await window.electronAPI.openYearVerseFolder();
     }
 
-    async openZoomAssetsFolder() {
-        return await window.electronAPI.openZoomAssetsFolder();
-    }
-
     async openFileDialog() {
         return await window.electronAPI.openFileDialog();
     }
