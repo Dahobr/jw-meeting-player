@@ -746,8 +746,8 @@ class App {
 
         // --- Control visibility and appearance of preview controls ---
         if (this.ui.previewControlsOverlay) {
-            // 画像を表示中、または停止中の場合はオーバーレイでコントロールを隠す
-            // isVideoがfalseなら画像
+            // Hide controls with overlay if displaying an image
+            // if isVideo is false, it's an image
             const shouldHideControls = !isVideo;
             this.ui.previewControlsOverlay.style.display = shouldHideControls ? 'block' : 'none';
         }
