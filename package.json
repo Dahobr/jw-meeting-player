@@ -21,6 +21,10 @@
         "filter": [
           "**/*"
         ]
+      },
+      {
+        "from": "scripts/ZoomControlManager/ZoomControlManager.exe",
+        "to": "bin/ZoomControlManager.exe"
       }
     ]
   },

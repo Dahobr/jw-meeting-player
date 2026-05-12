@@ -1,9 +1,12 @@
-const { ipcMain } = require('electron');
+const { ipcMain, app } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const storageManager = require('./src/main/storageManager');
 
-const ZOOM_MANAGER_PATH = path.join(__dirname, 'scripts', 'ZoomControlManager', 'ZoomControlManager.exe');
+const isPackaged = app.isPackaged;
+const ZOOM_MANAGER_PATH = isPackaged
+  ? path.join(process.resourcesPath, 'bin', 'ZoomControlManager.exe')
+  : path.join(__dirname, 'scripts', 'ZoomControlManager', 'ZoomControlManager.exe');
 
 let zoomProcess = null;
 let mainWindowRef = null;
