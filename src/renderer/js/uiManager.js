@@ -57,7 +57,6 @@ class UIManager {
 
         this.btnMenu = document.getElementById('btn-menu');
         this.headerMenu = document.getElementById('header-menu');
-        this.btnMenuZoom = document.getElementById('btn-menu-zoom');
         this.btnMenuYear = document.getElementById('btn-menu-year');
         this.btnMenuDownloads = document.getElementById('btn-menu-downloads');
         this.btnMenuHelp = document.getElementById('btn-menu-help');
