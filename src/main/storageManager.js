@@ -55,6 +55,8 @@ class StorageManager {
             return;
         }
 
+        this.importYearVerseImage();
+
         console.log('[StorageManager] Initializing IPC Handlers...');
         
         // Safety: Remove all handlers and listeners first
@@ -130,6 +132,22 @@ class StorageManager {
         
         this.initialized = true;
         console.log('[StorageManager] All IPC Handlers registered successfully.');
+    }
+
+    importYearVerseImage() {
+        const assetsDir = path.join(app.getAppPath(), 'assets');
+        const fileName = 'texto do ano 2026.png';
+        const sourcePath = path.join(assetsDir, fileName);
+        const destPath = path.join(this.yearVerseDir, fileName);
+
+        if (fs.existsSync(sourcePath) && !fs.existsSync(destPath)) {
+            try {
+                fs.copyFileSync(sourcePath, destPath);
+                console.log(`[StorageManager] Auto-imported year verse image to: ${destPath}`);
+            } catch (err) {
+                console.error(`[StorageManager] Failed to auto-import image: ${err.message}`);
+            }
+        }
     }
 
     loadConfig() {
