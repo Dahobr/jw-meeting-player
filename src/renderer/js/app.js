@@ -230,7 +230,6 @@ class App {
         this.ui.btnReunioes.onclick = () => handleNav('reunioes');
         this.ui.btnVideos.onclick = () => handleNav('videos');
         
-        this.ui.btnMenuZoom.onclick = () => this.ipc.openZoomAssetsFolder();
         this.ui.btnMenuYear.onclick = () => window.electronAPI.openYearVerseFolder();
         this.ui.btnMenuDownloads.onclick = () => this.ipc.openDownloadFolder();
         this.ui.btnMenuHelp.onclick = async () => {
