@@ -119,33 +119,25 @@ function createMainWindow() {
         y: 0,
         width: Math.floor(width / 2),
         height: height,
-        show: false, // Don't show until layers are ready
-    });
-
-    // Create Main UI View (Top Layer)
-    mainView = new WebContentsView({
         webPreferences: {
             partition: 'persist:jw_session',
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
             enableRemoteModule: false,
-        }
+        },
     });
-    mainView.setBackgroundColor('#00000000'); // Transparent
-    mainView.webContents.loadFile('src/renderer/index.html');
-    
-    // Create Site View (Bottom Layer)
-    setupSiteView();
 
-    // Order matters: Bottom to Top
-    mainWindow.contentView.addChildView(siteView);
-    mainWindow.contentView.addChildView(mainView);
-
+    mainWindow.loadFile('src/renderer/index.html');
     mainWindow.setMenuBarVisibility(false);
 
-    // Update references for managers using mainView's webContents
+    // Setup Site View (WebContentsView) - Embedded
+    setupSiteView();
+    getOrInitSiteView(); 
+    mainWindow.contentView.addChildView(siteView);
+
+    // Update references for managers
     displayManager.setMainWindow(mainWindow);
-    downloadManager.init(mainView.webContents); // Use mainView instead of mainWindow
+    downloadManager.init(mainWindow);
     
     // Zoom Integration
     setupZoomIntegration(mainWindow, () => displayManager.getPlaybackWindow());
@@ -153,21 +145,9 @@ function createMainWindow() {
     // Context Menu for Playlist Items
     setupContextMenu();
 
-    mainWindow.on('resize', () => {
-        const bounds = mainWindow.getContentBounds();
-        mainView.setBounds({ x: 0, y: 0, width: bounds.width, height: bounds.height });
-    });
-
-    mainWindow.once('ready-to-show', () => {
-        const bounds = mainWindow.getContentBounds();
-        mainView.setBounds({ x: 0, y: 0, width: bounds.width, height: bounds.height });
-        mainWindow.show();
-    });
-
     mainWindow.on('closed', () => {
         mainWindow = null;
         siteView = null;
-        mainView = null;
         // Close playback window if it exists
         const pbWin = displayManager.getPlaybackWindow();
         if (pbWin) {
@@ -295,6 +275,9 @@ function setupSiteView() {
         
         console.log(`[Main] toggle-webview: ${visible}`);
         view.setVisible(visible);
+        if (visible) {
+            view.webContents.focus();
+        }
     });
 }
 

@@ -190,19 +190,12 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: transparent; /* Ensure container is transparent */
-  pointer-events: none; /* Let clicks pass through to SiteView by default */
+  background-color: transparent;
+  pointer-events: none;
 }
 
-/* Re-enable pointer events for interactive UI elements */
-.app-header, 
-.playlist-manager, 
-.app-footer, 
-.modal-overlay, 
-.preview-overlay, 
-.help-overlay,
-.header-menu-dropdown {
-    pointer-events: auto;
+.app-container * {
+  pointer-events: auto;
 }
 
 /* Header Styles */
@@ -731,7 +724,7 @@ body {
 /* WebView Container & Preview Overlay */
 .webview-container {
   flex: 1;
-  background-color: #000;
+  background-color: transparent; /* Changed from #000 to see SiteView */
   z-index: var(--z-webview);
   position: relative;
 }
@@ -742,8 +735,8 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: #000;
-    z-index: 100; /* Higher than everything else in index.html */
+    background-color: #000; /* Keep black when active to focus on media */
+    z-index: 100; 
     display: flex;
     flex-direction: column;
 }
