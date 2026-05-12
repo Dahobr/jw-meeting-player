@@ -142,7 +142,7 @@ class UIManager {
     }
 
     /**
-     * Show preview area and hide BrowserView
+     * Show preview area and hide SiteView
      */
     showPreview(type, filePath, autoPlay = true) {
         console.log(`[UI] showPreview: ${type} -> ${filePath} (AutoPlay: ${autoPlay})`);
@@ -192,7 +192,7 @@ class UIManager {
     }
 
     /**
-     * Hide preview area and re-show BrowserView
+     * Hide preview area and re-show SiteView
      */
     hidePreview() {
         console.log('[UI] hidePreview called');

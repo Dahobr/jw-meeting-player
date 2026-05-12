@@ -10,20 +10,18 @@ class DownloadManager {
         this.mainWindow = null;
         this.activeDownloads = new Set();
         this.timeoutMap = new Map();
-        this.DOWNLOAD_TIMEOUT_MS = 60000; // 60 seconds
-        this.lastReceivedBytes = new Map(); // 新しく追加
+        this.DOWNLOAD_TIMEOUT_MS = 60000;
+        this.lastReceivedBytes = new Map();
     }
 
     init(mainWindow) {
         this.mainWindow = mainWindow;
         this.downloadDir = storageManager.getDownloadsDir();
 
-        // Ensure directories exist
         if (!fs.existsSync(this.downloadDir)) {
             fs.mkdirSync(this.downloadDir, { recursive: true });
         }
 
-        // Clear existing to avoid duplicates
         ipcMain.removeHandler('open-file-dialog');
         ipcMain.handle('open-file-dialog', () => this.handleOpenFile());
         
@@ -35,8 +33,13 @@ class DownloadManager {
         }
     }
 
+    setupWillDownload(session) {
+        session.removeAllListeners('will-download');
+        session.on('will-download', (event, item, webContents) => this.handleDownload(event, item, webContents));
+    }
+
     async saveBrowserImage(base64Data, originalUrl) {
-        const ext = '.jpg'; // Simplification, could be derived from base64 header
+        const ext = '.jpg';
         const filename = `img_${Date.now()}${ext}`;
         const filePath = path.join(this.downloadDir, filename);
 
@@ -58,25 +61,19 @@ class DownloadManager {
         });
     }
 
-    setupWillDownload(session) {
-        // Clear existing listeners to prevent leaks/duplicates
-        session.removeAllListeners('will-download');
-        session.on('will-download', (event, item) => this.handleDownload(event, item));
-    }
-
     startTimeout(downloadId, item, filename) {
-        this.clearTimeout(downloadId); // Clear any existing timeout
+        this.clearTimeout(downloadId);
         this.timeoutMap.set(downloadId, setTimeout(() => {
             console.warn(`[DownloadManager] Download timed out for ${filename} (ID: ${downloadId})`);
-            item.cancel(); // Cancel the Electron DownloadItem
+            item.cancel();
             this.mainWindow.webContents.send('download-error', { 
                 id: downloadId, 
                 message: 'Download timed out', 
                 filename: filename 
             });
-            this.activeDownloads.delete(downloadId); // Clean up active downloads
-            this.clearTimeout(downloadId); // Clear timeout after handling
-            this.lastReceivedBytes.delete(downloadId); // タイムアウト時にも削除
+            this.activeDownloads.delete(downloadId);
+            this.clearTimeout(downloadId);
+            this.lastReceivedBytes.delete(downloadId);
         }, this.DOWNLOAD_TIMEOUT_MS));
     }
 
@@ -84,11 +81,11 @@ class DownloadManager {
         if (this.timeoutMap.has(downloadId)) {
             clearTimeout(this.timeoutMap.get(downloadId));
             this.timeoutMap.delete(downloadId);
-            this.lastReceivedBytes.delete(downloadId); // クリア時にも削除
+            this.lastReceivedBytes.delete(downloadId);
         }
     }
 
-    async handleDownload(event, item) {
+    async handleDownload(event, item, webContents) {
         const filename = item.getFilename();
         const url = item.getURL();
         const downloadId = `${url}-${filename}`;
@@ -117,7 +114,7 @@ class DownloadManager {
         if (allowedFileTypes.includes(path.extname(finalFilename).toLowerCase())) {
             this.mainWindow.webContents.send('download-started', { filename: finalFilename, id: downloadId });
             item.setSavePath(finalFilePath);
-            this.startTimeout(downloadId, item, finalFilename); // Start timeout here
+            this.startTimeout(downloadId, item, finalFilename);
             
             item.on('updated', (event, state) => {
                 if (state === 'progressing') {
@@ -127,17 +124,17 @@ class DownloadManager {
                     this.mainWindow.webContents.send('download-progress', { id: downloadId, progress, filename });
                     
                     const previousReceived = this.lastReceivedBytes.get(downloadId) || 0;
-                    if (received > previousReceived) { // 前回のバイト数より増加している場合のみリセット
+                    if (received > previousReceived) {
                         this.startTimeout(downloadId, item, finalFilename);
-                        this.lastReceivedBytes.set(downloadId, received); // lastReceivedBytesの更新
+                        this.lastReceivedBytes.set(downloadId, received);
                     }
                 }
             });
 
             item.on('done', async (event, state) => {
                 this.activeDownloads.delete(downloadId);
-                this.clearTimeout(downloadId); // Clear timeout on done
-                this.lastReceivedBytes.delete(downloadId); // done時にも削除
+                this.clearTimeout(downloadId);
+                this.lastReceivedBytes.delete(downloadId);
                 if (state === 'completed') {
                     console.log(`[DownloadManager] Download complete: ${finalFilePath}`);
                     const result = await this.extractMediaInfo(finalFilePath);
@@ -241,7 +238,7 @@ class DownloadManager {
                                 filename: finalFileName,
                                 filePath: finalFilePath,
                                 type: entryExt,
-                                mediaType: 'image', // ここを追加
+                                mediaType: 'image',
                                 thumbnailData,
                                 title: title || path.basename(finalFileName, entryExt)
                             });
