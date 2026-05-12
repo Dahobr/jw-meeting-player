@@ -3,7 +3,7 @@
  * Main Process Entry Point - Modular and Clean.
  */
 
-const { app, BrowserWindow, ipcMain, Menu, MenuItem, BrowserView, protocol, net, session } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, MenuItem, WebContentsView, protocol, net, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
@@ -101,7 +101,7 @@ const downloadManager = require('./src/main/downloadManager');
 const { setupZoomIntegration } = require('./zoomIntegration');
 
 let mainWindow;
-let browserView;
+let siteView;
 
 function initializeGlobalManagers() {
     storageManager.init();
@@ -136,15 +136,15 @@ function createMainWindow() {
     // Zoom Integration
     setupZoomIntegration(mainWindow, () => displayManager.getPlaybackWindow());
 
-    // Setup BrowserView
-    setupBrowserView();
+    // Setup Site View (WebContentsView)
+    setupSiteView();
 
     // Context Menu for Playlist Items
     setupContextMenu();
 
     mainWindow.on('closed', () => {
         mainWindow = null;
-        browserView = null;
+        siteView = null;
         // Close playback window if it exists
         const pbWin = displayManager.getPlaybackWindow();
         if (pbWin) {
@@ -155,11 +155,11 @@ function createMainWindow() {
     return mainWindow;
 }
 
-function getOrInitBrowserView() {
-    if (browserView) return browserView;
+function getOrInitSiteView() {
+    if (siteView) return siteView;
     if (!mainWindow) return null;
 
-    browserView = new BrowserView({
+    siteView = new WebContentsView({
         webPreferences: {
             partition: 'persist:jw_session',
             contextIsolation: true,
@@ -167,28 +167,28 @@ function getOrInitBrowserView() {
         }
     });
 
-    browserView.webContents.session.on('will-download', (event, item, webContents) => {
+    siteView.webContents.session.on('will-download', (event, item, webContents) => {
         downloadManager.handleDownload(event, item, webContents);
     });
 
-    browserView.webContents.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36");
+    siteView.webContents.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36");
 
-    browserView.webContents.setWindowOpenHandler(({ url }) => {
-        browserView.webContents.loadURL(url);
+    siteView.webContents.setWindowOpenHandler(({ url }) => {
+        siteView.webContents.loadURL(url);
         return { action: 'deny' };
     });
 
-    // BrowserView Context Menu
-    browserView.webContents.on('context-menu', (event, params) => {
+    // SiteView Context Menu
+    siteView.webContents.on('context-menu', (event, params) => {
         const menu = new Menu();
         if (params.mediaType === 'image') {
             menu.append(new MenuItem({
                 label: 'Adicionar imagem à playlist',
                 click: async () => {
                     try {
-                        console.log(`[Main] Context Menu: Extracting image from BrowserView context: ${params.srcURL}`);
-                        // Execute script inside BrowserView to get base64 data
-                        const base64Data = await browserView.webContents.executeJavaScript(`
+                        console.log(`[Main] Context Menu: Extracting image from SiteView context: ${params.srcURL}`);
+                        // Execute script inside SiteView to get base64 data
+                        const base64Data = await siteView.webContents.executeJavaScript(`
                             (async () => {
                                 const response = await fetch("${params.srcURL}");
                                 const blob = await response.blob();
@@ -203,7 +203,7 @@ function getOrInitBrowserView() {
                         console.log(`[Main] Image data extracted successfully. Length: ${base64Data.length}`);
                         downloadManager.saveBrowserImage(base64Data, params.srcURL);
                     } catch (err) {
-                        console.error('[Main] Failed to extract image from BrowserView:', err);
+                        console.error('[Main] Failed to extract image from SiteView:', err);
                     }
                 }
             }));
@@ -211,34 +211,38 @@ function getOrInitBrowserView() {
         } else if (params.mediaType === 'video') {
             menu.append(new MenuItem({
                 label: 'Adicionar vídeo à playlist',
-                click: () => browserView.webContents.downloadURL(params.srcURL)
+                click: () => siteView.webContents.downloadURL(params.srcURL)
             }));
             menu.append(new MenuItem({ type: 'separator' }));
         }
         menu.append(new MenuItem({ 
             label: 'Voltar', 
-            enabled: browserView.webContents.navigationHistory.canGoBack(), 
-            click: () => browserView.webContents.navigationHistory.goBack() 
+            enabled: siteView.webContents.navigationHistory.canGoBack(), 
+            click: () => siteView.webContents.navigationHistory.goBack() 
         }));
         menu.append(new MenuItem({ 
             label: 'Avançar', 
-            enabled: browserView.webContents.navigationHistory.canGoForward(), 
-            click: () => browserView.webContents.navigationHistory.goForward() 
+            enabled: siteView.webContents.navigationHistory.canGoForward(), 
+            click: () => siteView.webContents.navigationHistory.goForward() 
         }));
-        menu.append(new MenuItem({ label: 'Recarregar', click: () => browserView.webContents.reload() }));
+        menu.append(new MenuItem({ label: 'Recarregar', click: () => siteView.webContents.reload() }));
         menu.popup();
     });
 
-    return browserView;
+    // Initially hidden
+    siteView.setVisible(false);
+    mainWindow.contentView.addChildView(siteView);
+
+    return siteView;
 }
 
-function setupBrowserView() {
+function setupSiteView() {
     ipcMain.on('navigate-site', (event, key) => {
-        const view = getOrInitBrowserView();
+        const view = getOrInitSiteView();
         if (!view) return;
-        if (mainWindow.getBrowserView() !== view) {
-            mainWindow.setBrowserView(view);
-        }
+        
+        view.setVisible(true);
+        
         const navUrls = {
             cantico: 'https://www.jw.org/pt/biblioteca/videos/#pt/categories/VODSJJMeetings',
             reunioes: 'https://wol.jw.org/pt/wol/meetings/r5/lp-t/',
@@ -246,15 +250,14 @@ function setupBrowserView() {
         };
         const url = navUrls[key];
         if (url) {
-            console.log(`[Main] Navigating BrowserView to: ${url}`);
+            console.log(`[Main] Navigating SiteView to: ${url}`);
             view.webContents.loadURL(url);
         }
     });
 
     ipcMain.on('update-view-bounds', (event, bounds) => {
-        const view = browserView; 
-        if (view && mainWindow && mainWindow.getBrowserView() === view) {
-            view.setBounds({
+        if (siteView && mainWindow) {
+            siteView.setBounds({
                 x: bounds.x,
                 y: bounds.y + 1,
                 width: bounds.width,
@@ -264,15 +267,11 @@ function setupBrowserView() {
     });
 
     ipcMain.on('toggle-webview', (event, visible) => {
-        const view = getOrInitBrowserView();
+        const view = getOrInitSiteView();
         if (!view || !mainWindow) return;
         
         console.log(`[Main] toggle-webview: ${visible}`);
-        if (visible) {
-            mainWindow.setBrowserView(view);
-        } else {
-            mainWindow.setBrowserView(null);
-        }
+        view.setVisible(visible);
     });
 }
 
