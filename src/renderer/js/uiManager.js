@@ -11,7 +11,6 @@ class UIManager {
         this.btnVideos = document.getElementById('btn-videos');
         this.btnOpenFolder = document.getElementById('btn-open-folder');
         this.btnOpenYearVerseFolder = document.getElementById('btn-open-year-verse-folder');
-        this.btnOpenZoomAssetsFolder = document.getElementById('btn-open-zoom-assets-folder');
         this.btnCreatePlaylist = document.getElementById('btn-create-playlist');
         this.btnBackToPlaylists = document.getElementById('btn-back-to-playlists');
         this.btnImportFile = document.getElementById('btn-import-file');
