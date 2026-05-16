@@ -99,6 +99,7 @@ class App {
             if (this.ui.zoomModeSelect) {
                 this.ui.zoomModeSelect.value = config.zoomMode || 'auto';
             }
+            this.updatePlaybackUI();
         } catch (e) {
             console.error('[App] Failed to load config:', e);
         }
@@ -241,6 +242,12 @@ class App {
             }
         };
 
+        this.ui.btnMenuGuide.onclick = () => {
+            const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : 'auto';
+            this.ui.showOperationGuide(zoomMode);
+            this.ui.headerMenu.classList.remove('show');
+        };
+
         this.ui.btnImportFile.onclick = () => this.handleImport();
 
         this.ui.btnCreatePlaylist.onclick = () => this.handleCreatePlaylist();
@@ -317,6 +324,7 @@ class App {
             this.ui.zoomModeSelect.onchange = (e) => {
                 this.ipc.updateConfig({ zoomMode: e.target.value });
                 console.log(`[App] Zoom mode updated to: ${e.target.value}`);
+                this.updatePlaybackUI();
             };
         }
 
@@ -725,6 +733,15 @@ class App {
         const isPaused = this.status === 'paused';
         const isStopped = this.status === 'stopped';
         const isVideo = this.currentMedia?.mediaType?.includes('video');
+
+        const hasMedia = !!this.currentMedia;
+        const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : 'auto';
+
+        if (isStopped && !hasMedia) {
+            this.ui.showOperationGuide(zoomMode);
+        } else if (hasMedia) {
+            this.ui.hideOperationGuide();
+        }
 
         // --- Update Status Text ---
         let statusText = 'Parado: Nenhum item';

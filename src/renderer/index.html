@@ -24,7 +24,8 @@
                 <div class="menu-container">
                     <button id="btn-menu" class="menu-btn">☰</button>
                     <div id="header-menu" class="header-menu-dropdown">
-                        <button id="btn-menu-help" class="menu-item"><span class="help-btn">?</span> Ajuda</button>
+                        <button id="btn-menu-guide" class="menu-item"><span class="menu-icon">❓</span> Guia de Operação</button>
+                        <button id="btn-menu-help" class="menu-item"><span class="menu-icon">📖</span> Ajuda</button>
                         <hr>
                         <button id="btn-menu-downloads" class="menu-item"><span class="menu-icon">📁</span> Downloads</button>
                         <button id="btn-menu-year" class="menu-item"><span class="menu-icon">🗓️</span> Texto do Ano</button>
@@ -82,6 +83,9 @@
                 </div>
                 <div id="preview-area" class="preview-overlay" style="display: none;">
                     <div id="preview-state-label" class="state-label"></div>
+                    <!-- Novo: Container do Guia -->
+                    <div id="operation-guide" class="operation-guide-container" style="display: none;"></div>
+                    
                     <div class="preview-media-wrapper">
                         <video id="preview-video" muted></video>
                         <img id="preview-image" style="display: none;">
