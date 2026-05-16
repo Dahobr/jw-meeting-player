@@ -739,6 +739,7 @@ body {
     z-index: 100; 
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 /* --- Help Overlay --- */
@@ -1027,7 +1028,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     width: 100%;
     height: 100%;
     background: #ffffff;
@@ -1049,6 +1050,7 @@ body {
     padding-bottom: 10px;
     margin-bottom: 20px;
     position: relative;
+    padding-top: 25px;
 }
 
 .guide-header h2 {
