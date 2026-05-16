@@ -317,6 +317,7 @@ class App {
             this.ui.zoomModeSelect.onchange = (e) => {
                 this.ipc.updateConfig({ zoomMode: e.target.value });
                 console.log(`[App] Zoom mode updated to: ${e.target.value}`);
+                this.updatePlaybackUI();
             };
         }
 
@@ -725,6 +726,15 @@ class App {
         const isPaused = this.status === 'paused';
         const isStopped = this.status === 'stopped';
         const isVideo = this.currentMedia?.mediaType?.includes('video');
+
+        const hasMedia = !!this.currentMedia;
+        const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : 'auto';
+
+        if (isStopped && !hasMedia) {
+            this.ui.showOperationGuide(zoomMode);
+        } else if (hasMedia) {
+            this.ui.hideOperationGuide();
+        }
 
         // --- Update Status Text ---
         let statusText = 'Parado: Nenhum item';
