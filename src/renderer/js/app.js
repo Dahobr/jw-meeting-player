@@ -99,6 +99,7 @@ class App {
             if (this.ui.zoomModeSelect) {
                 this.ui.zoomModeSelect.value = config.zoomMode || 'auto';
             }
+            this.updatePlaybackUI();
         } catch (e) {
             console.error('[App] Failed to load config:', e);
         }
@@ -239,6 +240,12 @@ class App {
             } catch (err) {
                 console.error('[App] Failed to load help content:', err);
             }
+        };
+
+        this.ui.btnMenuGuide.onclick = () => {
+            const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : 'auto';
+            this.ui.showOperationGuide(zoomMode);
+            this.ui.headerMenu.classList.remove('show');
         };
 
         this.ui.btnImportFile.onclick = () => this.handleImport();
