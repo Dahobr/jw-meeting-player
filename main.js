@@ -249,7 +249,8 @@ function setupSiteView() {
         const navUrls = {
             cantico: 'https://www.jw.org/pt/biblioteca/videos/#pt/categories/VODSJJMeetings',
             reunioes: 'https://wol.jw.org/pt/wol/meetings/r5/lp-t/',
-            videos: 'https://www.jw.org/pt/biblioteca/videos/#pt/home'
+            videos: 'https://www.jw.org/pt/biblioteca/videos/#pt/home',
+            esbocos: 'https://docs.jw.org/pt/-/pub-s-34mp'
         };
         const url = navUrls[key];
         if (url) {

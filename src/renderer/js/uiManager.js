@@ -9,6 +9,7 @@ class UIManager {
         this.btnCantico = document.getElementById('btn-cantico');
         this.btnReunioes = document.getElementById('btn-reunioes');
         this.btnVideos = document.getElementById('btn-videos');
+        this.btnEsbocos = document.getElementById('btn-esbocos');
         this.btnOpenFolder = document.getElementById('btn-open-folder');
         this.btnOpenYearVerseFolder = document.getElementById('btn-open-year-verse-folder');
         this.btnCreatePlaylist = document.getElementById('btn-create-playlist');
