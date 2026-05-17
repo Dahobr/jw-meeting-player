@@ -983,6 +983,10 @@ body {
     line-height: 1.2;
 }
 
+#current-item-status.status-preparado { color: #f39c12; } /* Original Orange */
+#current-item-status.status-reproduzindo { color: #d63031; } /* Deep Red */
+#current-item-status.status-pausado { color: #3498db; } /* Brighter Sky Blue */
+
 #current-item-filename {
     display: block;
     white-space: nowrap;

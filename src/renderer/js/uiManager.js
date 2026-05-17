@@ -657,27 +657,29 @@ class UIManager {
     }
 
     updateCurrentItemInfo(text) {
-        // text is expected as "Status: Filename"
+        // text is expected as "Label: Value" (e.g., "Reproduzindo: Video.mp4" or "O segundo monitor: Conectado")
         const parts = text.split(': ');
-        const status = parts[0];
-        const filename = parts.slice(1).join(': ');
+        const label = parts[0];
+        const value = parts.slice(1).join(': ');
         
+        let colorClass = '';
+        if (label === 'Preparado') colorClass = 'status-preparado';
+        else if (label === 'Reproduzindo') colorClass = 'status-reproduzindo';
+        else if (label === 'Pausado') colorClass = 'status-pausado';
+
         this.currentItemInfo.innerHTML = `
-            <span id="current-item-status">${status}</span>
-            <span id="current-item-filename">${filename}</span>
+            <span id="current-item-status" class="${colorClass}">${label}: </span>
+            <span id="current-item-filename">${value}</span>
         `;
-        this.currentItemInfo.classList.remove('status-warning');
     }
 
     updateDisplayStatus(status) {
+        // This is now primarily managed by app.js updatePlaybackUI for the text,
+        // but we'll keep this as a helper for specific warning styles.
         if (status === 'waiting') {
-            this.currentItemInfo.textContent = '⚠️ Segundo monitor não detectado';
             this.currentItemInfo.classList.add('status-warning');
         } else {
-            if (this.currentItemInfo.classList.contains('status-warning')) {
-                this.currentItemInfo.textContent = 'Monitor conectado. Pronto para reproduzir.';
-                this.currentItemInfo.classList.remove('status-warning');
-            }
+            this.currentItemInfo.classList.remove('status-warning');
         }
     }
 
