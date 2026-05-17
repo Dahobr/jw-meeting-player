@@ -83,9 +83,16 @@ class UIManager {
         if (viewName === 'playlists') {
             this.viewPlaylists.style.display = 'block';
             this.viewItems.style.display = 'none';
+            // Auto-hide preview and show SiteView when in playlist list
+            this.hidePreview();
         } else {
             this.viewPlaylists.style.display = 'none';
             this.viewItems.style.display = 'block';
+            // Show preview area and hide SiteView when entering a playlist
+            this.previewArea.style.display = 'flex';
+            if (window.electronAPI && window.electronAPI.toggleWebView) {
+                window.electronAPI.toggleWebView(false);
+            }
         }
     }
 
