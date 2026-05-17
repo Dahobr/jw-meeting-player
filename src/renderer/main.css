@@ -894,25 +894,20 @@ body {
   height: 100%;
 }
 
-.volume-control {
-  flex: 1;
+.misc-controls {
+  flex: 0 0 40%; /* Updated to 40% width */
+  text-align: left; /* Changed to left */
+  font-size: 0.85em;
+  color: #bbb;
   display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.volume-icon {
-    display: flex;
-    align-items: center;
-    color: #bdc3c7;
-}
-
-.volume-control input {
-  width: 120px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start; /* Changed to start */
+  overflow: hidden;
 }
 
 .transport-buttons {
-  flex: 2;
+  flex: 1; /* Takes remaining space (approx 60%) */
   display: flex;
   justify-content: center;
   gap: 20px;
@@ -946,19 +941,6 @@ body {
 .main-transport-btn svg {
   width: 24px;
   height: 24px;
-}
-
-.misc-controls {
-  flex: 0 0 25%; /* Fixed 25% width */
-  text-align: right;
-  font-size: 0.85em;
-  color: #bbb;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-end;
-  overflow: hidden;
-  padding-right: 10px;
 }
 
 #current-item-info {
