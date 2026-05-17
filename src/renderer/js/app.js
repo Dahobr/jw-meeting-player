@@ -265,6 +265,8 @@ class App {
             } else {
                 this.ui.switchView('playlists');
             }
+            // Explicitly ensure preview is hidden and siteView is shown
+            this.ui.hidePreview();
         };
 
         this.ui.onPlaylistSelect = (id) => {
