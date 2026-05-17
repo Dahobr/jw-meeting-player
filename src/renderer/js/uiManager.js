@@ -314,7 +314,7 @@ class UIManager {
                     <div class="guide-step zoom-step">
                         <div class="guide-step-num">4</div>
                         <div class="guide-step-content">
-                            <span class="guide-zoom-tag">${isAuto ? 'Na janela do Zoom (Apenas na 1ª vez)' : 'Na janela do Zoom (Sempre)'}</span>
+                            <span class="guide-zoom-tag">Na janela do Zoom (Apenas na 1ª vez)</span>
                             <div class="guide-step-title">Marcar "Otimizar"</div>
                             <div class="guide-step-desc">Marque <b>"Otimizar para clipe de vídeo"</b> no Zoom.</div>
                         </div>
