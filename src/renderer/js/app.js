@@ -230,6 +230,7 @@ class App {
         this.ui.btnCantico.onclick = () => handleNav('cantico');
         this.ui.btnReunioes.onclick = () => handleNav('reunioes');
         this.ui.btnVideos.onclick = () => handleNav('videos');
+        this.ui.btnEsbocos.onclick = () => handleNav('esbocos');
         
         this.ui.btnMenuYear.onclick = () => window.electronAPI.openYearVerseFolder();
         this.ui.btnMenuDownloads.onclick = () => this.ipc.openDownloadFolder();
