@@ -822,7 +822,10 @@ body {
 
 .preview-controls {
     position: relative; /* オーバーレイの基準点 */
-    padding: 15px 30px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px 30px;
     background: linear-gradient(to top, #1a1a1a, rgba(0,0,0,0.8));
     border-top: 1px solid rgba(255,255,255,0.1);
 }
@@ -838,9 +841,9 @@ body {
 }
 
 #preview-seeker {
-    width: 100%;
+    flex: 1;
     cursor: pointer;
-    margin-bottom: 10px;
+    margin-bottom: 0;
     height: 8px;
     -webkit-appearance: none;
     background: rgba(255,255,255,0.1);
@@ -873,6 +876,7 @@ body {
     font-family: 'Consolas', monospace;
     text-align: center;
     color: #ecf0f1;
+    white-space: nowrap;
 }
 
 /* Footer / Playback Controls */
