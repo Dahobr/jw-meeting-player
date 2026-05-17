@@ -107,7 +107,7 @@ class App {
         try {
             const displayStatus = await this.ipc.requestDisplayStatus();
             this.hasSecondaryDisplay = (displayStatus === 'connected');
-            this.ui.updateDisplayStatus(displayStatus);
+            this.updatePlaybackUI();
         } catch (e) {
             console.error('[App] Failed to get display status:', e);
         }
@@ -267,6 +267,7 @@ class App {
             }
             // Explicitly ensure preview is hidden and siteView is shown
             this.ui.hidePreview();
+            this.updatePlaybackUI();
         };
 
         this.ui.onPlaylistSelect = (id) => {
@@ -279,6 +280,7 @@ class App {
             if (playlist && playlist.items.length > 0 && this.status === 'stopped') {
                 this.prepareStagingMedia(playlist.items[0]);
             }
+            this.updatePlaybackUI();
         };
 
         this.ui.onPlaylistDelete = async (id) => {
@@ -411,7 +413,7 @@ class App {
 
         this.ipc.onDisplayStatus((status) => {
             this.hasSecondaryDisplay = (status === 'connected');
-            this.ui.updateDisplayStatus(status);
+            this.updatePlaybackUI();
             this.updateAudioMuteState();
         });
 
@@ -745,18 +747,32 @@ class App {
             this.ui.hideOperationGuide();
         }
 
-        // --- Update Status Text ---
-        let statusText = 'Parado: Nenhum item';
-        if (this.currentMedia) {
-            const fileName = this.currentMedia.title || this.currentMedia.filename;
-            if (isPlaying) statusText = `Reproduzindo: ${fileName}`;
-            else if (isPaused) statusText = `Pausado: ${fileName}`;
-            else if (isStaged) statusText = `Preparado: ${fileName}`;
+        // --- Update Status Text based on View ---
+        const isPlaylistView = (this.ui.viewPlaylists.style.display !== 'none');
+        let statusText = '';
+        
+        if (isPlaylistView) {
+            // Playlist List View: Show Monitor Status
+            statusText = this.hasSecondaryDisplay 
+                ? 'O segundo monitor: Conectado' 
+                : 'O segundo monitor: ⚠️ Não detectado';
+            
+            this.ui.updateDisplayStatus(this.hasSecondaryDisplay ? 'connected' : 'waiting');
+        } else {
+            // Inside Playlist View: Show Media Info
+            statusText = 'Parado: Nenhum item';
+            if (this.currentMedia) {
+                const fileName = this.currentMedia.title || this.currentMedia.filename;
+                if (isPlaying) statusText = `Reproduzindo: ${fileName}`;
+                else if (isPaused) statusText = `Pausado: ${fileName}`;
+                else if (isStaged) statusText = `Preparado: ${fileName}`;
+            }
+            this.ui.updateDisplayStatus('connected'); // Clear warning when inside playlist
         }
+        
         this.ui.updateCurrentItemInfo(statusText);
 
-        // --- Hide Fotter controls if in playlist view ---
-        const isPlaylistView = (this.ui.viewPlaylists.style.display !== 'none');
+        // --- Hide Footer controls if in playlist view ---
         const footerTransportButtons = document.querySelector('.transport-buttons');
         if (footerTransportButtons) {
             footerTransportButtons.style.visibility = isPlaylistView ? 'hidden' : 'visible';
