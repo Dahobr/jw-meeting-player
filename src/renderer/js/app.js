@@ -45,11 +45,19 @@ class App {
                 this.ipc.toggleWebView(false);
             }
 
+            // Show blur overlay if available
+            if (this.ui.menuBlurOverlay) {
+                this.ui.menuBlurOverlay.style.display = 'block';
+            }
+
             msgEl.textContent = message;
             modal.style.display = 'flex';
 
             const close = (result) => {
                 modal.style.display = 'none';
+                if (this.ui.menuBlurOverlay) {
+                    this.ui.menuBlurOverlay.style.display = 'none';
+                }
                 btnConfirm.onclick = null;
                 btnCancel.onclick = null;
                 
@@ -90,6 +98,7 @@ class App {
 
         this.ui.switchView('playlists');
         this.status = 'stopped';
+        this.ui.showOperationGuide('auto'); // 起動時にガイドを表示
         this.updatePlaybackUI();
         this.startBoundsMonitoring();
 

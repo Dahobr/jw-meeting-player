@@ -43,6 +43,7 @@ class UIManager {
         // Help Elements
         this.helpView = document.getElementById('help-view');
         this.helpContainer = document.getElementById('help-html-container');
+        this.menuBlurOverlay = document.getElementById('menu-blur-overlay');
 
         // Common SVG Icons
         this.icons = {
@@ -64,14 +65,36 @@ class UIManager {
         // Global click listener to close dropdowns
         document.addEventListener('click', (e) => {
             if (!this.btnMenu.contains(e.target)) {
-                this.headerMenu.classList.remove('show');
+                if (this.headerMenu.classList.contains('show')) {
+                    this.headerMenu.classList.remove('show');
+                    if (this.menuBlurOverlay) this.menuBlurOverlay.style.display = 'none';
+                    // Restore webview visibility
+                    if (window.electronAPI && window.electronAPI.toggleWebView) {
+                        window.electronAPI.toggleWebView(true);
+                    }
+                }
             }
             document.querySelectorAll('.item-dropdown.show').forEach(d => d.classList.remove('show'));
         });
 
         this.btnMenu.onclick = (e) => {
             e.stopPropagation();
+            const isOpening = !this.headerMenu.classList.contains('show');
             this.headerMenu.classList.toggle('show');
+            
+            if (this.menuBlurOverlay) {
+                this.menuBlurOverlay.style.display = isOpening ? 'block' : 'none';
+            }
+            
+            if (isOpening) {
+                if (window.electronAPI && window.electronAPI.toggleWebView) {
+                    window.electronAPI.toggleWebView(false);
+                }
+            } else {
+                if (window.electronAPI && window.electronAPI.toggleWebView) {
+                    window.electronAPI.toggleWebView(true);
+                }
+            }
         };
 
         this.operationGuide = document.getElementById('operation-guide');
@@ -230,6 +253,7 @@ class UIManager {
 
     showHelp(html) {
         console.log('[UI] showHelp called');
+        this.hideOperationGuide();
         this.helpContainer.innerHTML = html;
         this.helpView.style.display = 'flex';
         this.previewArea.style.display = 'none'; // Ensure preview is hidden
@@ -752,4 +776,5 @@ class UIManager {
     onItemRename(itemId, newName) {}
 }
 
+window.uiManager = new UIManager();
 window.uiManager = new UIManager();
