@@ -748,7 +748,7 @@ body {
     width: 100%;
     height: 100%;
     background-color: #000; /* Keep black when active to focus on media */
-    z-index: 100; 
+    z-index: 250; /* Higher than menu-blur-overlay (200) to avoid blur */
     display: flex;
     flex-direction: column;
     overflow: hidden;
