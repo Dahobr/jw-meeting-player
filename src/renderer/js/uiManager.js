@@ -9,6 +9,7 @@ class UIManager {
         this.btnCantico = document.getElementById('btn-cantico');
         this.btnReunioes = document.getElementById('btn-reunioes');
         this.btnVideos = document.getElementById('btn-videos');
+        this.btnEsbocos = document.getElementById('btn-esbocos');
         this.btnOpenFolder = document.getElementById('btn-open-folder');
         this.btnOpenYearVerseFolder = document.getElementById('btn-open-year-verse-folder');
         this.btnCreatePlaylist = document.getElementById('btn-create-playlist');
@@ -82,9 +83,16 @@ class UIManager {
         if (viewName === 'playlists') {
             this.viewPlaylists.style.display = 'block';
             this.viewItems.style.display = 'none';
+            // Auto-hide preview and show SiteView when in playlist list
+            this.hidePreview();
         } else {
             this.viewPlaylists.style.display = 'none';
             this.viewItems.style.display = 'block';
+            // Show preview area and hide SiteView when entering a playlist
+            this.previewArea.style.display = 'flex';
+            if (window.electronAPI && window.electronAPI.toggleWebView) {
+                window.electronAPI.toggleWebView(false);
+            }
         }
     }
 
@@ -314,7 +322,7 @@ class UIManager {
                     <div class="guide-step zoom-step">
                         <div class="guide-step-num">4</div>
                         <div class="guide-step-content">
-                            <span class="guide-zoom-tag">${isAuto ? 'Na janela do Zoom (Apenas na 1ª vez)' : 'Na janela do Zoom (Sempre)'}</span>
+                            <span class="guide-zoom-tag">Na janela do Zoom (Apenas na 1ª vez)</span>
                             <div class="guide-step-title">Marcar "Otimizar"</div>
                             <div class="guide-step-desc">Marque <b>"Otimizar para clipe de vídeo"</b> no Zoom.</div>
                         </div>
@@ -649,27 +657,29 @@ class UIManager {
     }
 
     updateCurrentItemInfo(text) {
-        // text is expected as "Status: Filename"
+        // text is expected as "Label: Value" (e.g., "Reproduzindo: Video.mp4" or "O segundo monitor: Conectado")
         const parts = text.split(': ');
-        const status = parts[0];
-        const filename = parts.slice(1).join(': ');
+        const label = parts[0];
+        const value = parts.slice(1).join(': ');
         
+        let colorClass = '';
+        if (label === 'Preparado') colorClass = 'status-preparado';
+        else if (label === 'Reproduzindo') colorClass = 'status-reproduzindo';
+        else if (label === 'Pausado') colorClass = 'status-pausado';
+
         this.currentItemInfo.innerHTML = `
-            <span id="current-item-status">${status}</span>
-            <span id="current-item-filename">${filename}</span>
+            <span id="current-item-status" class="${colorClass}">${label}: </span>
+            <span id="current-item-filename">${value}</span>
         `;
-        this.currentItemInfo.classList.remove('status-warning');
     }
 
     updateDisplayStatus(status) {
+        // This is now primarily managed by app.js updatePlaybackUI for the text,
+        // but we'll keep this as a helper for specific warning styles.
         if (status === 'waiting') {
-            this.currentItemInfo.textContent = '⚠️ Segundo monitor não detectado';
             this.currentItemInfo.classList.add('status-warning');
         } else {
-            if (this.currentItemInfo.classList.contains('status-warning')) {
-                this.currentItemInfo.textContent = 'Monitor conectado. Pronto para reproduzir.';
-                this.currentItemInfo.classList.remove('status-warning');
-            }
+            this.currentItemInfo.classList.remove('status-warning');
         }
     }
 

@@ -60,20 +60,16 @@ namespace ZoomControlManager
                 else if (arg.StartsWith("--y=")) y = int.Parse(arg.Substring(4));
             }
 
-            if (mode == "auto")
+            if (mode == "auto" || mode == "semi")
             {
                 if (x != -1 && y != -1)
                 {
-                    MonitorShareFlow(x, y);
+                    MonitorShareFlow(x, y, mode);
                 }
                 else
                 {
                     CaptureAndMonitor();
                 }
-            }
-            else if (mode == "semi")
-            {
-                SendAltS();
             }
         }
 
@@ -133,7 +129,7 @@ namespace ZoomControlManager
             }
         }
 
-        static void MonitorShareFlow(int x, int y)
+        static void MonitorShareFlow(int x, int y, string mode)
         {
             Color initialColor = GetColorAt(x, y);
             SendAltS();
@@ -151,36 +147,39 @@ namespace ZoomControlManager
 
             if (opened)
             {
-                Thread.Sleep(500);
-                
-                // SAVE CURRENT MOUSE POSITION
-                Point originalPos;
-                GetCursorPos(out originalPos);
-
-                // MOVE MOUSE TO TARGET COORDS
-                SetCursorPos(x, y);
-                Thread.Sleep(100);
-
-                // Double click automatically
-                mouse_event(MOUSEEVENTF_LEFTDOWN, x, y, 0, 0);
-                mouse_event(MOUSEEVENTF_LEFTUP, x, y, 0, 0);
-                Thread.Sleep(100);
-                mouse_event(MOUSEEVENTF_LEFTDOWN, x, y, 0, 0);
-                mouse_event(MOUSEEVENTF_LEFTUP, x, y, 0, 0);
-                
-                // RESTORE MOUSE POSITION
                 Thread.Sleep(200);
-                SetCursorPos(originalPos.X, originalPos.Y);
+                
+                // AUTOMATIC CLICKING ONLY IN AUTO MODE
+                if (mode == "auto")
+                {
+                    Point originalPos;
+                    GetCursorPos(out originalPos);
 
-                Console.WriteLine("[C#] STARTED");
-                Console.Out.Flush();
+                    SetCursorPos(x, y);
+                    Thread.Sleep(100);
 
-                // Monitor for window closure
+                    mouse_event(MOUSEEVENTF_LEFTDOWN, x, y, 0, 0);
+                    mouse_event(MOUSEEVENTF_LEFTUP, x, y, 0, 0);
+                    Thread.Sleep(100);
+                    mouse_event(MOUSEEVENTF_LEFTDOWN, x, y, 0, 0);
+                    mouse_event(MOUSEEVENTF_LEFTUP, x, y, 0, 0);
+                    
+                    Thread.Sleep(200);
+                    SetCursorPos(originalPos.X, originalPos.Y);
+
+                    Console.WriteLine("[C#] STARTED");
+                    Console.Out.Flush();
+                }
+
                 for (int i = 0; i < 200; i++) 
                 {
                     Thread.Sleep(500);
                     if (ColorsAreClose(GetColorAt(x, y), initialColor, 20))
                     {
+                        if (mode == "semi")
+                        {
+                            Console.WriteLine("[C#] STARTED");
+                        }
                         Console.WriteLine("[C#] COMPLETED");
                         Console.Out.Flush();
                         break;
