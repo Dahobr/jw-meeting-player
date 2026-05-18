@@ -24,7 +24,6 @@ class UIManager {
         this.itemsList = document.getElementById('playlist-items-ul');
         this.currentPlaylistTitle = document.getElementById('current-playlist-title');
         this.currentItemInfo = document.getElementById('current-item-info');
-        this.volumeSlider = document.getElementById('volume-slider');
         
         this.viewPlaylists = document.getElementById('view-playlists');
         this.viewItems = document.getElementById('view-items');
