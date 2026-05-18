@@ -276,7 +276,7 @@ class UIManager {
             window.electronAPI.toggleWebView(false);
         }
 
-        this.previewArea.style.display = 'flex';
+        this.previewArea.style.display = 'none'; // Hide preview area when showing guide
         this.operationGuide.style.display = 'flex';
         this.previewMediaWrapper.style.display = 'none';
         this.previewControls.style.display = 'none';
