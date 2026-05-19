@@ -27,6 +27,12 @@ class App {
         this.lastStagedItemPerPlaylist = {}; // Keeps track of the last item staged per playlist
     }
 
+    /**
+     * Displays a custom confirmation modal and returns a promise.
+     * 
+     * @param {string} message - The confirmation message to display.
+     * @returns {Promise<boolean>} Resolves to true if confirmed, false otherwise.
+     */
     async showCustomConfirm(message) {
         return new Promise((resolve) => {
             const wasWebViewVisible = this.ui.isWebViewVisible();
@@ -55,6 +61,12 @@ class App {
         });
     }
 
+    /**
+     * Initializes the application, setting up listeners, loading initial data, 
+     * and configuring the UI.
+     * 
+     * @returns {Promise<void>}
+     */
     async init() {
         if (this.initialized) return;
 
@@ -98,6 +110,9 @@ class App {
         console.log('[App] Renderer Initialized.');
     }
 
+    /**
+     * Sets up keyboard event listeners for application shortcuts.
+     */
     setupKeyboardListeners() {
         window.addEventListener('keydown', (e) => {
             if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
@@ -107,6 +122,9 @@ class App {
         });
     }
 
+    /**
+     * Sets up event listeners for the preview video and seeker interaction.
+     */
     setupPreviewListeners() {
         let lastSeekTime = 0;
         const seekThrottleMs = 100; 
@@ -340,6 +358,9 @@ class App {
         }
     }
 
+    /**
+     * Handles the creation of a new playlist based on UI input.
+     */
     handleCreatePlaylist() {
         const name = this.ui.newPlaylistInput.value.trim();
         if (name) {
@@ -348,6 +369,9 @@ class App {
         }
     }
 
+    /**
+     * Sets up IPC listeners to handle events from the main process.
+     */
     setupIPCListeners() {
         this.ipc.onRequestSaveImage(async (url) => {
             await this.saveBrowserImage(url);
@@ -444,6 +468,9 @@ class App {
         });
     }
 
+    /**
+     * Resumes video playback after a pause or wait period.
+     */
     resumePlayback() {
         if (!this.currentMedia || !this.currentMedia.mediaType.includes('video')) return;
 
@@ -613,6 +640,11 @@ class App {
         this.updatePlaybackUI();
     }
 
+    /**
+     * Triggers the Zoom sharing mechanism via IPC.
+     * 
+     * @param {string} mode - Zoom mode identifier.
+     */
     triggerZoomSharing(mode) {
         console.log(`[App] Triggering Zoom Sharing (${mode})`);
         const args = [];
@@ -626,12 +658,18 @@ class App {
     // goLive was absorbed into playMedia for simplicity.
     // Removed to avoid confusion.
 
+    /**
+     * Updates the preview video audio mute state based on display configuration.
+     */
     updateAudioMuteState() {
         if (this.ui.previewVideo) {
             this.ui.previewVideo.muted = this.hasSecondaryDisplay && this.isPlayingOnSlave;
         }
     }
 
+    /**
+     * Toggles playback between playing, paused, or stopped.
+     */
     togglePlayback() {
         if (this.status === 'stopped' || this.status === 'staged') {
             if (this.currentMedia) this.playMedia(this.currentMedia);
@@ -652,6 +690,9 @@ class App {
         }
     }
 
+    /**
+     * Pauses the current video playback.
+     */
     pausePlayback() {
         if (!this.currentMedia || !this.currentMedia.mediaType.includes('video')) return;
 
@@ -663,6 +704,11 @@ class App {
         this.updatePlaybackUI();
     }
 
+    /**
+     * Stops the current media playback and handles cleanup or auto-standby logic.
+     * 
+     * @param {string} [reason='unknown'] - The reason for stopping playback.
+     */
     stopMedia(reason = 'unknown') {
         if (this.isStopping) return;
         this.isStopping = true;
@@ -727,12 +773,12 @@ class App {
      * Updates the playback bar UI (control buttons and status) 
      * based on the current playback status and media type.
      * 
-     * @execution_context 
-     * - Called by: handleStoreChange(), stopMedia(), setupPreviewListeners(), onMediaPlaybackStateChange(), etc.
-     * - When: Whenever the playback status or media state changes, or the UI needs re-rendering.
+     * @listens App#handleStoreChange
+     * @listens App#stopMedia
+     * @listens App#setupPreviewListeners
+     * @listens App#onMediaPlaybackStateChange
      * 
-     * Updates the playback bar UI (control buttons and status) 
-     * based on the current playback status and media type.
+     * @context Called whenever the playback status or media state changes, or the UI needs re-rendering.
      */
     updatePlaybackUI() {
         const isStaged = this.status === "staged";
@@ -814,6 +860,9 @@ class App {
         this.ui.updatePlaybackStateUI(playlistConfig);
     }
 
+    /**
+     * Starts monitoring the window bounds for the webview.
+     */
     startBoundsMonitoring() {
         const update = () => this.ipc.updateViewBounds(this.ui.getWebViewBounds());
         window.addEventListener('resize', update);

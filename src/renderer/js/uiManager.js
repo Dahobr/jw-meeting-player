@@ -4,6 +4,9 @@
  */
 
 class UIManager {
+    /**
+     * Initializes the UIManager, setting up references to DOM elements and global event listeners.
+     */
     constructor() {
         // Elements
         this.btnCantico = document.getElementById('btn-cantico');
@@ -82,10 +85,20 @@ class UIManager {
     }
 
 
+    /**
+     * Checks if the playlist view is currently displayed.
+     * 
+     * @returns {boolean} True if the playlist view is visible, false otherwise.
+     */
     isPlaylistView() {
         return this.viewPlaylists.style.display !== 'none';
     }
 
+    /**
+     * Switches the UI view between 'playlists' and 'items'.
+     * 
+     * @param {string} viewName - The name of the view to switch to ('playlists' or 'items').
+     */
     switchView(viewName) {
         if (viewName === 'playlists') {
             this.viewPlaylists.style.display = 'block';
@@ -110,6 +123,17 @@ class UIManager {
      * Atualiza o estado visual do bot?o de reprodu??o/pausa no rodap?.
      * Recebe um estado de exibi??o calculado para evitar l?gica de neg?cio no UI Manager.
      */
+    /**
+     * Updates the visual state of the footer playback buttons based on the provided configuration.
+     * 
+     * @param {Object} config - Configuration object for footer buttons.
+     * @param {boolean} config.isVisible - Whether the footer controls are visible.
+     * @param {boolean} config.isEnabled - Whether the buttons are enabled.
+     * @param {string} config.icon - SVG icon string to display.
+     * @param {string} config.title - Button title/tooltip text.
+     * @param {boolean} config.isHighlighted - Whether to apply highlight styles to play/pause button.
+     * @param {boolean} config.isStopHighlighted - Whether to highlight stop button.
+     */
     updateFooterPlaybackUI(config) {
         const { isVisible, isEnabled, icon, title, isHighlighted, isStopHighlighted } = config;
         
@@ -133,6 +157,13 @@ class UIManager {
         }
     }
 
+    /**
+     * Displays a media item in the preview area.
+     * 
+     * @param {string} type - Media type ('video' or 'image').
+     * @param {string} filePath - Path to the media file.
+     * @param {boolean} [autoPlay=true] - Whether to auto-play video content.
+     */
     showPreview(type, filePath, autoPlay = true) {
         console.log(`[UI] showPreview: ${type} -> ${filePath} (AutoPlay: ${autoPlay})`);
         
@@ -182,7 +213,7 @@ class UIManager {
     }
 
     /**
-     * Hide preview area and re-show SiteView
+     * Hides the preview area and restores the main content view.
      */
     hidePreview() {
         console.log('[UI] hidePreview called');
@@ -208,6 +239,11 @@ class UIManager {
         }
     }
 
+    /**
+     * Displays help content in the UI.
+     * 
+     * @param {string} html - HTML content of the help documentation.
+     */
     showHelp(html) {
         console.log('[UI] showHelp called');
         this.hideOperationGuide();
@@ -220,6 +256,9 @@ class UIManager {
         }
     }
 
+    /**
+     * Hides the help view.
+     */
     hideHelp() {
         if (this.helpView && this.helpView.style.display !== 'none') {
             console.log('[UI] hideHelp called');
@@ -227,6 +266,11 @@ class UIManager {
         }
     }
 
+    /**
+     * Shows the operation guide view.
+     * 
+     * @param {string} zoomMode - Current zoom mode configuration.
+     */
     showOperationGuide(zoomMode) {
         this.hideHelp();
         if (window.electronAPI && window.electronAPI.toggleWebView) {
@@ -242,6 +286,9 @@ class UIManager {
         this.renderOperationGuide(zoomMode);
     }
 
+    /**
+     * Hides the operation guide view.
+     */
     hideOperationGuide() {
         this.operationGuide.style.display = 'none';
         this.previewMediaWrapper.style.display = 'flex';
@@ -249,6 +296,11 @@ class UIManager {
         if (this.stateLabel) this.stateLabel.style.display = 'block';
     }
 
+    /**
+     * Renders the operation guide template.
+     * 
+     * @param {string} zoomMode - Current zoom mode configuration.
+     */
     renderOperationGuide(zoomMode) {
         this.operationGuide.innerHTML = window.templates.renderOperationGuide(zoomMode);
     }
@@ -256,6 +308,9 @@ class UIManager {
     /**
      * Complete Seeker Update (max + value + background)
      * This is called when duration is known (e.g., onloadedmetadata) or when external seek is confirmed.
+     * 
+     * @param {number} current - Current playback position in seconds.
+     * @param {number} total - Total media duration in seconds.
      */
     updateSeeker(current, total) {
         if (!total || isNaN(total) || total <= 0) {
@@ -275,7 +330,10 @@ class UIManager {
     }
 
     /**
-     * Partial Update (Labels + Background only - safe for dragging)
+     * Partial Update (Labels + Background only - safe for dragging).
+     * 
+     * @param {number} current - Current playback position.
+     * @param {number} total - Total media duration.
      */
     updateSeekerLabels(current, total) {
         const percentage = (total > 0 && !isNaN(total)) ? (current / total) * 100 : 0;
@@ -291,6 +349,12 @@ class UIManager {
         this.previewTimeTotal.textContent = format(total || 0);
     }
 
+    /**
+     * Renders the list of playlists.
+     * 
+     * @param {Object} playlists - Collection of playlist objects.
+     * @param {string} currentId - ID of the currently selected playlist.
+     */
     renderPlaylists(playlists, currentId) {
         this.playlistList.innerHTML = '';
         Object.entries(playlists).forEach(([id, playlist]) => {
@@ -342,6 +406,12 @@ class UIManager {
         });
     }
 
+    /**
+     * Renders items for a specific playlist.
+     * 
+     * @param {string} id - The playlist ID.
+     * @param {Object} playlist - The playlist object containing items.
+     */
     renderPlaylistItems(id, playlist) {
         this.currentPlaylistTitle.textContent = playlist.name;
         this.itemsList.innerHTML = '';
@@ -438,6 +508,12 @@ class UIManager {
         });
     }
 
+    /**
+     * Toggles the edit mode for a playlist item.
+     * 
+     * @param {string} id - The playlist item ID.
+     * @param {boolean} [show=true] - Whether to show the edit input.
+     */
     togglePlaylistEdit(id, show = true) {
         const nameSpan = document.getElementById(`name-${id}`);
         const input = document.getElementById(`input-${id}`);
@@ -453,6 +529,12 @@ class UIManager {
         }
     }
 
+    /**
+     * Toggles the edit mode for a specific playlist item.
+     * 
+     * @param {string} id - The item ID.
+     * @param {boolean} [show=true] - Whether to show the edit input.
+     */
     toggleItemEdit(id, show = true) {
         const nameSpan = document.getElementById(`item-name-${id}`);
         const input = document.getElementById(`item-input-${id}`);
@@ -463,6 +545,12 @@ class UIManager {
         }
     }
 
+    /**
+     * Renders a download item in the list.
+     * 
+     * @param {string} itemId - The ID of the item being downloaded.
+     * @param {string} filename - The filename of the item.
+     */
     renderDownloadItem(itemId, filename) {
         const li = document.createElement('li');
         li.className = 'playlist-item-li downloading';
@@ -481,6 +569,13 @@ class UIManager {
         this.itemsList.appendChild(li);
     }
 
+    /**
+     * Updates the download progress indicator for an item.
+     * 
+     * @param {string} itemId - The ID of the item.
+     * @param {number} percentage - The download progress percentage.
+     * @param {string} filename - The filename.
+     */
     updateDownloadProgress(itemId, percentage, filename) {
         const li = this.itemsList.querySelector(`li[data-id="${itemId}"]`);
         if (li) {
@@ -543,6 +638,11 @@ class UIManager {
         });
     }
 
+    /**
+     * Updates information about the current media item.
+     * 
+     * @param {string} text - The status information text in "Label: Value" format.
+     */
     updateCurrentItemInfo(text) {
         // text is expected as "Label: Value" (e.g., "Reproduzindo: Video.mp4" or "O segundo monitor: Conectado")
         const parts = text.split(': ');
@@ -560,6 +660,11 @@ class UIManager {
         `;
     }
 
+    /**
+     * Updates the display status indicator.
+     * 
+     * @param {string} status - Display connection status ('connected' or 'waiting').
+     */
     updateDisplayStatus(status) {
         // This is now primarily managed by app.js updatePlaybackUI for the text,
         // but we'll keep this as a helper for specific warning styles.
@@ -570,10 +675,21 @@ class UIManager {
         }
     }
 
+    /**
+     * Shows a notification message.
+     * 
+     * @param {string} message - The message content.
+     * @param {string} [type='info'] - The type of notification.
+     */
     showNotification(message, type = 'info') {
         console.log(`[UI] Notification (${type}): ${message}`);
     }
 
+    /**
+     * Gets the webview container's bounding rectangle.
+     * 
+     * @returns {Object} Bounds object with x, y, width, and height.
+     */
     getWebViewBounds() {
         const rect = this.webviewContainer.getBoundingClientRect();
         return {
@@ -584,6 +700,12 @@ class UIManager {
         };
     }
 
+    /**
+     * Handles UI updates on download completion.
+     * 
+     * @param {string} itemId - The ID of the item.
+     * @param {Object} newItemData - The new item data.
+     */
     onDownloadComplete(itemId, newItemData) {
         const li = this.itemsList.querySelector(`li[data-id="${itemId}"]`);
         if (li) {
@@ -594,6 +716,13 @@ class UIManager {
         }
     }
 
+    /**
+     * Displays an error message for a download or item action.
+     * 
+     * @param {string} itemId - The ID of the item.
+     * @param {string} message - The error message.
+     * @param {string} [filename=''] - The filename associated with the error.
+     */
     showError(itemId, message, filename = '') {
         let li = this.itemsList.querySelector(`li[data-id="${itemId}"]`);
         if (!li) {
@@ -631,12 +760,56 @@ class UIManager {
         }, 4000);
     }
 
+    /**
+     * Callback for playlist selection.
+     * 
+     * @param {string} id - Playlist ID.
+     */
     onPlaylistSelect(id) {}
+
+    /**
+     * Callback for playlist deletion.
+     * 
+     * @param {string} id - Playlist ID.
+     */
     onPlaylistDelete(id) {}
+
+    /**
+     * Callback for playlist renaming.
+     * 
+     * @param {string} id - Playlist ID.
+     * @param {string} newName - New playlist name.
+     */
     onPlaylistRename(id, newName) {}
+
+    /**
+     * Callback for item selection.
+     * 
+     * @param {Object} item - Item object.
+     */
     onItemSelect(item) {}
+
+    /**
+     * Callback for item playback.
+     * 
+     * @param {Object} item - Item object.
+     */
     onItemPlay(item) {}
+
+    /**
+     * Callback for item removal.
+     * 
+     * @param {string} playlistId - Playlist ID.
+     * @param {string} itemId - Item ID.
+     */
     onItemRemove(playlistId, itemId) {}
+
+    /**
+     * Callback for item renaming.
+     * 
+     * @param {string} itemId - Item ID.
+     * @param {string} newName - New item name.
+     */
     onItemRename(itemId, newName) {}
 
 
