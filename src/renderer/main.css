@@ -982,7 +982,16 @@ body {
 
 #current-item-status.status-preparado { color: #f39c12; } /* Original Orange */
 #current-item-status.status-reproduzindo { color: #d63031; } /* Deep Red */
-#current-item-status.status-pausado { color: #3498db; } /* Brighter Sky Blue */
+#current-item-status.status-pausado { 
+    color: #3498db;
+    animation: blink-animation 2s steps(5, start) infinite;
+} /* Brighter Sky Blue */
+
+@keyframes blink-animation {
+  to {
+    visibility: hidden;
+  }
+}
 
 #current-item-filename {
     display: block;
