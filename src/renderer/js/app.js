@@ -24,7 +24,7 @@ class App {
         this.seekerDragEndTime = 0; 
         this.pendingCanPlayListener = null; 
         this.zoomCoords = null;
-        this.lastStagedItemPerPlaylist = {}; // プレイリストごとの最後にスタンバイされたアイテムを保持
+        this.lastStagedItemPerPlaylist = {}; // Keeps track of the last item staged per playlist
     }
 
     async showCustomConfirm(message) {
@@ -93,7 +93,7 @@ class App {
 
         this.ui.switchView('playlists');
         this.status = 'stopped';
-        this.ui.showOperationGuide('auto'); // 起動時にガイドを表示
+        this.ui.showOperationGuide('auto'); // Show operation guide on launch
         this.updatePlaybackUI();
         this.startBoundsMonitoring();
 
@@ -543,7 +543,7 @@ class App {
         this.currentMedia = item;
         this.standbyItemId = item.id;
         
-        // 最後にスタンバイされたアイテムを記録
+        // Record the last item staged for this playlist
         const { currentPlaylistId } = this.store.getState();
         if (currentPlaylistId) {
             this.lastStagedItemPerPlaylist[currentPlaylistId] = item.id;
@@ -737,12 +737,12 @@ class App {
     }
 
     /**
-     * Atualiza a interface da barra de reprodução (botões de controle e estado) 
-     * com base no status atual da reprodução e no tipo de mídia.
+     * Updates the playback bar UI (control buttons and status) 
+     * based on the current playback status and media type.
      * 
      * @execution_context 
-     * - Chamado por: handleStoreChange(), stopMedia(), setupPreviewListeners(), onMediaPlaybackStateChange(), etc.
-     * - Quando: Sempre que o status da reprodução ou o estado da mídia muda, ou a interface precisa ser re-renderizada.
+     * - Called by: handleStoreChange(), stopMedia(), setupPreviewListeners(), onMediaPlaybackStateChange(), etc.
+     * - When: Whenever the playback status or media state changes, or the UI needs re-rendering.
      */
     updatePlaybackUI() {
         const isStaged = this.status === 'staged';

@@ -703,7 +703,7 @@ class UIManager {
         const li = this.itemsList.querySelector(`li[data-id="${itemId}"]`);
         if (li) {
             li.classList.remove('downloading');
-            // プログレスバー用のスタイルタグを削除
+            // Remove style tag for progress bar
             const style = document.getElementById(`style-progress-${itemId}`);
             if (style) style.remove();
         }
@@ -755,5 +755,4 @@ class UIManager {
     onItemRename(itemId, newName) {}
 }
 
-window.uiManager = new UIManager();
 window.uiManager = new UIManager();
