@@ -24,6 +24,7 @@ class App {
         this.seekerDragEndTime = 0; 
         this.pendingCanPlayListener = null; 
         this.zoomCoords = null;
+        this.lastStagedItemPerPlaylist = {}; // プレイリストごとの最後にスタンバイされたアイテムを保持
     }
 
     async showCustomConfirm(message) {
@@ -266,6 +267,7 @@ class App {
                     this.ui.switchView('playlists');
                 }
             } else {
+                this.status = 'stopped';
                 this.ui.switchView('playlists');
             }
             // Explicitly ensure preview is hidden and siteView is shown
@@ -277,11 +279,13 @@ class App {
             this.store.setCurrentPlaylistId(id);
             this.ui.switchView('items');
             
-            // Auto-standby first item if available
+            // Auto-standby previous item if available
             const state = this.store.getState();
             const playlist = state.playlists[id];
             if (playlist && playlist.items.length > 0 && this.status === 'stopped') {
-                this.prepareStagingMedia(playlist.items[0]);
+                const lastItemId = this.lastStagedItemPerPlaylist[id];
+                const itemToStandby = playlist.items.find(i => i.id === lastItemId) || playlist.items[0];
+                this.prepareStagingMedia(itemToStandby);
             }
             this.updatePlaybackUI();
         };
@@ -538,6 +542,12 @@ class App {
 
         this.currentMedia = item;
         this.standbyItemId = item.id;
+        
+        // 最後にスタンバイされたアイテムを記録
+        const { currentPlaylistId } = this.store.getState();
+        if (currentPlaylistId) {
+            this.lastStagedItemPerPlaylist[currentPlaylistId] = item.id;
+        }
         
         let fullType = item.mediaType || '';
         if (fullType === 'video') fullType = 'video/mp4';
