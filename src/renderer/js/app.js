@@ -247,6 +247,15 @@ class App {
             }
         };
 
+        this.ui.btnMenuAbout.onclick = async () => {
+            try {
+                const html = await this.ipc.getAboutContent();
+                this.ui.showHelp(html);
+            } catch (err) {
+                console.error('[App] Failed to load about content:', err);
+            }
+        };
+
         this.ui.btnMenuGuide.onclick = () => {
             const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : 'auto';
             this.ui.showOperationGuide(zoomMode);

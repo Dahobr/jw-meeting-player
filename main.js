@@ -320,6 +320,25 @@ ipcMain.handle('get-help-content', async () => {
     }
 });
 
+ipcMain.handle('get-about-content', async () => {
+    try {
+        const licensePath = path.join(__dirname, 'LICENSE');
+        const thirdPartyPath = path.join(__dirname, 'LICENSE-THIRD-PARTY.md');
+        
+        let content = '<h1>Sobre</h1>';
+        if (fs.existsSync(licensePath)) {
+            content += '<h2>Licença</h2><pre>' + fs.readFileSync(licensePath, 'utf8') + '</pre>';
+        }
+        if (fs.existsSync(thirdPartyPath)) {
+            content += '<h2>Licenças de Terceiros</h2>' + marked.parse(fs.readFileSync(thirdPartyPath, 'utf8'));
+        }
+        return content;
+    } catch (err) {
+        console.error('[Main] Error reading license files:', err);
+        return `<h1>Erro</h1><p>${err.message}</p>`;
+    }
+});
+
 // App Lifecycle
 app.whenReady().then(() => {
     // Register for the default session

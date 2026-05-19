@@ -46,6 +46,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   savePlaylists: (data) => ipcRenderer.send('save-playlists', data),
   loadPlaylists: () => ipcRenderer.invoke('load-playlists'),
   getHelpContent: () => ipcRenderer.invoke('get-help-content'),
+  getAboutContent: () => ipcRenderer.invoke('get-about-content'),
   deleteFile: (filePath) => ipcRenderer.invoke('delete-file', filePath),
 
   // --- File System Dialogs ---
