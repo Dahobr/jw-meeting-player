@@ -40,3 +40,4 @@ playlists.json
 logs/
 .git_backup/
 .superpowers
+.worktrees/
