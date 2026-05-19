@@ -29,51 +29,29 @@ class App {
 
     async showCustomConfirm(message) {
         return new Promise((resolve) => {
-            const modal = document.getElementById('custom-modal');
-            const msgEl = document.getElementById('modal-message');
-            const btnConfirm = document.getElementById('modal-confirm');
-            const btnCancel = document.getElementById('modal-cancel');
+            const wasWebViewVisible = this.ui.isWebViewVisible();
+            this.ui.setWebViewVisibility(false);
 
-            if (!modal || !msgEl || !btnConfirm || !btnCancel) {
-                console.error('[App] Modal elements not found');
-                resolve(confirm(message));
-                return;
-            }
-
-            // Hide SiteView to ensure modal is visible
-            const wasWebViewVisible = (this.ui.webviewContainer.style.display !== 'none');
-            if (this.ipc && this.ipc.toggleWebView) {
-                this.ipc.toggleWebView(false);
-            }
-
-            // Show blur overlay if available
-
-            msgEl.textContent = message;
-            modal.style.display = 'flex';
-
-            const close = (result) => {
-                modal.style.display = 'none';
-                btnConfirm.onclick = null;
-                btnCancel.onclick = null;
-                
-                // Restore SiteView if it was visible and we aren't in preview mode
-                // (preview mode also hides webview, so we check app status)
-                if (wasWebViewVisible && this.status === 'stopped') {
-                    if (this.ipc && this.ipc.toggleWebView) {
-                        this.ipc.toggleWebView(true);
+            const success = this.ui.showConfirmModal(
+                message,
+                () => {
+                    if (wasWebViewVisible && this.status === "stopped") {
+                        this.ui.setWebViewVisibility(true);
                     }
+                    resolve(true);
+                },
+                () => {
+                    if (wasWebViewVisible && this.status === "stopped") {
+                        this.ui.setWebViewVisibility(true);
+                    }
+                    resolve(false);
                 }
-                
-                resolve(result);
-            };
+            );
 
-            btnConfirm.onclick = () => close(true);
-            btnCancel.onclick = () => close(false);
-            
-            // Allow closing by clicking outside the modal content
-            modal.onclick = (e) => {
-                if (e.target === modal) close(false);
-            };
+            if (!success) {
+                console.error("[App] Modal elements not found");
+                resolve(confirm(message));
+            }
         });
     }
 
@@ -752,16 +730,19 @@ class App {
      * @execution_context 
      * - Called by: handleStoreChange(), stopMedia(), setupPreviewListeners(), onMediaPlaybackStateChange(), etc.
      * - When: Whenever the playback status or media state changes, or the UI needs re-rendering.
+     * 
+     * Updates the playback bar UI (control buttons and status) 
+     * based on the current playback status and media type.
      */
     updatePlaybackUI() {
-        const isStaged = this.status === 'staged';
-        const isPlaying = this.status === 'playing';
-        const isPaused = this.status === 'paused';
-        const isStopped = this.status === 'stopped';
-        const isVideo = this.currentMedia?.mediaType?.includes('video');
+        const isStaged = this.status === "staged";
+        const isPlaying = this.status === "playing";
+        const isPaused = this.status === "paused";
+        const isStopped = this.status === "stopped";
+        const isVideo = this.currentMedia?.mediaType?.includes("video");
 
         const hasMedia = !!this.currentMedia;
-        const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : 'auto';
+        const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : "auto";
 
         if (isStopped && !hasMedia) {
             this.ui.showOperationGuide(zoomMode);
@@ -769,49 +750,68 @@ class App {
             this.ui.hideOperationGuide();
         }
 
-        // --- Update Status Text based on View ---
-        const isPlaylistView = (this.ui.viewPlaylists.style.display !== 'none');
-        let statusText = '';
+        // --- View Logic ---
+        const isPlaylistView = this.ui.isPlaylistView();
+        let statusText = "";
         
         if (isPlaylistView) {
-            // Playlist List View: Show Monitor Status
             statusText = this.hasSecondaryDisplay 
-                ? 'O segundo monitor: Conectado' 
-                : 'O segundo monitor: ⚠️ Não detectado';
-            
-            this.ui.updateDisplayStatus(this.hasSecondaryDisplay ? 'connected' : 'waiting');
+                ? "O segundo monitor: Conectado" 
+                : "O segundo monitor: ⚠️ Não detectado";
+            this.ui.updateDisplayStatus(this.hasSecondaryDisplay ? "connected" : "waiting");
         } else {
-            // Inside Playlist View: Show Media Info
-            statusText = 'Parado: Nenhum item';
+            statusText = "Parado: Nenhum item";
             if (this.currentMedia) {
                 const fileName = this.currentMedia.title || this.currentMedia.filename;
                 if (isPlaying) statusText = `Reproduzindo: ${fileName}`;
                 else if (isPaused) statusText = `Pausado: ${fileName}`;
                 else if (isStaged) statusText = `Preparado: ${fileName}`;
             }
-            this.ui.updateDisplayStatus('connected'); // Clear warning when inside playlist
+            this.ui.updateDisplayStatus("connected");
         }
         
         this.ui.updateCurrentItemInfo(statusText);
+        this.ui.setFooterTransportVisibility(!isPlaylistView);
+        this.ui.setPreviewControlsOverlayVisibility(!isVideo);
 
-        // --- Hide Footer controls if in playlist view ---
-        const footerTransportButtons = document.querySelector('.transport-buttons');
-        if (footerTransportButtons) {
-            footerTransportButtons.style.visibility = isPlaylistView ? 'hidden' : 'visible';
+        // --- Calculate Footer UI State ---
+        const footerConfig = {
+            isVisible: true,
+            isEnabled: true,
+            icon: isPlaying ? App.PAUSE_ICON : App.PLAY_ICON,
+            title: isPlaying ? "Pausar" : (isStaged ? "Reproduzir" : "Retomar"),
+            isHighlighted: (isPaused || isStaged),
+            isStopHighlighted: !(isPaused || isStaged) && (isPlaying || isStopped)
+        };
+
+        if (!isVideo) {
+            if (isStaged) {
+                footerConfig.title = "Reproduzir";
+                footerConfig.isHighlighted = true;
+                footerConfig.isStopHighlighted = false;
+            } else if (isPlaying) {
+                footerConfig.isEnabled = false;
+                footerConfig.isHighlighted = false;
+                footerConfig.isStopHighlighted = true;
+            }
         }
+        this.ui.updateFooterPlaybackUI(footerConfig);
 
-        // --- Control visibility and appearance of preview controls ---
-        if (this.ui.previewControlsOverlay) {
-            // Hide controls with overlay if displaying an image
-            // if isVideo is false, it's an image
-            const shouldHideControls = !isVideo;
-            this.ui.previewControlsOverlay.style.display = shouldHideControls ? 'block' : 'none';
+        // --- Calculate Playlist Item State ---
+        const playlistConfig = {
+            statusLabel: (isPlaying || isPaused) ? "NO AR" : (isStaged ? "PREPARADO" : ""),
+            statusClass: isStaged ? "staged" : (isPlaying || isPaused ? this.status : ""),
+            items: {}
+        };
+
+        if (this.currentMedia) {
+            playlistConfig.items[this.currentMedia.id] = {
+                class: (isPlaying || isPaused) ? "playing" : "standby",
+                icon: (isPlaying && isVideo) ? this.ui.icons.pause : (isPlaying ? this.ui.icons.stop : this.ui.icons.play),
+                title: (isPlaying && isVideo) ? "Pausar" : (isPaused ? "Retomar" : "Reproduzir")
+            };
         }
-        
-        this.ui.updateFooterPlaybackUI(this.status, isVideo, isPlaying);
-
-        console.log(`[UI Update] Status: ${this.status}, isVideo: ${isVideo}`);
-        this.ui.updatePlaybackStateUI(this.status, this.currentMedia?.id);
+        this.ui.updatePlaybackStateUI(playlistConfig);
     }
 
     startBoundsMonitoring() {

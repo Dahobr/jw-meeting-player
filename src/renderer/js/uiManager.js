@@ -81,6 +81,11 @@ class UIManager {
         this.previewMediaWrapper = document.querySelector('.preview-media-wrapper');
     }
 
+
+    isPlaylistView() {
+        return this.viewPlaylists.style.display !== 'none';
+    }
+
     switchView(viewName) {
         if (viewName === 'playlists') {
             this.viewPlaylists.style.display = 'block';
@@ -101,61 +106,33 @@ class UIManager {
     /**
      * Atualiza o estado visual do botão de reprodução/pausa no rodapé.
      */
-    updateFooterPlaybackUI(status, isVideo, isPlaying) {
-        const isStaged = status === 'staged';
-        const isPaused = status === 'paused';
+        /**
+     * Atualiza o estado visual do bot?o de reprodu??o/pausa no rodap?.
+     * Recebe um estado de exibi??o calculado para evitar l?gica de neg?cio no UI Manager.
+     */
+    updateFooterPlaybackUI(config) {
+        const { isVisible, isEnabled, icon, title, isHighlighted, isStopHighlighted } = config;
+        
+        this.btnFooterPlayPause.style.display = isVisible ? "inline-flex" : "none";
+        this.btnFooterPlayPause.disabled = !isEnabled;
+        this.btnFooterPlayPause.style.opacity = isEnabled ? "1" : "0.5";
+        this.btnFooterPlayPause.style.cursor = isEnabled ? "pointer" : "default";
+        this.btnFooterPlayPause.innerHTML = icon;
+        this.btnFooterPlayPause.title = title;
 
-        if (isVideo) {
-            this.btnFooterPlayPause.disabled = false;
-            this.btnFooterPlayPause.style.opacity = '1';
-            this.btnFooterPlayPause.style.cursor = 'pointer';
-            this.btnFooterPlayPause.innerHTML = isPlaying ? window.app.constructor.PAUSE_ICON : window.app.constructor.PLAY_ICON;
-            this.btnFooterPlayPause.style.display = 'inline-flex';
-            this.btnFooterPlayPause.title = isPlaying ? 'Pausar' : (isStaged ? 'Reproduzir' : 'Retomar');
-
-            if (isPaused || isStaged) {
-                this.btnFooterPlayPause.classList.add('btn-paused-highlight');
-                // btnStop might not be available if not initialized in UIManager
-                const btnStop = document.getElementById('btn-stop');
-                if (btnStop) btnStop.classList.remove('btn-paused-highlight');
-            } else {
-                this.btnFooterPlayPause.classList.remove('btn-paused-highlight');
-                const btnStop = document.getElementById('btn-stop');
-                if (btnStop) btnStop.classList.add('btn-paused-highlight');
-            }
+        if (isHighlighted) {
+            this.btnFooterPlayPause.classList.add("btn-paused-highlight");
         } else {
-            if (isStaged) {
-                this.btnFooterPlayPause.disabled = false;
-                this.btnFooterPlayPause.style.opacity = '1';
-                this.btnFooterPlayPause.style.cursor = 'pointer';
-                this.btnFooterPlayPause.innerHTML = window.app.constructor.PLAY_ICON;
-                this.btnFooterPlayPause.style.display = 'inline-flex';
-                this.btnFooterPlayPause.title = 'Reproduzir';
-                this.btnFooterPlayPause.classList.add('btn-paused-highlight');
-                const btnStop = document.getElementById('btn-stop');
-                if (btnStop) btnStop.classList.remove('btn-paused-highlight');
-            } else if (isPlaying) {
-                this.btnFooterPlayPause.style.display = 'inline-flex';
-                this.btnFooterPlayPause.innerHTML = this.icons.play;
-                this.btnFooterPlayPause.title = 'Reproduzir';
-                this.btnFooterPlayPause.disabled = true;
-                this.btnFooterPlayPause.style.opacity = '0.5';
-                this.btnFooterPlayPause.style.cursor = 'default';
-                this.btnFooterPlayPause.classList.remove('btn-paused-highlight');
-                const btnStop = document.getElementById('btn-stop');
-                if (btnStop) btnStop.classList.add('btn-paused-highlight');
-            } else {
-                this.btnFooterPlayPause.disabled = false;
-                this.btnFooterPlayPause.style.opacity = '1';
-                this.btnFooterPlayPause.style.cursor = 'pointer';
-                this.btnFooterPlayPause.style.display = 'inline-flex';
-            }
+            this.btnFooterPlayPause.classList.remove("btn-paused-highlight");
+        }
+
+        const btnStop = document.getElementById("btn-stop");
+        if (btnStop) {
+            if (isStopHighlighted) btnStop.classList.add("btn-paused-highlight");
+            else btnStop.classList.remove("btn-paused-highlight");
         }
     }
 
-    /**
-     * Show preview area and hide SiteView
-     */
     showPreview(type, filePath, autoPlay = true) {
         console.log(`[UI] showPreview: ${type} -> ${filePath} (AutoPlay: ${autoPlay})`);
         
@@ -273,87 +250,7 @@ class UIManager {
     }
 
     renderOperationGuide(zoomMode) {
-        const isAuto = zoomMode === 'auto';
-        const isSemi = zoomMode === 'semi';
-        const isManual = zoomMode === 'off';
-        const modeText = isAuto ? 'Zoom Automático' : (isSemi ? 'Zoom Semiautomático' : 'Zoom Manual');
-        
-        this.operationGuide.innerHTML = `
-            <div class="guide-card">
-                <div class="guide-header">
-                    <h2>Guia de Operação</h2>
-                    <span class="guide-mode-badge">Modo: ${modeText}</span>
-                </div>
-                <div class="guide-steps">
-                    ${!isManual ? `
-                    <div class="guide-step">
-                        <div class="guide-step-num">0</div>
-                        <div class="guide-step-content">
-                            <div class="guide-step-title">Configurar Atalho Global</div>
-                            <div class="guide-step-desc">
-                                No Zoom (Configurações > Atalhos do teclado):<br>
-                                Procure <b>Iniciar/interromper compartilhamento de tela</b> e ative <b>Atalho global</b>.
-                            </div>
-                        </div>
-                        <div class="guide-icon-box">⚙️</div>
-                    </div>` : ''}
-                    <div class="guide-step">
-                        <div class="guide-step-num">1</div>
-                        <div class="guide-step-content">
-                            <div class="guide-step-title">Preparar Playlist</div>
-                            <div class="guide-step-desc"><b>Crie e/ou escolha</b> uma playlist na barra lateral.</div>
-                        </div>
-                        <div class="guide-icon-box">📋</div>
-                    </div>
-                    <div class="guide-step">
-                        <div class="guide-step-num">2</div>
-                        <div class="guide-step-content">
-                            <div class="guide-step-title">Selecionar Mídia (Standby)</div>
-                            <div class="guide-step-desc">Clique no item. Ele ficará pronto, mas <b>não aparecerá</b> na TV ainda.</div>
-                        </div>
-                        <div class="guide-icon-box">🖱️</div>
-                    </div>
-                    <div class="guide-step">
-                        <div class="guide-step-num">3</div>
-                        <div class="guide-step-content">
-                            <div class="guide-step-title">Iniciar Reprodução</div>
-                            <div class="guide-step-desc">Clique no <b>Reproduzir</b>. O vídeo aparecerá na <b>2ª tela</b> ${!isAuto ? 'e você deve compartilhar pelo Zoom manualmente.' : 'e o Zoom será acionado.'}</div>
-                        </div>
-                        <div class="guide-icon-box"><div class="guide-play-mock"></div></div>
-                    </div>
-                    ${(isAuto || isSemi) ? `
-                    <div class="guide-step zoom-step">
-                        <div class="guide-step-num">4</div>
-                        <div class="guide-step-content">
-                            <span class="guide-zoom-tag">Na janela do Zoom (Apenas na 1ª vez)</span>
-                            <div class="guide-step-title">Marcar "Otimizar"</div>
-                            <div class="guide-step-desc">Marque <b>"Otimizar para clipe de vídeo"</b> no Zoom.</div>
-                        </div>
-                        <div class="guide-icon-box">✅</div>
-                    </div>
-                    <div class="guide-step zoom-step">
-                        <div class="guide-step-num">5</div>
-                        <div class="guide-step-content">
-                            <span class="guide-zoom-tag">${isAuto ? 'Na janela do Zoom (Apenas na 1ª vez)' : 'Na janela do Zoom (Sempre)'}</span>
-                            <div class="guide-step-title">Clique Duplo na Tela 2</div>
-                            <div class="guide-step-desc">Dê um <b>clique duplo</b> no quadro da "Tela 2" para iniciar.</div>
-                        </div>
-                        <div class="guide-icon-box">🖱️🖱️</div>
-                    </div>
-                    ` : ''}
-                </div>
-                ${isAuto ? `
-                <div class="guide-attention" style="text-align: left;">
-                    <b style="display: block; text-align: center;">⚠️ ATENÇÃO</b>
-                    <ul style="padding-left: 20px; margin: 10px 0 0 0;">
-                        <li>Estes passos (4 e 5) são necessários apenas no primeiro uso.</li>
-                        <li>A partir da segunda vez, o sistema assume o controle automaticamente.</li>
-                        <li>Não mexa no mouse durante o processamento!</li>
-                    </ul>
-                </div>
-                ` : ''}
-            </div>
-        `;
+        this.operationGuide.innerHTML = window.templates.renderOperationGuide(zoomMode);
     }
 
     /**
@@ -609,52 +506,39 @@ class UIManager {
      * @param {string} status - Status atual ('playing', 'paused', 'staged', 'stopped')
      * @param {string|number|null} activeItemId - ID do item que está sendo reproduzido ou em preparação
      */
-    updatePlaybackStateUI(status, activeItemId) {
-        const items = this.itemsList.querySelectorAll('.playlist-item-li');
+        /**
+     * Atualiza a interface da playlist (?cones e estado dos bot?es) 
+     * com base no estado de exibi??o calculado.
+     */
+    updatePlaybackStateUI(config) {
+        const { statusLabel, statusClass, items } = config;
 
-        // Update state label ['PREPARADO', 'NO AR']
+        // Update top-left state label (PREPARADO / NO AR)
         if (this.stateLabel) {
-            this.stateLabel.className = 'state-label'; // Reset classes
-            if (status === 'playing' || status === 'paused') {
-                this.stateLabel.textContent = 'NO AR';
-                this.stateLabel.classList.add(status);
-            } else if (status === 'staged') {
-                this.stateLabel.textContent = 'PREPARADO';
-                this.stateLabel.classList.add('staged');
-            } else {
-                this.stateLabel.textContent = '';
-            }
+            this.stateLabel.textContent = statusLabel || "";
+            this.stateLabel.className = "state-label " + (statusClass || "");
         }
 
-        items.forEach(li => {
+        // Update each item in the list
+        const liElements = this.itemsList.querySelectorAll(".playlist-item-li");
+        liElements.forEach(li => {
             const itemId = li.dataset.id;
-            const btnPlay = li.querySelector('.btn-play-item');
+            const itemConfig = items[itemId];
+            const btnPlay = li.querySelector(".btn-play-item");
+
+            li.classList.remove("playing", "standby");
             
-            li.classList.remove('playing', 'standby');
-            
-            // If item is the active/staged one
-            if (itemId == activeItemId) {
-                if (status === 'playing' || status === 'paused') {
-                    li.classList.add('playing');
-                    const isVideo = li.querySelector('.item-type').textContent.toLowerCase().includes('video');
-                    
-                    if (status === 'playing') {
-                        btnPlay.innerHTML = isVideo ? this.icons.pause : this.icons.stop;
-                        btnPlay.title = isVideo ? 'Pausar' : 'Parar';
-                    } else {
-                        // paused state
-                        btnPlay.innerHTML = this.icons.play;
-                        btnPlay.title = 'Retomar';
-                    }
-                } else if (status === 'staged') {
-                    li.classList.add('standby');
-                    btnPlay.innerHTML = this.icons.play;
-                    btnPlay.title = 'Reproduzir';
+            if (itemConfig) {
+                if (itemConfig.class) li.classList.add(itemConfig.class);
+                if (btnPlay) {
+                    btnPlay.innerHTML = itemConfig.icon;
+                    btnPlay.title = itemConfig.title;
                 }
             } else {
-                // Stopped or other items
-                btnPlay.innerHTML = this.icons.play;
-                btnPlay.title = 'Reproduzir';
+                if (btnPlay) {
+                    btnPlay.innerHTML = this.icons.play;
+                    btnPlay.title = "Reproduzir";
+                }
             }
         });
     }
@@ -754,6 +638,59 @@ class UIManager {
     onItemPlay(item) {}
     onItemRemove(playlistId, itemId) {}
     onItemRename(itemId, newName) {}
+
+
+    // --- Modal Helpers ---
+    showConfirmModal(message, onConfirm, onCancel) {
+        const modal = document.getElementById('custom-modal');
+        const msgEl = document.getElementById('modal-message');
+        const btnConfirm = document.getElementById('modal-confirm');
+        const btnCancel = document.getElementById('modal-cancel');
+
+        if (!modal || !msgEl || !btnConfirm || !btnCancel) return false;
+
+        msgEl.textContent = message;
+        modal.style.display = 'flex';
+
+        const close = (result) => {
+            modal.style.display = 'none';
+            btnConfirm.onclick = null;
+            btnCancel.onclick = null;
+            modal.onclick = null;
+            if (result) onConfirm();
+            else onCancel();
+        };
+
+        btnConfirm.onclick = () => close(true);
+        btnCancel.onclick = () => close(false);
+        modal.onclick = (e) => { if (e.target === modal) close(false); };
+        return true;
+    }
+
+    // --- View Helpers ---
+    isWebViewVisible() { return this.webviewContainer.style.display !== 'none'; }
+    setWebViewVisibility(visible) {
+        if (window.electronAPI && window.electronAPI.toggleWebView) {
+            window.electronAPI.toggleWebView(visible);
+        }
+    }
+    isPlaylistView() { return this.viewPlaylists.style.display !== 'none'; }
+
+    setFooterTransportVisibility(visible) {
+        const footerTransportButtons = document.querySelector('.transport-buttons');
+        if (footerTransportButtons) {
+            footerTransportButtons.style.visibility = visible ? 'visible' : 'hidden';
+        }
+    }
+
+    setPreviewControlsOverlayVisibility(visible) {
+        if (this.previewControlsOverlay) {
+            this.previewControlsOverlay.style.display = visible ? 'block' : 'none';
+        }
+    }
+
 }
+
+
 
 window.uiManager = new UIManager();
