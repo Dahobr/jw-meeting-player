@@ -64,7 +64,9 @@ class UIManager {
         // Global click listener to close dropdowns
         document.addEventListener('click', (e) => {
             if (!this.btnMenu.contains(e.target)) {
-                this.headerMenu.classList.remove('show');
+                if (this.headerMenu.classList.contains('show')) {
+                    this.headerMenu.classList.remove('show');
+                }
             }
             document.querySelectorAll('.item-dropdown.show').forEach(d => d.classList.remove('show'));
         });
@@ -230,6 +232,7 @@ class UIManager {
 
     showHelp(html) {
         console.log('[UI] showHelp called');
+        this.hideOperationGuide();
         this.helpContainer.innerHTML = html;
         this.helpView.style.display = 'flex';
         this.previewArea.style.display = 'none'; // Ensure preview is hidden
@@ -252,7 +255,7 @@ class UIManager {
             window.electronAPI.toggleWebView(false);
         }
 
-        this.previewArea.style.display = 'flex';
+        this.previewArea.style.display = 'none'; // Hide preview area when showing guide
         this.operationGuide.style.display = 'flex';
         this.previewMediaWrapper.style.display = 'none';
         this.previewControls.style.display = 'none';
@@ -752,4 +755,5 @@ class UIManager {
     onItemRename(itemId, newName) {}
 }
 
+window.uiManager = new UIManager();
 window.uiManager = new UIManager();

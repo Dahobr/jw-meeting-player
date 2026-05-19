@@ -45,6 +45,8 @@ class App {
                 this.ipc.toggleWebView(false);
             }
 
+            // Show blur overlay if available
+
             msgEl.textContent = message;
             modal.style.display = 'flex';
 
@@ -90,6 +92,7 @@ class App {
 
         this.ui.switchView('playlists');
         this.status = 'stopped';
+        this.ui.showOperationGuide('auto'); // 起動時にガイドを表示
         this.updatePlaybackUI();
         this.startBoundsMonitoring();
 
