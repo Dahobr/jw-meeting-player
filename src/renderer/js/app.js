@@ -320,7 +320,7 @@ class App {
                 this.togglePlayback();
             } else {
                 // Otherwise play it
-                this.playMedia(item);
+                this.playbackManager.playMedia(item);
             }
         };
 
@@ -581,64 +581,6 @@ class App {
         if (type === 'video') return 'video/mp4';
         if (type === 'image') return 'image/jpeg';
         return type;
-    }
-
-    playMedia(item) {
-        console.log(`[App] playMedia called for: ${item.title || item.filename}`);
-        this.currentMedia = item;
-        this.standbyItemId = null;
-        
-        const fullType = this.playbackManager.getNormalizedType(item);
-        const isVideo = fullType.includes('video');
-        const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : 'off';
-        
-        // --- ZOOM INTEGRATION TRIGGER ---
-        const useZoom = (zoomMode !== 'off');
-
-        console.log(`[App] Playing ${fullType}. ZoomMode: ${zoomMode}, UseZoom: ${useZoom}`);
-
-        // 1. Show Preview
-        this.ui.showPreview(fullType, item.filePath, !useZoom || !isVideo);
-
-        if (useZoom) {
-            if (isVideo) {
-                // Video: Start in paused state to wait for Zoom
-                this.status = 'paused';
-                this.isPlaying = false;
-                if (this.hasSecondaryDisplay) {
-                    this.ipc.loadMedia({ mediaPath: item.filePath, mediaType: fullType, autoPlay: false });
-                    this.isPlayingOnSlave = false;
-                }
-            } else {
-                // Image: Show immediately, but also trigger Zoom sharing
-                this.status = 'playing';
-                this.isPlaying = true;
-                if (this.hasSecondaryDisplay) {
-                    this.ipc.loadMedia({ mediaPath: item.filePath, mediaType: fullType, autoPlay: true });
-                    this.isPlayingOnSlave = true;
-                }
-            }
-            // Trigger Alt+S via C#
-            this.triggerZoomSharing(zoomMode);
-        } else {
-            // Normal behavior without Zoom
-            this.status = 'playing';
-            this.isPlaying = true;
-
-            if (this.hasSecondaryDisplay) {
-                this.ipc.loadMedia({ mediaPath: item.filePath, mediaType: fullType, autoPlay: true });
-                this.isPlayingOnSlave = true;
-            }
-
-            if (isVideo) {
-                this.ui.previewVideo.play().catch(e => {
-                    if(e.name !== 'AbortError') console.error('[App] Local play failed:', e);
-                });
-            }
-        }
-
-        this.updateAudioMuteState();
-        this.updatePlaybackUI();
     }
 
     /**
