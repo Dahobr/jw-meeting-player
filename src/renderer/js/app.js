@@ -69,6 +69,7 @@ class App {
      */
     async init() {
         if (this.initialized) return;
+        this.playbackManager = new PlaybackManager(this, this.ui, this.ipc, this.store);
 
         console.log('[App] Initializing Renderer...');
 
@@ -290,7 +291,7 @@ class App {
             if (playlist && playlist.items.length > 0 && this.status === 'stopped') {
                 const lastItemId = this.lastStagedItemPerPlaylist[id];
                 const itemToStandby = playlist.items.find(i => i.id === lastItemId) || playlist.items[0];
-                this.prepareStagingMedia(itemToStandby);
+                this.playbackManager.prepareStagingMedia(itemToStandby);
             }
             this.updatePlaybackUI();
         };
@@ -309,7 +310,7 @@ class App {
         // Item List Interactions
         this.ui.onItemSelect = (item) => {
             console.log('[App] Staging item in preview area.');
-            this.prepareStagingMedia(item);
+            this.playbackManager.prepareStagingMedia(item);
         };
         
         this.ui.onItemPlay = (item) => {
@@ -587,7 +588,7 @@ class App {
         this.currentMedia = item;
         this.standbyItemId = null;
         
-        const fullType = this.getNormalizedType(item);
+        const fullType = this.playbackManager.getNormalizedType(item);
         const isVideo = fullType.includes('video');
         const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : 'off';
         
