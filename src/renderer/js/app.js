@@ -615,7 +615,7 @@ class App {
      */
     togglePlayback() {
         if (this.status === 'stopped' || this.status === 'staged') {
-            if (this.currentMedia) this.playMedia(this.currentMedia);
+            if (this.currentMedia) this.playbackManager.playMedia(this.currentMedia);
             return;
         }
 
@@ -623,9 +623,9 @@ class App {
         const isVideo = this.currentMedia?.mediaType?.includes('video');
         if (isVideo) {
             if (this.ui.previewVideo.paused) {
-                this.resumePlayback();
+                this.playbackManager.resumePlayback();
             } else {
-                this.pausePlayback();
+                this.playbackManager.pausePlayback();
             }
         } else {
             // It's an image. If it's live, treat toggle as stop.
