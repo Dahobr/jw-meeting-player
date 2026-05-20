@@ -111,18 +111,6 @@ class App {
     }
 
     /**
-     * Sets up keyboard event listeners for application shortcuts.
-     */
-    setupKeyboardListeners() {
-        window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
-                e.preventDefault();
-                this.togglePlayback();
-            }
-        });
-    }
-
-    /**
      * Sets up event listeners for the preview video and seeker interaction.
      */
     setupPreviewListeners() {
