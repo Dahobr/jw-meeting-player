@@ -346,7 +346,7 @@ class App {
         }
 
         this.ui.btnStop = document.getElementById('btn-stop');
-        if (this.ui.btnStop) this.ui.btnStop.onclick = () => this.stopMedia('manual click');
+        if (this.ui.btnStop) this.ui.btnStop.onclick = () => this.playbackManager.stopMedia('manual click');
 
         if (window.Sortable) {
             new Sortable(this.ui.itemsList, {
@@ -413,7 +413,7 @@ class App {
             if (this.status === 'playing' || this.status === 'paused') {
                 this.status = isPlaying ? 'playing' : 'paused';
             }
-            this.updatePlaybackUI();
+            this.playbackManager.updatePlaybackUI();
         });
         
         this.ipc.onLoadMedia((data) => {
@@ -427,12 +427,12 @@ class App {
                 console.log('[App] [PAUSE-LOG] onLoadMedia received but keeping status staged/waiting.');
             }
             
-            this.updatePlaybackUI();
+            this.playbackManager.updatePlaybackUI();
         });
 
         this.ipc.onDisplayStatus((status) => {
             this.hasSecondaryDisplay = (status === 'connected');
-            this.updatePlaybackUI();
+            this.playbackManager.updatePlaybackUI();
             this.updateAudioMuteState();
         });
 
@@ -440,7 +440,7 @@ class App {
             // Ignore 'stop' if already stopped, staged, or stopping to prevent feedback loops
             if (action === 'stop') {
                 if (this.status === 'stopped' || this.status === 'staged' || this.isStopping) return;
-                this.stopMedia('ipc command');
+                this.playbackManager.stopMedia('ipc command');
             }
         });
 
@@ -448,7 +448,7 @@ class App {
         window.electronAPI.onZoomProcStdout((data) => {
             if (data.includes('[C#] COORDS:')) {
                 const parts = data.split(':')[1].split(',');
-                this.zoomCoords = { x: parseInt(parts[0]), y: parseInt(parts[1]) };
+                this.zoomCoords = { x: parseInt(parts[0]), y: parseInt(parts[1] ) };
                 console.log('[App] >>> SAVED ZOOM COORDS:', this.zoomCoords);
             }
         });
@@ -457,7 +457,7 @@ class App {
             console.log('[App] >>> Zoom sharing READY (STARTED) signal received.');
             if (this.status === 'paused' && this.currentMedia?.mediaType?.includes('video')) {
                 console.log('[App] >>> Auto-resuming video playback.');
-                this.resumePlayback();
+                this.playbackManager.resumePlayback();
             } else {
                 console.log('[App] Zoom signal ignored. Status:', this.status, 'Media:', this.currentMedia?.mediaType);
             }
