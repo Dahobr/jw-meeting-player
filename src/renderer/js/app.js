@@ -15,13 +15,11 @@ class App {
         this.initialized = false;
         this.isStopping = false;
         this.currentMedia = null;
-        this.isPlaying = false;
         this.status = 'stopped';
         this.isDraggingSeeker = false;
         this.hasSecondaryDisplay = false;
         this.wasPlayingBeforeDrag = false;
         this.isPlayingOnSlave = false;
-        this.seekerDragEndTime = 0; 
         this.pendingCanPlayListener = null; 
         this.zoomCoords = null;
         this.lastStagedItemPerPlaylist = {};
