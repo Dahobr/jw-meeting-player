@@ -70,13 +70,12 @@ class App {
     async init() {
         if (this.initialized) return;
         this.playbackManager = new PlaybackManager(this, this.ui, this.ipc, this.store);
+        this.eventHandler = new EventHandler(this, this.ui, this.ipc, this.store);
 
         console.log('[App] Initializing Renderer...');
 
         this.store.subscribe((state) => this.handleStoreChange(state));
-        this.setupUICallbacks();
-        this.setupIPCListeners();
-        this.setupKeyboardListeners();
+        this.eventHandler.init();
         this.setupPreviewListeners();
 
         const data = await this.ipc.loadPlaylists();
