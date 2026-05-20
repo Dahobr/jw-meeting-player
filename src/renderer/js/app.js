@@ -7,24 +7,22 @@ class App {
     static PLAY_ICON = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
     static PAUSE_ICON = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="currentColor"/></svg>';
 
-    constructor() {
-        this.store = window.PlaylistStore;
-        this.ui = window.uiManager;
-        this.ipc = window.ipcClient;
+    constructor(store, ui, ipc) {
+        this.store = store;
+        this.ui = ui;
+        this.ipc = ipc;
         
         this.initialized = false;
-        this.isStopping = false; // Re-entrancy guard for stopMedia
+        this.isStopping = false;
         this.currentMedia = null;
-        this.isPlaying = false;
-        this.status = 'stopped'; // 'stopped', 'staged', 'playing', 'paused'
+        this.status = 'stopped';
         this.isDraggingSeeker = false;
         this.hasSecondaryDisplay = false;
         this.wasPlayingBeforeDrag = false;
         this.isPlayingOnSlave = false;
-        this.seekerDragEndTime = 0; 
         this.pendingCanPlayListener = null; 
         this.zoomCoords = null;
-        this.lastStagedItemPerPlaylist = {}; // Keeps track of the last item staged per playlist
+        this.lastStagedItemPerPlaylist = {};
     }
 
     /**
@@ -664,6 +662,6 @@ class App {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    window.app = new App();
+    window.app = new App(window.PlaylistStore, window.uiManager, window.ipcClient);
     window.app.init();
 });
