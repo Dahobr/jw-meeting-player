@@ -17,6 +17,10 @@ class PlaybackManager {
         this.store = store;
     }
 
+    /**
+     * Prepares media for playback without starting it (staging).
+     * @param {Object} item - The media item to stage.
+     */
     prepareStagingMedia(item) {
         console.log('[PlaybackManager] prepareStagingMedia:', item.title || item.filename);
 
@@ -47,6 +51,11 @@ class PlaybackManager {
         this.app.updatePlaybackUI();
     }
 
+    /**
+     * Normalizes the media type for consistency (e.g., video -> video/mp4).
+     * @param {Object} item - The media item.
+     * @returns {string} Normalized mime type.
+     */
     getNormalizedType(item) {
         let type = item.mediaType || '';
         if (type === 'video') return 'video/mp4';
@@ -54,6 +63,10 @@ class PlaybackManager {
         return type;
     }
 
+    /**
+     * Plays the specified media item.
+     * @param {Object} item - The media item to play.
+     */
     playMedia(item) {
         console.log(`[PlaybackManager] playMedia called for: ${item.title || item.filename}`);
         this.app.currentMedia = item;
@@ -112,6 +125,9 @@ class PlaybackManager {
         this.app.updatePlaybackUI();
     }
 
+    /**
+     * Resumes video playback.
+     */
     resumePlayback() {
         if (!this.app.currentMedia || !this.app.currentMedia.mediaType.includes('video')) return;
 
@@ -129,6 +145,9 @@ class PlaybackManager {
         this.app.updateAudioMuteState();
     }
 
+    /**
+     * Pauses video playback.
+     */
     pausePlayback() {
         if (!this.app.currentMedia || !this.app.currentMedia.mediaType.includes('video')) return;
 
@@ -140,6 +159,10 @@ class PlaybackManager {
         this.updatePlaybackUI();
     }
 
+    /**
+     * Stops the media playback.
+     * @param {string} [reason='unknown'] - The reason for stopping playback.
+     */
     stopMedia(reason = 'unknown') {
         if (this.app.isStopping) return;
         this.app.isStopping = true;
@@ -156,7 +179,7 @@ class PlaybackManager {
             }
             
             this.ipc.playbackControl({ action: 'stop' });
-            this.app.triggerZoomSharing(false); // Refactored triggerZoomSharing name or keep as is?
+            this.app.triggerZoomSharing(false);
             this.app.status = 'stopped';
 
             this.app.currentMedia = null;
@@ -194,6 +217,9 @@ class PlaybackManager {
         }
     }
 
+    /**
+     * Updates the playback UI controls and display state.
+     */
     updatePlaybackUI() {
         const isStaged = this.app.status === "staged";
         const isPlaying = this.app.status === "playing";
