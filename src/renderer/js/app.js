@@ -27,58 +27,49 @@ class App {
         this.lastStagedItemPerPlaylist = {}; // Keeps track of the last item staged per playlist
     }
 
+    /**
+     * Displays a custom confirmation modal and returns a promise.
+     * 
+     * @param {string} message - The confirmation message to display.
+     * @returns {Promise<boolean>} Resolves to true if confirmed, false otherwise.
+     */
     async showCustomConfirm(message) {
         return new Promise((resolve) => {
-            const modal = document.getElementById('custom-modal');
-            const msgEl = document.getElementById('modal-message');
-            const btnConfirm = document.getElementById('modal-confirm');
-            const btnCancel = document.getElementById('modal-cancel');
+            const wasWebViewVisible = this.ui.isWebViewVisible();
+            this.ui.setWebViewVisibility(false);
 
-            if (!modal || !msgEl || !btnConfirm || !btnCancel) {
-                console.error('[App] Modal elements not found');
-                resolve(confirm(message));
-                return;
-            }
-
-            // Hide SiteView to ensure modal is visible
-            const wasWebViewVisible = (this.ui.webviewContainer.style.display !== 'none');
-            if (this.ipc && this.ipc.toggleWebView) {
-                this.ipc.toggleWebView(false);
-            }
-
-            // Show blur overlay if available
-
-            msgEl.textContent = message;
-            modal.style.display = 'flex';
-
-            const close = (result) => {
-                modal.style.display = 'none';
-                btnConfirm.onclick = null;
-                btnCancel.onclick = null;
-                
-                // Restore SiteView if it was visible and we aren't in preview mode
-                // (preview mode also hides webview, so we check app status)
-                if (wasWebViewVisible && this.status === 'stopped') {
-                    if (this.ipc && this.ipc.toggleWebView) {
-                        this.ipc.toggleWebView(true);
+            const success = this.ui.showConfirmModal(
+                message,
+                () => {
+                    if (wasWebViewVisible && this.status === "stopped") {
+                        this.ui.setWebViewVisibility(true);
                     }
+                    resolve(true);
+                },
+                () => {
+                    if (wasWebViewVisible && this.status === "stopped") {
+                        this.ui.setWebViewVisibility(true);
+                    }
+                    resolve(false);
                 }
-                
-                resolve(result);
-            };
+            );
 
-            btnConfirm.onclick = () => close(true);
-            btnCancel.onclick = () => close(false);
-            
-            // Allow closing by clicking outside the modal content
-            modal.onclick = (e) => {
-                if (e.target === modal) close(false);
-            };
+            if (!success) {
+                console.error("[App] Modal elements not found");
+                resolve(confirm(message));
+            }
         });
     }
 
+    /**
+     * Initializes the application, setting up listeners, loading initial data, 
+     * and configuring the UI.
+     * 
+     * @returns {Promise<void>}
+     */
     async init() {
         if (this.initialized) return;
+        this.playbackManager = new PlaybackManager(this, this.ui, this.ipc, this.store);
 
         console.log('[App] Initializing Renderer...');
 
@@ -120,6 +111,9 @@ class App {
         console.log('[App] Renderer Initialized.');
     }
 
+    /**
+     * Sets up keyboard event listeners for application shortcuts.
+     */
     setupKeyboardListeners() {
         window.addEventListener('keydown', (e) => {
             if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
@@ -129,6 +123,9 @@ class App {
         });
     }
 
+    /**
+     * Sets up event listeners for the preview video and seeker interaction.
+     */
     setupPreviewListeners() {
         let lastSeekTime = 0;
         const seekThrottleMs = 100; 
@@ -294,7 +291,7 @@ class App {
             if (playlist && playlist.items.length > 0 && this.status === 'stopped') {
                 const lastItemId = this.lastStagedItemPerPlaylist[id];
                 const itemToStandby = playlist.items.find(i => i.id === lastItemId) || playlist.items[0];
-                this.prepareStagingMedia(itemToStandby);
+                this.playbackManager.prepareStagingMedia(itemToStandby);
             }
             this.updatePlaybackUI();
         };
@@ -313,7 +310,7 @@ class App {
         // Item List Interactions
         this.ui.onItemSelect = (item) => {
             console.log('[App] Staging item in preview area.');
-            this.prepareStagingMedia(item);
+            this.playbackManager.prepareStagingMedia(item);
         };
         
         this.ui.onItemPlay = (item) => {
@@ -323,7 +320,7 @@ class App {
                 this.togglePlayback();
             } else {
                 // Otherwise play it
-                this.playMedia(item);
+                this.playbackManager.playMedia(item);
             }
         };
 
@@ -349,7 +346,7 @@ class App {
         }
 
         this.ui.btnStop = document.getElementById('btn-stop');
-        if (this.ui.btnStop) this.ui.btnStop.onclick = () => this.stopMedia('manual click');
+        if (this.ui.btnStop) this.ui.btnStop.onclick = () => this.playbackManager.stopMedia('manual click');
 
         if (window.Sortable) {
             new Sortable(this.ui.itemsList, {
@@ -362,6 +359,9 @@ class App {
         }
     }
 
+    /**
+     * Handles the creation of a new playlist based on UI input.
+     */
     handleCreatePlaylist() {
         const name = this.ui.newPlaylistInput.value.trim();
         if (name) {
@@ -370,6 +370,9 @@ class App {
         }
     }
 
+    /**
+     * Sets up IPC listeners to handle events from the main process.
+     */
     setupIPCListeners() {
         this.ipc.onRequestSaveImage(async (url) => {
             await this.saveBrowserImage(url);
@@ -410,7 +413,7 @@ class App {
             if (this.status === 'playing' || this.status === 'paused') {
                 this.status = isPlaying ? 'playing' : 'paused';
             }
-            this.updatePlaybackUI();
+            this.playbackManager.updatePlaybackUI();
         });
         
         this.ipc.onLoadMedia((data) => {
@@ -424,12 +427,12 @@ class App {
                 console.log('[App] [PAUSE-LOG] onLoadMedia received but keeping status staged/waiting.');
             }
             
-            this.updatePlaybackUI();
+            this.playbackManager.updatePlaybackUI();
         });
 
         this.ipc.onDisplayStatus((status) => {
             this.hasSecondaryDisplay = (status === 'connected');
-            this.updatePlaybackUI();
+            this.playbackManager.updatePlaybackUI();
             this.updateAudioMuteState();
         });
 
@@ -437,7 +440,7 @@ class App {
             // Ignore 'stop' if already stopped, staged, or stopping to prevent feedback loops
             if (action === 'stop') {
                 if (this.status === 'stopped' || this.status === 'staged' || this.isStopping) return;
-                this.stopMedia('ipc command');
+                this.playbackManager.stopMedia('ipc command');
             }
         });
 
@@ -445,7 +448,7 @@ class App {
         window.electronAPI.onZoomProcStdout((data) => {
             if (data.includes('[C#] COORDS:')) {
                 const parts = data.split(':')[1].split(',');
-                this.zoomCoords = { x: parseInt(parts[0]), y: parseInt(parts[1]) };
+                this.zoomCoords = { x: parseInt(parts[0]), y: parseInt(parts[1] ) };
                 console.log('[App] >>> SAVED ZOOM COORDS:', this.zoomCoords);
             }
         });
@@ -454,7 +457,7 @@ class App {
             console.log('[App] >>> Zoom sharing READY (STARTED) signal received.');
             if (this.status === 'paused' && this.currentMedia?.mediaType?.includes('video')) {
                 console.log('[App] >>> Auto-resuming video playback.');
-                this.resumePlayback();
+                this.playbackManager.resumePlayback();
             } else {
                 console.log('[App] Zoom signal ignored. Status:', this.status, 'Media:', this.currentMedia?.mediaType);
             }
@@ -466,6 +469,9 @@ class App {
         });
     }
 
+    /**
+     * Resumes video playback after a pause or wait period.
+     */
     resumePlayback() {
         if (!this.currentMedia || !this.currentMedia.mediaType.includes('video')) return;
 
@@ -577,64 +583,11 @@ class App {
         return type;
     }
 
-    playMedia(item) {
-        console.log(`[App] playMedia called for: ${item.title || item.filename}`);
-        this.currentMedia = item;
-        this.standbyItemId = null;
-        
-        const fullType = this.getNormalizedType(item);
-        const isVideo = fullType.includes('video');
-        const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : 'off';
-        
-        // --- ZOOM INTEGRATION TRIGGER ---
-        const useZoom = (zoomMode !== 'off');
-
-        console.log(`[App] Playing ${fullType}. ZoomMode: ${zoomMode}, UseZoom: ${useZoom}`);
-
-        // 1. Show Preview
-        this.ui.showPreview(fullType, item.filePath, !useZoom || !isVideo);
-
-        if (useZoom) {
-            if (isVideo) {
-                // Video: Start in paused state to wait for Zoom
-                this.status = 'paused';
-                this.isPlaying = false;
-                if (this.hasSecondaryDisplay) {
-                    this.ipc.loadMedia({ mediaPath: item.filePath, mediaType: fullType, autoPlay: false });
-                    this.isPlayingOnSlave = false;
-                }
-            } else {
-                // Image: Show immediately, but also trigger Zoom sharing
-                this.status = 'playing';
-                this.isPlaying = true;
-                if (this.hasSecondaryDisplay) {
-                    this.ipc.loadMedia({ mediaPath: item.filePath, mediaType: fullType, autoPlay: true });
-                    this.isPlayingOnSlave = true;
-                }
-            }
-            // Trigger Alt+S via C#
-            this.triggerZoomSharing(zoomMode);
-        } else {
-            // Normal behavior without Zoom
-            this.status = 'playing';
-            this.isPlaying = true;
-
-            if (this.hasSecondaryDisplay) {
-                this.ipc.loadMedia({ mediaPath: item.filePath, mediaType: fullType, autoPlay: true });
-                this.isPlayingOnSlave = true;
-            }
-
-            if (isVideo) {
-                this.ui.previewVideo.play().catch(e => {
-                    if(e.name !== 'AbortError') console.error('[App] Local play failed:', e);
-                });
-            }
-        }
-
-        this.updateAudioMuteState();
-        this.updatePlaybackUI();
-    }
-
+    /**
+     * Triggers the Zoom sharing mechanism via IPC.
+     * 
+     * @param {string} mode - Zoom mode identifier.
+     */
     triggerZoomSharing(mode) {
         console.log(`[App] Triggering Zoom Sharing (${mode})`);
         const args = [];
@@ -648,15 +601,21 @@ class App {
     // goLive was absorbed into playMedia for simplicity.
     // Removed to avoid confusion.
 
+    /**
+     * Updates the preview video audio mute state based on display configuration.
+     */
     updateAudioMuteState() {
         if (this.ui.previewVideo) {
             this.ui.previewVideo.muted = this.hasSecondaryDisplay && this.isPlayingOnSlave;
         }
     }
 
+    /**
+     * Toggles playback between playing, paused, or stopped.
+     */
     togglePlayback() {
         if (this.status === 'stopped' || this.status === 'staged') {
-            if (this.currentMedia) this.playMedia(this.currentMedia);
+            if (this.currentMedia) this.playbackManager.playMedia(this.currentMedia);
             return;
         }
 
@@ -664,9 +623,9 @@ class App {
         const isVideo = this.currentMedia?.mediaType?.includes('video');
         if (isVideo) {
             if (this.ui.previewVideo.paused) {
-                this.resumePlayback();
+                this.playbackManager.resumePlayback();
             } else {
-                this.pausePlayback();
+                this.playbackManager.pausePlayback();
             }
         } else {
             // It's an image. If it's live, treat toggle as stop.
@@ -674,6 +633,9 @@ class App {
         }
     }
 
+    /**
+     * Pauses the current video playback.
+     */
     pausePlayback() {
         if (!this.currentMedia || !this.currentMedia.mediaType.includes('video')) return;
 
@@ -685,6 +647,11 @@ class App {
         this.updatePlaybackUI();
     }
 
+    /**
+     * Stops the current media playback and handles cleanup or auto-standby logic.
+     * 
+     * @param {string} [reason='unknown'] - The reason for stopping playback.
+     */
     stopMedia(reason = 'unknown') {
         if (this.isStopping) return;
         this.isStopping = true;
@@ -749,19 +716,22 @@ class App {
      * Updates the playback bar UI (control buttons and status) 
      * based on the current playback status and media type.
      * 
-     * @execution_context 
-     * - Called by: handleStoreChange(), stopMedia(), setupPreviewListeners(), onMediaPlaybackStateChange(), etc.
-     * - When: Whenever the playback status or media state changes, or the UI needs re-rendering.
+     * @listens App#handleStoreChange
+     * @listens App#stopMedia
+     * @listens App#setupPreviewListeners
+     * @listens App#onMediaPlaybackStateChange
+     * 
+     * @context Called whenever the playback status or media state changes, or the UI needs re-rendering.
      */
     updatePlaybackUI() {
-        const isStaged = this.status === 'staged';
-        const isPlaying = this.status === 'playing';
-        const isPaused = this.status === 'paused';
-        const isStopped = this.status === 'stopped';
-        const isVideo = this.currentMedia?.mediaType?.includes('video');
+        const isStaged = this.status === "staged";
+        const isPlaying = this.status === "playing";
+        const isPaused = this.status === "paused";
+        const isStopped = this.status === "stopped";
+        const isVideo = this.currentMedia?.mediaType?.includes("video");
 
         const hasMedia = !!this.currentMedia;
-        const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : 'auto';
+        const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : "auto";
 
         if (isStopped && !hasMedia) {
             this.ui.showOperationGuide(zoomMode);
@@ -769,51 +739,73 @@ class App {
             this.ui.hideOperationGuide();
         }
 
-        // --- Update Status Text based on View ---
-        const isPlaylistView = (this.ui.viewPlaylists.style.display !== 'none');
-        let statusText = '';
+        // --- View Logic ---
+        const isPlaylistView = this.ui.isPlaylistView();
+        let statusText = "";
         
         if (isPlaylistView) {
-            // Playlist List View: Show Monitor Status
             statusText = this.hasSecondaryDisplay 
-                ? 'O segundo monitor: Conectado' 
-                : 'O segundo monitor: ⚠️ Não detectado';
-            
-            this.ui.updateDisplayStatus(this.hasSecondaryDisplay ? 'connected' : 'waiting');
+                ? "O segundo monitor: Conectado" 
+                : "O segundo monitor: ⚠️ Não detectado";
+            this.ui.updateDisplayStatus(this.hasSecondaryDisplay ? "connected" : "waiting");
         } else {
-            // Inside Playlist View: Show Media Info
-            statusText = 'Parado: Nenhum item';
+            statusText = "Parado: Nenhum item";
             if (this.currentMedia) {
                 const fileName = this.currentMedia.title || this.currentMedia.filename;
                 if (isPlaying) statusText = `Reproduzindo: ${fileName}`;
                 else if (isPaused) statusText = `Pausado: ${fileName}`;
                 else if (isStaged) statusText = `Preparado: ${fileName}`;
             }
-            this.ui.updateDisplayStatus('connected'); // Clear warning when inside playlist
+            this.ui.updateDisplayStatus("connected");
         }
         
         this.ui.updateCurrentItemInfo(statusText);
+        this.ui.setFooterTransportVisibility(!isPlaylistView);
+        this.ui.setPreviewControlsOverlayVisibility(!isVideo);
 
-        // --- Hide Footer controls if in playlist view ---
-        const footerTransportButtons = document.querySelector('.transport-buttons');
-        if (footerTransportButtons) {
-            footerTransportButtons.style.visibility = isPlaylistView ? 'hidden' : 'visible';
+        // --- Calculate Footer UI State ---
+        const footerConfig = {
+            isVisible: true,
+            isEnabled: true,
+            icon: isPlaying ? App.PAUSE_ICON : App.PLAY_ICON,
+            title: isPlaying ? "Pausar" : (isStaged ? "Reproduzir" : "Retomar"),
+            isHighlighted: (isPaused || isStaged),
+            isStopHighlighted: !(isPaused || isStaged) && (isPlaying || isStopped)
+        };
+
+        if (!isVideo) {
+            if (isStaged) {
+                footerConfig.title = "Reproduzir";
+                footerConfig.isHighlighted = true;
+                footerConfig.isStopHighlighted = false;
+            } else if (isPlaying) {
+                footerConfig.isEnabled = false;
+                footerConfig.isHighlighted = false;
+                footerConfig.isStopHighlighted = true;
+            }
         }
+        this.ui.updateFooterPlaybackUI(footerConfig);
 
-        // --- Control visibility and appearance of preview controls ---
-        if (this.ui.previewControlsOverlay) {
-            // Hide controls with overlay if displaying an image
-            // if isVideo is false, it's an image
-            const shouldHideControls = !isVideo;
-            this.ui.previewControlsOverlay.style.display = shouldHideControls ? 'block' : 'none';
+        // --- Calculate Playlist Item State ---
+        const playlistConfig = {
+            statusLabel: (isPlaying || isPaused) ? "NO AR" : (isStaged ? "PREPARADO" : ""),
+            statusClass: isStaged ? "staged" : (isPlaying || isPaused ? this.status : ""),
+            items: {}
+        };
+
+        if (this.currentMedia) {
+            playlistConfig.items[this.currentMedia.id] = {
+                class: (isPlaying || isPaused) ? "playing" : "standby",
+                icon: (isPlaying && isVideo) ? this.ui.icons.pause : (isPlaying ? this.ui.icons.stop : this.ui.icons.play),
+                title: (isPlaying && isVideo) ? "Pausar" : (isPaused ? "Retomar" : "Reproduzir")
+            };
         }
-        
-        this.ui.updateFooterPlaybackUI(this.status, isVideo, isPlaying);
-
-        console.log(`[UI Update] Status: ${this.status}, isVideo: ${isVideo}`);
-        this.ui.updatePlaybackStateUI(this.status, this.currentMedia?.id);
+        this.ui.updatePlaybackStateUI(playlistConfig);
     }
 
+    /**
+     * Starts monitoring the window bounds for the webview.
+     */
     startBoundsMonitoring() {
         const update = () => this.ipc.updateViewBounds(this.ui.getWebViewBounds());
         window.addEventListener('resize', update);

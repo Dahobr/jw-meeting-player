@@ -4,6 +4,9 @@
  */
 
 class UIManager {
+    /**
+     * Initializes the UIManager, setting up references to DOM elements and global event listeners.
+     */
     constructor() {
         // Elements
         this.btnCantico = document.getElementById('btn-cantico');
@@ -81,6 +84,21 @@ class UIManager {
         this.previewMediaWrapper = document.querySelector('.preview-media-wrapper');
     }
 
+
+    /**
+     * Checks if the playlist view is currently displayed.
+     * 
+     * @returns {boolean} True if the playlist view is visible, false otherwise.
+     */
+    isPlaylistView() {
+        return this.viewPlaylists.style.display !== 'none';
+    }
+
+    /**
+     * Switches the UI view between 'playlists' and 'items'.
+     * 
+     * @param {string} viewName - The name of the view to switch to ('playlists' or 'items').
+     */
     switchView(viewName) {
         if (viewName === 'playlists') {
             this.viewPlaylists.style.display = 'block';
@@ -101,60 +119,50 @@ class UIManager {
     /**
      * Atualiza o estado visual do botão de reprodução/pausa no rodapé.
      */
-    updateFooterPlaybackUI(status, isVideo, isPlaying) {
-        const isStaged = status === 'staged';
-        const isPaused = status === 'paused';
+        /**
+     * Atualiza o estado visual do bot?o de reprodu??o/pausa no rodap?.
+     * Recebe um estado de exibi??o calculado para evitar l?gica de neg?cio no UI Manager.
+     */
+    /**
+     * Updates the visual state of the footer playback buttons based on the provided configuration.
+     * 
+     * @param {Object} config - Configuration object for footer buttons.
+     * @param {boolean} config.isVisible - Whether the footer controls are visible.
+     * @param {boolean} config.isEnabled - Whether the buttons are enabled.
+     * @param {string} config.icon - SVG icon string to display.
+     * @param {string} config.title - Button title/tooltip text.
+     * @param {boolean} config.isHighlighted - Whether to apply highlight styles to play/pause button.
+     * @param {boolean} config.isStopHighlighted - Whether to highlight stop button.
+     */
+    updateFooterPlaybackUI(config) {
+        const { isVisible, isEnabled, icon, title, isHighlighted, isStopHighlighted } = config;
+        
+        this.btnFooterPlayPause.style.display = isVisible ? "inline-flex" : "none";
+        this.btnFooterPlayPause.disabled = !isEnabled;
+        this.btnFooterPlayPause.style.opacity = isEnabled ? "1" : "0.5";
+        this.btnFooterPlayPause.style.cursor = isEnabled ? "pointer" : "default";
+        this.btnFooterPlayPause.innerHTML = icon;
+        this.btnFooterPlayPause.title = title;
 
-        if (isVideo) {
-            this.btnFooterPlayPause.disabled = false;
-            this.btnFooterPlayPause.style.opacity = '1';
-            this.btnFooterPlayPause.style.cursor = 'pointer';
-            this.btnFooterPlayPause.innerHTML = isPlaying ? window.app.constructor.PAUSE_ICON : window.app.constructor.PLAY_ICON;
-            this.btnFooterPlayPause.style.display = 'inline-flex';
-            this.btnFooterPlayPause.title = isPlaying ? 'Pausar' : (isStaged ? 'Reproduzir' : 'Retomar');
-
-            if (isPaused || isStaged) {
-                this.btnFooterPlayPause.classList.add('btn-paused-highlight');
-                // btnStop might not be available if not initialized in UIManager
-                const btnStop = document.getElementById('btn-stop');
-                if (btnStop) btnStop.classList.remove('btn-paused-highlight');
-            } else {
-                this.btnFooterPlayPause.classList.remove('btn-paused-highlight');
-                const btnStop = document.getElementById('btn-stop');
-                if (btnStop) btnStop.classList.add('btn-paused-highlight');
-            }
+        if (isHighlighted) {
+            this.btnFooterPlayPause.classList.add("btn-paused-highlight");
         } else {
-            if (isStaged) {
-                this.btnFooterPlayPause.disabled = false;
-                this.btnFooterPlayPause.style.opacity = '1';
-                this.btnFooterPlayPause.style.cursor = 'pointer';
-                this.btnFooterPlayPause.innerHTML = window.app.constructor.PLAY_ICON;
-                this.btnFooterPlayPause.style.display = 'inline-flex';
-                this.btnFooterPlayPause.title = 'Reproduzir';
-                this.btnFooterPlayPause.classList.add('btn-paused-highlight');
-                const btnStop = document.getElementById('btn-stop');
-                if (btnStop) btnStop.classList.remove('btn-paused-highlight');
-            } else if (isPlaying) {
-                this.btnFooterPlayPause.style.display = 'inline-flex';
-                this.btnFooterPlayPause.innerHTML = this.icons.play;
-                this.btnFooterPlayPause.title = 'Reproduzir';
-                this.btnFooterPlayPause.disabled = true;
-                this.btnFooterPlayPause.style.opacity = '0.5';
-                this.btnFooterPlayPause.style.cursor = 'default';
-                this.btnFooterPlayPause.classList.remove('btn-paused-highlight');
-                const btnStop = document.getElementById('btn-stop');
-                if (btnStop) btnStop.classList.add('btn-paused-highlight');
-            } else {
-                this.btnFooterPlayPause.disabled = false;
-                this.btnFooterPlayPause.style.opacity = '1';
-                this.btnFooterPlayPause.style.cursor = 'pointer';
-                this.btnFooterPlayPause.style.display = 'inline-flex';
-            }
+            this.btnFooterPlayPause.classList.remove("btn-paused-highlight");
+        }
+
+        const btnStop = document.getElementById("btn-stop");
+        if (btnStop) {
+            if (isStopHighlighted) btnStop.classList.add("btn-paused-highlight");
+            else btnStop.classList.remove("btn-paused-highlight");
         }
     }
 
     /**
-     * Show preview area and hide SiteView
+     * Displays a media item in the preview area.
+     * 
+     * @param {string} type - Media type ('video' or 'image').
+     * @param {string} filePath - Path to the media file.
+     * @param {boolean} [autoPlay=true] - Whether to auto-play video content.
      */
     showPreview(type, filePath, autoPlay = true) {
         console.log(`[UI] showPreview: ${type} -> ${filePath} (AutoPlay: ${autoPlay})`);
@@ -205,7 +213,7 @@ class UIManager {
     }
 
     /**
-     * Hide preview area and re-show SiteView
+     * Hides the preview area and restores the main content view.
      */
     hidePreview() {
         console.log('[UI] hidePreview called');
@@ -231,6 +239,11 @@ class UIManager {
         }
     }
 
+    /**
+     * Displays help content in the UI.
+     * 
+     * @param {string} html - HTML content of the help documentation.
+     */
     showHelp(html) {
         console.log('[UI] showHelp called');
         this.hideOperationGuide();
@@ -243,6 +256,9 @@ class UIManager {
         }
     }
 
+    /**
+     * Hides the help view.
+     */
     hideHelp() {
         if (this.helpView && this.helpView.style.display !== 'none') {
             console.log('[UI] hideHelp called');
@@ -250,6 +266,11 @@ class UIManager {
         }
     }
 
+    /**
+     * Shows the operation guide view.
+     * 
+     * @param {string} zoomMode - Current zoom mode configuration.
+     */
     showOperationGuide(zoomMode) {
         this.hideHelp();
         if (window.electronAPI && window.electronAPI.toggleWebView) {
@@ -265,6 +286,9 @@ class UIManager {
         this.renderOperationGuide(zoomMode);
     }
 
+    /**
+     * Hides the operation guide view.
+     */
     hideOperationGuide() {
         this.operationGuide.style.display = 'none';
         this.previewMediaWrapper.style.display = 'flex';
@@ -272,93 +296,21 @@ class UIManager {
         if (this.stateLabel) this.stateLabel.style.display = 'block';
     }
 
+    /**
+     * Renders the operation guide template.
+     * 
+     * @param {string} zoomMode - Current zoom mode configuration.
+     */
     renderOperationGuide(zoomMode) {
-        const isAuto = zoomMode === 'auto';
-        const isSemi = zoomMode === 'semi';
-        const isManual = zoomMode === 'off';
-        const modeText = isAuto ? 'Zoom Automático' : (isSemi ? 'Zoom Semiautomático' : 'Zoom Manual');
-        
-        this.operationGuide.innerHTML = `
-            <div class="guide-card">
-                <div class="guide-header">
-                    <h2>Guia de Operação</h2>
-                    <span class="guide-mode-badge">Modo: ${modeText}</span>
-                </div>
-                <div class="guide-steps">
-                    ${!isManual ? `
-                    <div class="guide-step">
-                        <div class="guide-step-num">0</div>
-                        <div class="guide-step-content">
-                            <div class="guide-step-title">Configurar Atalho Global</div>
-                            <div class="guide-step-desc">
-                                No Zoom (Configurações > Atalhos do teclado):<br>
-                                Procure <b>Iniciar/interromper compartilhamento de tela</b> e ative <b>Atalho global</b>.
-                            </div>
-                        </div>
-                        <div class="guide-icon-box">⚙️</div>
-                    </div>` : ''}
-                    <div class="guide-step">
-                        <div class="guide-step-num">1</div>
-                        <div class="guide-step-content">
-                            <div class="guide-step-title">Preparar Playlist</div>
-                            <div class="guide-step-desc"><b>Crie e/ou escolha</b> uma playlist na barra lateral.</div>
-                        </div>
-                        <div class="guide-icon-box">📋</div>
-                    </div>
-                    <div class="guide-step">
-                        <div class="guide-step-num">2</div>
-                        <div class="guide-step-content">
-                            <div class="guide-step-title">Selecionar Mídia (Standby)</div>
-                            <div class="guide-step-desc">Clique no item. Ele ficará pronto, mas <b>não aparecerá</b> na TV ainda.</div>
-                        </div>
-                        <div class="guide-icon-box">🖱️</div>
-                    </div>
-                    <div class="guide-step">
-                        <div class="guide-step-num">3</div>
-                        <div class="guide-step-content">
-                            <div class="guide-step-title">Iniciar Reprodução</div>
-                            <div class="guide-step-desc">Clique no <b>Reproduzir</b>. O vídeo aparecerá na <b>2ª tela</b> ${!isAuto ? 'e você deve compartilhar pelo Zoom manualmente.' : 'e o Zoom será acionado.'}</div>
-                        </div>
-                        <div class="guide-icon-box"><div class="guide-play-mock"></div></div>
-                    </div>
-                    ${(isAuto || isSemi) ? `
-                    <div class="guide-step zoom-step">
-                        <div class="guide-step-num">4</div>
-                        <div class="guide-step-content">
-                            <span class="guide-zoom-tag">Na janela do Zoom (Apenas na 1ª vez)</span>
-                            <div class="guide-step-title">Marcar "Otimizar"</div>
-                            <div class="guide-step-desc">Marque <b>"Otimizar para clipe de vídeo"</b> no Zoom.</div>
-                        </div>
-                        <div class="guide-icon-box">✅</div>
-                    </div>
-                    <div class="guide-step zoom-step">
-                        <div class="guide-step-num">5</div>
-                        <div class="guide-step-content">
-                            <span class="guide-zoom-tag">${isAuto ? 'Na janela do Zoom (Apenas na 1ª vez)' : 'Na janela do Zoom (Sempre)'}</span>
-                            <div class="guide-step-title">Clique Duplo na Tela 2</div>
-                            <div class="guide-step-desc">Dê um <b>clique duplo</b> no quadro da "Tela 2" para iniciar.</div>
-                        </div>
-                        <div class="guide-icon-box">🖱️🖱️</div>
-                    </div>
-                    ` : ''}
-                </div>
-                ${isAuto ? `
-                <div class="guide-attention" style="text-align: left;">
-                    <b style="display: block; text-align: center;">⚠️ ATENÇÃO</b>
-                    <ul style="padding-left: 20px; margin: 10px 0 0 0;">
-                        <li>Estes passos (4 e 5) são necessários apenas no primeiro uso.</li>
-                        <li>A partir da segunda vez, o sistema assume o controle automaticamente.</li>
-                        <li>Não mexa no mouse durante o processamento!</li>
-                    </ul>
-                </div>
-                ` : ''}
-            </div>
-        `;
+        this.operationGuide.innerHTML = window.templates.renderOperationGuide(zoomMode);
     }
 
     /**
      * Complete Seeker Update (max + value + background)
      * This is called when duration is known (e.g., onloadedmetadata) or when external seek is confirmed.
+     * 
+     * @param {number} current - Current playback position in seconds.
+     * @param {number} total - Total media duration in seconds.
      */
     updateSeeker(current, total) {
         if (!total || isNaN(total) || total <= 0) {
@@ -378,7 +330,10 @@ class UIManager {
     }
 
     /**
-     * Partial Update (Labels + Background only - safe for dragging)
+     * Partial Update (Labels + Background only - safe for dragging).
+     * 
+     * @param {number} current - Current playback position.
+     * @param {number} total - Total media duration.
      */
     updateSeekerLabels(current, total) {
         const percentage = (total > 0 && !isNaN(total)) ? (current / total) * 100 : 0;
@@ -394,6 +349,12 @@ class UIManager {
         this.previewTimeTotal.textContent = format(total || 0);
     }
 
+    /**
+     * Renders the list of playlists.
+     * 
+     * @param {Object} playlists - Collection of playlist objects.
+     * @param {string} currentId - ID of the currently selected playlist.
+     */
     renderPlaylists(playlists, currentId) {
         this.playlistList.innerHTML = '';
         Object.entries(playlists).forEach(([id, playlist]) => {
@@ -445,6 +406,12 @@ class UIManager {
         });
     }
 
+    /**
+     * Renders items for a specific playlist.
+     * 
+     * @param {string} id - The playlist ID.
+     * @param {Object} playlist - The playlist object containing items.
+     */
     renderPlaylistItems(id, playlist) {
         this.currentPlaylistTitle.textContent = playlist.name;
         this.itemsList.innerHTML = '';
@@ -541,6 +508,12 @@ class UIManager {
         });
     }
 
+    /**
+     * Toggles the edit mode for a playlist item.
+     * 
+     * @param {string} id - The playlist item ID.
+     * @param {boolean} [show=true] - Whether to show the edit input.
+     */
     togglePlaylistEdit(id, show = true) {
         const nameSpan = document.getElementById(`name-${id}`);
         const input = document.getElementById(`input-${id}`);
@@ -556,6 +529,12 @@ class UIManager {
         }
     }
 
+    /**
+     * Toggles the edit mode for a specific playlist item.
+     * 
+     * @param {string} id - The item ID.
+     * @param {boolean} [show=true] - Whether to show the edit input.
+     */
     toggleItemEdit(id, show = true) {
         const nameSpan = document.getElementById(`item-name-${id}`);
         const input = document.getElementById(`item-input-${id}`);
@@ -566,6 +545,12 @@ class UIManager {
         }
     }
 
+    /**
+     * Renders a download item in the list.
+     * 
+     * @param {string} itemId - The ID of the item being downloaded.
+     * @param {string} filename - The filename of the item.
+     */
     renderDownloadItem(itemId, filename) {
         const li = document.createElement('li');
         li.className = 'playlist-item-li downloading';
@@ -584,6 +569,13 @@ class UIManager {
         this.itemsList.appendChild(li);
     }
 
+    /**
+     * Updates the download progress indicator for an item.
+     * 
+     * @param {string} itemId - The ID of the item.
+     * @param {number} percentage - The download progress percentage.
+     * @param {string} filename - The filename.
+     */
     updateDownloadProgress(itemId, percentage, filename) {
         const li = this.itemsList.querySelector(`li[data-id="${itemId}"]`);
         if (li) {
@@ -609,56 +601,48 @@ class UIManager {
      * @param {string} status - Status atual ('playing', 'paused', 'staged', 'stopped')
      * @param {string|number|null} activeItemId - ID do item que está sendo reproduzido ou em preparação
      */
-    updatePlaybackStateUI(status, activeItemId) {
-        const items = this.itemsList.querySelectorAll('.playlist-item-li');
+        /**
+     * Atualiza a interface da playlist (?cones e estado dos bot?es) 
+     * com base no estado de exibi??o calculado.
+     */
+    updatePlaybackStateUI(config) {
+        const { statusLabel, statusClass, items } = config;
 
-        // Update state label ['PREPARADO', 'NO AR']
+        // Update top-left state label (PREPARADO / NO AR)
         if (this.stateLabel) {
-            this.stateLabel.className = 'state-label'; // Reset classes
-            if (status === 'playing' || status === 'paused') {
-                this.stateLabel.textContent = 'NO AR';
-                this.stateLabel.classList.add(status);
-            } else if (status === 'staged') {
-                this.stateLabel.textContent = 'PREPARADO';
-                this.stateLabel.classList.add('staged');
-            } else {
-                this.stateLabel.textContent = '';
-            }
+            this.stateLabel.textContent = statusLabel || "";
+            this.stateLabel.className = "state-label " + (statusClass || "");
         }
 
-        items.forEach(li => {
+        // Update each item in the list
+        const liElements = this.itemsList.querySelectorAll(".playlist-item-li");
+        liElements.forEach(li => {
             const itemId = li.dataset.id;
-            const btnPlay = li.querySelector('.btn-play-item');
+            const itemConfig = items[itemId];
+            const btnPlay = li.querySelector(".btn-play-item");
+
+            li.classList.remove("playing", "standby");
             
-            li.classList.remove('playing', 'standby');
-            
-            // If item is the active/staged one
-            if (itemId == activeItemId) {
-                if (status === 'playing' || status === 'paused') {
-                    li.classList.add('playing');
-                    const isVideo = li.querySelector('.item-type').textContent.toLowerCase().includes('video');
-                    
-                    if (status === 'playing') {
-                        btnPlay.innerHTML = isVideo ? this.icons.pause : this.icons.stop;
-                        btnPlay.title = isVideo ? 'Pausar' : 'Parar';
-                    } else {
-                        // paused state
-                        btnPlay.innerHTML = this.icons.play;
-                        btnPlay.title = 'Retomar';
-                    }
-                } else if (status === 'staged') {
-                    li.classList.add('standby');
-                    btnPlay.innerHTML = this.icons.play;
-                    btnPlay.title = 'Reproduzir';
+            if (itemConfig) {
+                if (itemConfig.class) li.classList.add(itemConfig.class);
+                if (btnPlay) {
+                    btnPlay.innerHTML = itemConfig.icon;
+                    btnPlay.title = itemConfig.title;
                 }
             } else {
-                // Stopped or other items
-                btnPlay.innerHTML = this.icons.play;
-                btnPlay.title = 'Reproduzir';
+                if (btnPlay) {
+                    btnPlay.innerHTML = this.icons.play;
+                    btnPlay.title = "Reproduzir";
+                }
             }
         });
     }
 
+    /**
+     * Updates information about the current media item.
+     * 
+     * @param {string} text - The status information text in "Label: Value" format.
+     */
     updateCurrentItemInfo(text) {
         // text is expected as "Label: Value" (e.g., "Reproduzindo: Video.mp4" or "O segundo monitor: Conectado")
         const parts = text.split(': ');
@@ -676,6 +660,11 @@ class UIManager {
         `;
     }
 
+    /**
+     * Updates the display status indicator.
+     * 
+     * @param {string} status - Display connection status ('connected' or 'waiting').
+     */
     updateDisplayStatus(status) {
         // This is now primarily managed by app.js updatePlaybackUI for the text,
         // but we'll keep this as a helper for specific warning styles.
@@ -686,10 +675,21 @@ class UIManager {
         }
     }
 
+    /**
+     * Shows a notification message.
+     * 
+     * @param {string} message - The message content.
+     * @param {string} [type='info'] - The type of notification.
+     */
     showNotification(message, type = 'info') {
         console.log(`[UI] Notification (${type}): ${message}`);
     }
 
+    /**
+     * Gets the webview container's bounding rectangle.
+     * 
+     * @returns {Object} Bounds object with x, y, width, and height.
+     */
     getWebViewBounds() {
         const rect = this.webviewContainer.getBoundingClientRect();
         return {
@@ -700,6 +700,12 @@ class UIManager {
         };
     }
 
+    /**
+     * Handles UI updates on download completion.
+     * 
+     * @param {string} itemId - The ID of the item.
+     * @param {Object} newItemData - The new item data.
+     */
     onDownloadComplete(itemId, newItemData) {
         const li = this.itemsList.querySelector(`li[data-id="${itemId}"]`);
         if (li) {
@@ -710,6 +716,13 @@ class UIManager {
         }
     }
 
+    /**
+     * Displays an error message for a download or item action.
+     * 
+     * @param {string} itemId - The ID of the item.
+     * @param {string} message - The error message.
+     * @param {string} [filename=''] - The filename associated with the error.
+     */
     showError(itemId, message, filename = '') {
         let li = this.itemsList.querySelector(`li[data-id="${itemId}"]`);
         if (!li) {
@@ -747,13 +760,110 @@ class UIManager {
         }, 4000);
     }
 
+    /**
+     * Callback for playlist selection.
+     * 
+     * @param {string} id - Playlist ID.
+     */
     onPlaylistSelect(id) {}
+
+    /**
+     * Callback for playlist deletion.
+     * 
+     * @param {string} id - Playlist ID.
+     */
     onPlaylistDelete(id) {}
+
+    /**
+     * Callback for playlist renaming.
+     * 
+     * @param {string} id - Playlist ID.
+     * @param {string} newName - New playlist name.
+     */
     onPlaylistRename(id, newName) {}
+
+    /**
+     * Callback for item selection.
+     * 
+     * @param {Object} item - Item object.
+     */
     onItemSelect(item) {}
+
+    /**
+     * Callback for item playback.
+     * 
+     * @param {Object} item - Item object.
+     */
     onItemPlay(item) {}
+
+    /**
+     * Callback for item removal.
+     * 
+     * @param {string} playlistId - Playlist ID.
+     * @param {string} itemId - Item ID.
+     */
     onItemRemove(playlistId, itemId) {}
+
+    /**
+     * Callback for item renaming.
+     * 
+     * @param {string} itemId - Item ID.
+     * @param {string} newName - New item name.
+     */
     onItemRename(itemId, newName) {}
+
+
+    // --- Modal Helpers ---
+    showConfirmModal(message, onConfirm, onCancel) {
+        const modal = document.getElementById('custom-modal');
+        const msgEl = document.getElementById('modal-message');
+        const btnConfirm = document.getElementById('modal-confirm');
+        const btnCancel = document.getElementById('modal-cancel');
+
+        if (!modal || !msgEl || !btnConfirm || !btnCancel) return false;
+
+        msgEl.textContent = message;
+        modal.style.display = 'flex';
+
+        const close = (result) => {
+            modal.style.display = 'none';
+            btnConfirm.onclick = null;
+            btnCancel.onclick = null;
+            modal.onclick = null;
+            if (result) onConfirm();
+            else onCancel();
+        };
+
+        btnConfirm.onclick = () => close(true);
+        btnCancel.onclick = () => close(false);
+        modal.onclick = (e) => { if (e.target === modal) close(false); };
+        return true;
+    }
+
+    // --- View Helpers ---
+    isWebViewVisible() { return this.webviewContainer.style.display !== 'none'; }
+    setWebViewVisibility(visible) {
+        if (window.electronAPI && window.electronAPI.toggleWebView) {
+            window.electronAPI.toggleWebView(visible);
+        }
+    }
+    isPlaylistView() { return this.viewPlaylists.style.display !== 'none'; }
+
+    setFooterTransportVisibility(visible) {
+        const footerTransportButtons = document.querySelector('.transport-buttons');
+        if (footerTransportButtons) {
+            footerTransportButtons.style.visibility = visible ? 'visible' : 'hidden';
+        }
+    }
+
+    setPreviewControlsOverlayVisibility(visible) {
+        if (this.previewControlsOverlay) {
+            this.previewControlsOverlay.style.display = visible ? 'block' : 'none';
+        }
+    }
+
 }
+
+
 
 window.uiManager = new UIManager();
