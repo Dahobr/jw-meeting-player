@@ -70,13 +70,12 @@ class App {
     async init() {
         if (this.initialized) return;
         this.playbackManager = new PlaybackManager(this, this.ui, this.ipc, this.store);
+        this.eventHandler = new EventHandler(this, this.ui, this.ipc, this.store);
 
         console.log('[App] Initializing Renderer...');
 
         this.store.subscribe((state) => this.handleStoreChange(state));
-        this.setupUICallbacks();
-        this.setupIPCListeners();
-        this.setupKeyboardListeners();
+        this.eventHandler.init();
         this.setupPreviewListeners();
 
         const data = await this.ipc.loadPlaylists();
@@ -109,18 +108,6 @@ class App {
 
         this.initialized = true;
         console.log('[App] Renderer Initialized.');
-    }
-
-    /**
-     * Sets up keyboard event listeners for application shortcuts.
-     */
-    setupKeyboardListeners() {
-        window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
-                e.preventDefault();
-                this.togglePlayback();
-            }
-        });
     }
 
     /**
@@ -219,144 +206,6 @@ class App {
             console.log('[App] Preview video ended. Auto-returning.');
             this.stopMedia('video ended');
         };
-    }
-
-    setupUICallbacks() {
-        console.log('[App] Setting up UI callbacks...');
-
-        const handleNav = (key) => {
-            this.ipc.navigateSite(key);
-        };
-
-        this.ui.btnCantico.onclick = () => handleNav('cantico');
-        this.ui.btnReunioes.onclick = () => handleNav('reunioes');
-        this.ui.btnVideos.onclick = () => handleNav('videos');
-        this.ui.btnEsbocos.onclick = () => handleNav('esbocos');
-        
-        this.ui.btnMenuYear.onclick = () => window.electronAPI.openYearVerseFolder();
-        this.ui.btnMenuDownloads.onclick = () => this.ipc.openDownloadFolder();
-        this.ui.btnMenuHelp.onclick = async () => {
-            try {
-                const html = await this.ipc.getHelpContent();
-                this.ui.showHelp(html);
-            } catch (err) {
-                console.error('[App] Failed to load help content:', err);
-            }
-        };
-
-        this.ui.btnMenuAbout.onclick = async () => {
-            try {
-                const html = await this.ipc.getAboutContent();
-                this.ui.showHelp(html);
-            } catch (err) {
-                console.error('[App] Failed to load about content:', err);
-            }
-        };
-
-        this.ui.btnMenuGuide.onclick = () => {
-            const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : 'auto';
-            this.ui.showOperationGuide(zoomMode);
-            this.ui.headerMenu.classList.remove('show');
-        };
-
-        this.ui.btnImportFile.onclick = () => this.handleImport();
-
-        this.ui.btnCreatePlaylist.onclick = () => this.handleCreatePlaylist();
-        this.ui.newPlaylistInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') this.handleCreatePlaylist();
-        });
-
-        this.ui.btnBackToPlaylists.onclick = async () => {
-            if (this.status === 'playing' || this.status === 'paused') {
-                if (await this.showCustomConfirm('Deseja parar a reprodução e voltar às playlists?')) {
-                    this.stopMedia('navigation to playlists');
-                    this.ui.switchView('playlists');
-                }
-            } else {
-                this.status = 'stopped';
-                this.ui.switchView('playlists');
-            }
-            // Explicitly ensure preview is hidden and siteView is shown
-            this.ui.hidePreview();
-            this.updatePlaybackUI();
-        };
-
-        this.ui.onPlaylistSelect = (id) => {
-            this.store.setCurrentPlaylistId(id);
-            this.ui.switchView('items');
-            
-            // Auto-standby previous item if available
-            const state = this.store.getState();
-            const playlist = state.playlists[id];
-            if (playlist && playlist.items.length > 0 && this.status === 'stopped') {
-                const lastItemId = this.lastStagedItemPerPlaylist[id];
-                const itemToStandby = playlist.items.find(i => i.id === lastItemId) || playlist.items[0];
-                this.playbackManager.prepareStagingMedia(itemToStandby);
-            }
-            this.updatePlaybackUI();
-        };
-
-        this.ui.onPlaylistDelete = async (id) => {
-            if (await this.showCustomConfirm('Deseja realmente excluir esta playlist?')) {
-                const itemsToDelete = this.store.deletePlaylist(id);
-                for (const item of itemsToDelete) {
-                    if (item.filePath) await this.ipc.deleteFile(item.filePath);
-                }
-            }
-        };
-
-        this.ui.onPlaylistRename = (id, newName) => this.store.renamePlaylist(id, newName);
-
-        // Item List Interactions
-        this.ui.onItemSelect = (item) => {
-            console.log('[App] Staging item in preview area.');
-            this.playbackManager.prepareStagingMedia(item);
-        };
-        
-        this.ui.onItemPlay = (item) => {
-            console.log(`[App] onItemPlay triggered for: ${item.title || item.filename}`);
-            if (this.currentMedia && this.currentMedia.id === item.id) {
-                // Toggle playback if it's the same item
-                this.togglePlayback();
-            } else {
-                // Otherwise play it
-                this.playbackManager.playMedia(item);
-            }
-        };
-
-        this.ui.onItemRemove = async (playlistId, itemId) => {
-            if (await this.showCustomConfirm('Deseja realmente excluir este arquivo?')) {
-                const item = this.store.getItem(playlistId, itemId);
-                if (item && item.filePath) await this.ipc.deleteFile(item.filePath);
-                this.store.removeItem(playlistId, itemId);
-            }
-        };
-        this.ui.onItemRename = (itemId, newName) => {
-            this.store.updateItem(itemId, { title: newName });
-        };
-
-        this.ui.btnFooterPlayPause.onclick = () => this.togglePlayback();
-        
-        if (this.ui.zoomModeSelect) {
-            this.ui.zoomModeSelect.onchange = (e) => {
-                this.ipc.updateConfig({ zoomMode: e.target.value });
-                console.log(`[App] Zoom mode updated to: ${e.target.value}`);
-                this.updatePlaybackUI();
-            };
-        }
-
-        this.ui.btnStop = document.getElementById('btn-stop');
-        if (this.ui.btnStop) this.ui.btnStop.onclick = () => this.playbackManager.stopMedia('manual click');
-
-        if (window.Sortable) {
-            new Sortable(this.ui.itemsList, {
-                animation: 150,
-                onEnd: (evt) => {
-                    const { currentPlaylistId } = this.store.getState();
-                    this.store.reorderItems(currentPlaylistId, evt.oldIndex, evt.newIndex);
-                }
-            });
-        }
     }
 
     /**
