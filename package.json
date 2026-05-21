@@ -29,13 +29,19 @@
         "from": "scripts/ZoomControlManager/ZoomControlManager.exe",
         "to": "bin/ZoomControlManager.exe"
       }
-    ]
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "Dahobr",
+      "repo": "jw-meeting-player"
+    }
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "adm-zip": "^0.5.17",
+    "electron-updater": "^6.8.3",
     "marked": "^18.0.3",
     "music-metadata": "^11.12.3",
     "sortablejs": "^1.15.7"
