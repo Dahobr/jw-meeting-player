@@ -166,8 +166,10 @@ function getOrInitSiteView() {
     siteView = new WebContentsView({
         webPreferences: {
             partition: 'persist:jw_session',
+            preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
-            backgroundThrottling: false
+            backgroundThrottling: false,
+            devTools: true
         }
     });
 
@@ -279,6 +281,14 @@ function setupSiteView() {
         view.setVisible(visible);
         if (visible) {
             view.webContents.focus();
+        }
+    });
+
+    ipcMain.on('wol-song-link-clicked', (event, songId) => {
+        console.log(`[Main] IPC received: wol-song-link-clicked with ID: ${songId}`);
+        const view = getOrInitSiteView();
+        if (view) {
+            view.webContents.loadURL('https://www.jw.org/pt/biblioteca/videos/#pt/mediaitems/VODSJJMeetings/pub-sjjm_' + songId + '_VIDEO');
         }
     });
 }

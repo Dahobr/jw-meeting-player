@@ -74,3 +74,32 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
 // Set default zoom factor to ensure consistency
 webFrame.setZoomFactor(1.0);
+
+window.addEventListener('click', (e) => {
+    console.log('[Preload Debug] Click detected! target:', e.target);        
+
+    // Attempt to find an anchor tag in the path or parent chain
+    let target = e.target.closest('a');
+
+    // If not found directly, check if the clicked element contains or is near a link (e.g. tooltip cases)
+    if (!target) {
+        target = e.target.querySelector('a') || (e.target.parentElement ? e.target.parentElement.closest('a') : null);
+    }
+
+    if (target) {
+        console.log(`[Preload Debug] Link found: "${target.href}", text: "${target.textContent}"`);
+        if (target.href && target.href.includes('/r5/lp-')) {
+            const text = target.textContent;
+            // Match "Cântico" or "Cantico"
+            const match = text.match(/C[âã]ntico\s*(\d+)/i);
+            if (match) {
+                console.log(`[Preload] Song match found: ${match[1]}`);      
+                ipcRenderer.send('wol-song-link-clicked', match[1]);
+
+                // Stop the default site navigation
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }
+    }
+}, true);
