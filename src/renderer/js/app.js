@@ -579,10 +579,11 @@ class App {
 
         const hasMedia = !!this.currentMedia;
         const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : "auto";
+        const isWebViewVisible = this.ui.isWebViewVisible();
 
-        if (isStopped && !hasMedia) {
+        if (isStopped && !hasMedia && !isWebViewVisible) {
             this.ui.showOperationGuide(zoomMode);
-        } else if (hasMedia) {
+        } else if (hasMedia || isWebViewVisible) {
             this.ui.hideOperationGuide();
         }
 

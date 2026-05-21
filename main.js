@@ -9,6 +9,7 @@ const fs = require('fs');
 const url = require('url');
 const { spawn } = require('child_process');
 const { marked } = require('marked');
+const { autoUpdater } = require('electron-updater');
 
 // Register 'media' as a standard and secure protocol before app is ready
 // This is global and affects all sessions
@@ -341,6 +342,20 @@ ipcMain.handle('get-about-content', async () => {
 
 // App Lifecycle
 app.whenReady().then(() => {
+    autoUpdater.checkForUpdatesAndNotify();
+
+    autoUpdater.on('update-available', (info) => {
+        console.log('[AutoUpdater] Update available:', info.version);
+    });
+
+    autoUpdater.on('update-not-available', (info) => {
+        console.log('[AutoUpdater] No update available.');
+    });
+
+    autoUpdater.on('error', (err) => {
+        console.log('[AutoUpdater] Update error:', err);
+    });
+
     // Register for the default session
     registerMediaProtocol(session.defaultSession);
     
