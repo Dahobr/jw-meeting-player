@@ -114,7 +114,8 @@ class PlaybackManager {
             this.app.isPlaying = true;
 
             if (this.app.hasSecondaryDisplay) {
-                this.ipc.loadMedia({ mediaPath: item.filePath, mediaType: fullType, autoPlay: true });
+                const startTime = this.ui.previewVideo ? this.ui.previewVideo.currentTime : 0;
+                this.ipc.loadMedia({ mediaPath: item.filePath, mediaType: fullType, autoPlay: true, startTime: startTime });
                 this.app.isPlayingOnSlave = true;
             }
 

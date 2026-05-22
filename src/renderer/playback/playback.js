@@ -88,26 +88,31 @@ function loadMediaItem(mediaPath, mediaType, autoPlay = true, startTime = 0) {
         console.log(`[Playback] Setting video src to: ${safeUrl}`);
         videoPlayer.src = safeUrl;
         showOnly(videoPlayer);
+        
+        // Sync starting position after metadata is loaded
+        const onMetadata = () => {
+            if (startTime > 0) {
+                console.log(`[Playback] Syncing startTime: ${startTime}`);
+                videoPlayer.currentTime = startTime;
+            }
+            videoPlayer.removeEventListener('loadedmetadata', onMetadata);
+            
+            if (autoPlay) {
+                console.log('[Playback] Attempting auto-play after metadata load');
+                videoPlayer.play().catch(error => {
+                    if (error.name !== 'AbortError') {
+                        console.error('[Playback] Play failed:', error);
+                        showError(`Erro ao reproduzir vídeo: ${error.message || error.name}`);
+                    }
+                });
+            } else {
+                hideLoadingIndicator();
+                updatePlaybackState(false);
+            }
+        };
+        videoPlayer.addEventListener('loadedmetadata', onMetadata);
+        
         videoPlayer.load();
-        
-        // Sync starting position
-        if (startTime > 0) {
-            console.log(`[Playback] Syncing startTime: ${startTime}`);
-            videoPlayer.currentTime = startTime;
-        }
-        
-        if (autoPlay) {
-            console.log('[Playback] Attempting auto-play');
-            videoPlayer.play().catch(error => {
-                if (error.name !== 'AbortError') {
-                    console.error('[Playback] Play failed:', error);
-                    showError(`Erro ao reproduzir vídeo: ${error.message || error.name}`);
-                }
-            });
-        } else {
-            hideLoadingIndicator();
-            updatePlaybackState(false);
-        }
     } else if (isImage) {
         console.log(`[Playback] Setting image src to: ${safeUrl}`);
         imageViewer.src = safeUrl;
@@ -161,7 +166,9 @@ window.electronAPI.onPlaybackCommand(({ action, ...data }) => {
             videoPlayer.pause();
             break;
         case 'seek':
+            console.log(`[Playback] Received seek command. Time: ${data.time}, CurrentTime: ${videoPlayer.currentTime}`);
             videoPlayer.currentTime = data.time;
+            console.log(`[Playback] Seek command applied. New CurrentTime: ${videoPlayer.currentTime}`);
             break;
     }
 });
