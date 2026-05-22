@@ -86,6 +86,84 @@ class UIManager {
 
 
     /**
+     * Centralized method to manage main content overlays.
+     * @param {string} mode - The view mode to display: 'preview', 'guide', 'help', or 'webview'.
+     */
+    updateMainOverlay(mode) {
+        console.log(`[UI] updateMainOverlay: ${mode}`);
+        const isPlaylist = this.isPlaylistView();
+
+        // 1. Hide everything by default
+        this.previewArea.style.display = 'none';
+        this.operationGuide.style.display = 'none';
+        this.helpView.style.display = 'none';
+        
+        // Native WebView visibility
+        let webViewVisible = false;
+
+        if (isPlaylist) {
+            // In Playlist View, Preview is ALWAYS hidden.
+            // One of the overlays MUST be shown.
+            switch (mode) {
+                case 'help':
+                    this.helpView.style.display = 'flex';
+                    break;
+                case 'webview':
+                    webViewVisible = true;
+                    break;
+                case 'guide':
+                case 'preview': // Fallback to guide in playlist view
+                default:
+                    this.operationGuide.style.display = 'flex';
+                    this.previewMediaWrapper.style.display = 'none';
+                    this.previewControls.style.display = 'none';
+                    if (this.stateLabel) this.stateLabel.style.display = 'none';
+                    this.renderOperationGuide(this.zoomModeSelect ? this.zoomModeSelect.value : 'auto');
+                    break;
+            }
+        } else {
+            // In Item View, Preview is the base.
+            // Overlays can be shown on top or replace it.
+            this.previewArea.style.display = 'flex';
+            this.previewMediaWrapper.style.display = 'flex';
+            this.previewControls.style.display = 'flex';
+            if (this.stateLabel) this.stateLabel.style.display = 'block';
+
+            switch (mode) {
+                case 'help':
+                    this.helpView.style.display = 'flex';
+                    this.previewArea.style.display = 'none';
+                    break;
+                case 'guide':
+                    this.operationGuide.style.display = 'flex';
+                    this.previewArea.style.display = 'none';
+                    this.renderOperationGuide(this.zoomModeSelect ? this.zoomModeSelect.value : 'auto');
+                    break;
+                case 'webview':
+                    webViewVisible = true;
+                    this.previewArea.style.display = 'none';
+                    break;
+                case 'preview':
+                default:
+                    // Keep previewArea flex (already set above)
+                    break;
+            }
+        }
+
+        if (window.electronAPI && window.electronAPI.toggleWebView) {
+            window.electronAPI.toggleWebView(webViewVisible);
+        }
+    }
+
+    /**
+     * Resets the UI to show the preview area, hiding all overlays.
+     */
+    ensurePreviewVisible() {
+        if (this.isPlaylistView()) return; // Do nothing if in playlist list
+        this.updateMainOverlay('preview');
+    }
+
+    /**
      * Checks if the playlist view is currently displayed.
      * 
      * @returns {boolean} True if the playlist view is visible, false otherwise.
@@ -103,16 +181,13 @@ class UIManager {
         if (viewName === 'playlists') {
             this.viewPlaylists.style.display = 'block';
             this.viewItems.style.display = 'none';
-            // Auto-hide preview and show SiteView when in playlist list
-            this.hidePreview();
+            // In playlist list, show the default overlay (usually guide or last active)
+            this.updateMainOverlay('guide');
         } else {
             this.viewPlaylists.style.display = 'none';
             this.viewItems.style.display = 'block';
-            // Show preview area and hide SiteView when entering a playlist
-            this.previewArea.style.display = 'flex';
-            if (window.electronAPI && window.electronAPI.toggleWebView) {
-                window.electronAPI.toggleWebView(false);
-            }
+            // Entering a playlist: show preview area by default
+            this.updateMainOverlay('preview');
         }
     }
 
@@ -167,14 +242,8 @@ class UIManager {
     showPreview(type, filePath, autoPlay = true) {
         console.log(`[UI] showPreview: ${type} -> ${filePath} (AutoPlay: ${autoPlay})`);
         
-        this.hideOperationGuide();
-        this.hideHelp();
+        this.updateMainOverlay('preview');
 
-        if (window.electronAPI && window.electronAPI.toggleWebView) {
-            window.electronAPI.toggleWebView(false);
-        }
-
-        this.previewArea.style.display = 'flex';
         const isVideo = type.includes('video') || filePath.toLowerCase().endsWith('.mp4');
         
         const normalizedPath = filePath.replace(/\\/g, '/');
@@ -217,8 +286,7 @@ class UIManager {
      */
     hidePreview() {
         console.log('[UI] hidePreview called');
-        this.hideOperationGuide();
-        this.previewArea.style.display = 'none';
+        this.updateMainOverlay('guide'); // Default to guide when hiding preview
         this.previewVideo.pause();
 
         if (this.stateLabel) {
@@ -231,12 +299,6 @@ class UIManager {
         this.previewVideo.load();
         
         this.previewImage.removeAttribute('src');
-        
-        this.hideHelp();
-
-        if (window.electronAPI && window.electronAPI.toggleWebView) {
-            window.electronAPI.toggleWebView(true);
-        }
     }
 
     /**
@@ -246,14 +308,8 @@ class UIManager {
      */
     showHelp(html) {
         console.log('[UI] showHelp called');
-        this.hideOperationGuide();
         this.helpContainer.innerHTML = html;
-        this.helpView.style.display = 'flex';
-        this.previewArea.style.display = 'none'; // Ensure preview is hidden
-        
-        if (window.electronAPI && window.electronAPI.toggleWebView) {
-            window.electronAPI.toggleWebView(false);
-        }
+        this.updateMainOverlay('help');
     }
 
     /**
@@ -262,7 +318,7 @@ class UIManager {
     hideHelp() {
         if (this.helpView && this.helpView.style.display !== 'none') {
             console.log('[UI] hideHelp called');
-            this.helpView.style.display = 'none';
+            this.updateMainOverlay('preview'); // Return to preview if in item view
         }
     }
 
@@ -272,28 +328,16 @@ class UIManager {
      * @param {string} zoomMode - Current zoom mode configuration.
      */
     showOperationGuide(zoomMode) {
-        this.hideHelp();
-        if (window.electronAPI && window.electronAPI.toggleWebView) {
-            window.electronAPI.toggleWebView(false);
-        }
-
-        this.previewArea.style.display = 'none'; // Hide preview area when showing guide
-        this.operationGuide.style.display = 'flex';
-        this.previewMediaWrapper.style.display = 'none';
-        this.previewControls.style.display = 'none';
-        if (this.stateLabel) this.stateLabel.style.display = 'none';
-
-        this.renderOperationGuide(zoomMode);
+        this.updateMainOverlay('guide');
     }
 
     /**
      * Hides the operation guide view.
      */
     hideOperationGuide() {
-        this.operationGuide.style.display = 'none';
-        this.previewMediaWrapper.style.display = 'flex';
-        this.previewControls.style.display = 'flex';
-        if (this.stateLabel) this.stateLabel.style.display = 'block';
+        // This is now handled by updateMainOverlay, but kept for compatibility
+        // If we want to hide the guide, we usually want to show the preview
+        this.updateMainOverlay('preview');
     }
 
     /**
