@@ -20,6 +20,11 @@ class ProtocolManager {
             { scheme: 'media', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } }
         ]);
 
+        this.initialized = true;
+        console.log('[ProtocolManager] Privileged schemes registered.');
+    }
+
+    initSessions() {
         // Register for the default session
         this.registerMediaProtocol(session.defaultSession);
         
@@ -30,9 +35,8 @@ class ProtocolManager {
         app.on('session-created', (ses) => {
             this.registerMediaProtocol(ses);
         });
-
-        this.initialized = true;
-        console.log('[ProtocolManager] Initialized.');
+        
+        console.log('[ProtocolManager] Session protocols registered.');
     }
 
     registerMediaProtocol(ses) {
