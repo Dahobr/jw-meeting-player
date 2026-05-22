@@ -96,6 +96,7 @@ function registerMediaProtocol(ses) {
 
 
 // Import Managers
+const protocolManager = require('./src/main/protocolManager');
 const storageManager = require('./src/main/storageManager');
 const displayManager = require('./src/main/displayManager');
 const downloadManager = require('./src/main/downloadManager');
@@ -106,6 +107,7 @@ let siteView;
 let mainView; // The UI Layer
 
 function initializeGlobalManagers() {
+    protocolManager.init();
     storageManager.init();
     displayManager.initGlobal();
 }
@@ -364,17 +366,6 @@ app.whenReady().then(() => {
 
     autoUpdater.on('error', (err) => {
         console.log('[AutoUpdater] Update error:', err);
-    });
-
-    // Register for the default session
-    registerMediaProtocol(session.defaultSession);
-    
-    // Register for our custom session
-    registerMediaProtocol(session.fromPartition('persist:jw_session'));
-    
-    // Ensure any future sessions also get the protocol
-    app.on('session-created', (ses) => {
-        registerMediaProtocol(ses);
     });
 
     initializeGlobalManagers();
