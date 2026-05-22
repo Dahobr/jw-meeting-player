@@ -81,7 +81,6 @@ class App {
 
         this.ui.switchView('playlists');
         this.status = 'stopped';
-        this.ui.showOperationGuide('auto'); // Show operation guide on launch
         this.updatePlaybackUI();
         this.startBoundsMonitoring();
 
@@ -320,20 +319,7 @@ class App {
      * Resumes video playback after a pause or wait period.
      */
     resumePlayback() {
-        if (!this.currentMedia || !this.currentMedia.mediaType.includes('video')) return;
-
-        this.ui.previewVideo.play().catch(e => { 
-            if(e.name !== 'AbortError') console.error('[App] play() failed:', e); 
-        });
-
-        if (this.hasSecondaryDisplay) {
-            this.ipc.playbackControl({ action: 'play' });
-            this.isPlayingOnSlave = true;
-        }
-
-        this.status = 'playing';
-        this.updatePlaybackUI();
-        this.updateAudioMuteState();
+        this.playbackManager.resumePlayback();
     }
 
     async saveBrowserImage(url) {
@@ -391,43 +377,15 @@ class App {
                 this.store.addItem(currentPlaylistId, item);
             });
         }
+        this.ui.ensurePreviewVisible();
     }
 
     prepareStagingMedia(item) {
-        console.log('[App] prepareStagingMedia:', item.title || item.filename);
-
-        // Clean up any old pending listener before staging new media
-        if (this.pendingCanPlayListener) {
-            this.ui.previewVideo.removeEventListener('canplay', this.pendingCanPlayListener);
-            this.pendingCanPlayListener = null;
-        }
-
-        this.currentMedia = item;
-        this.standbyItemId = item.id;
-        
-        // Record the last item staged for this playlist
-        const { currentPlaylistId } = this.store.getState();
-        if (currentPlaylistId) {
-            this.lastStagedItemPerPlaylist[currentPlaylistId] = item.id;
-        }
-        
-        let fullType = item.mediaType || '';
-        if (fullType === 'video') fullType = 'video/mp4';
-        if (fullType === 'image') fullType = 'image/jpeg';
-        
-        this.ui.showPreview(fullType, item.filePath, false);
-        
-        this.status = 'staged'; // Use 'staged' for standby
-        this.isPlayingOnSlave = false; 
-        this.updateAudioMuteState();
-        this.updatePlaybackUI();
+        this.playbackManager.prepareStagingMedia(item);
     }
 
     getNormalizedType(item) {
-        let type = item.mediaType || '';
-        if (type === 'video') return 'video/mp4';
-        if (type === 'image') return 'image/jpeg';
-        return type;
+        return this.playbackManager.getNormalizedType(item);
     }
 
     /**
@@ -484,14 +442,7 @@ class App {
      * Pauses the current video playback.
      */
     pausePlayback() {
-        if (!this.currentMedia || !this.currentMedia.mediaType.includes('video')) return;
-
-        this.ui.previewVideo.pause();
-        if (this.hasSecondaryDisplay) {
-            this.ipc.playbackControl({ action: 'pause' });
-        }
-        this.status = 'paused';
-        this.updatePlaybackUI();
+        this.playbackManager.pausePlayback();
     }
 
     /**
@@ -500,63 +451,7 @@ class App {
      * @param {string} [reason='unknown'] - The reason for stopping playback.
      */
     stopMedia(reason = 'unknown') {
-        if (this.isStopping) return;
-        this.isStopping = true;
-
-        try {
-            console.log(`[App] stopMedia called. Reason: ${reason}`);
-            
-            // Capture context before resetting
-            const lastMediaId = this.currentMedia?.id;
-            const { playlists, currentPlaylistId } = this.store.getState();
-
-            // Clean up any pending canplay listener
-            if (this.pendingCanPlayListener) {
-                this.ui.previewVideo.removeEventListener('canplay', this.pendingCanPlayListener);
-                this.pendingCanPlayListener = null;
-            }
-            
-            // 1. Stop actual playback
-            this.ipc.playbackControl({ action: 'stop' });
-            this.ipc.setZoomSharing(false); // Trigger Zoom Sharing Stop (Alt+S)
-            this.status = 'stopped';
-
-            this.currentMedia = null;
-            this.isPlayingOnSlave = false;
-            
-            // 2. Handle Auto-Standby logic
-            const isNavigation = reason.includes('navigation');
-            
-            if (!isNavigation && currentPlaylistId && playlists[currentPlaylistId]) {
-                const items = playlists[currentPlaylistId].items;
-                if (items.length > 0) {
-                    let nextItem = null;
-                    
-                    if (lastMediaId) {
-                        const lastIdx = items.findIndex(i => i.id === lastMediaId);
-                        if (lastIdx !== -1) {
-                            const nextIdx = (lastIdx + 1) % items.length;
-                            nextItem = items[nextIdx];
-                        }
-                    } else {
-                        nextItem = items[0];
-                    }
-
-                    if (nextItem) {
-                        console.log(`[App] Auto-standby for item: ${nextItem.title || nextItem.filename}`);
-                        this.prepareStagingMedia(nextItem);
-                        return; // Successfully staged, don't hide preview
-                    }
-                }
-            }
-
-            // 3. Fallback: hide preview
-            this.ui.hidePreview();
-            this.updatePlaybackUI();
-
-        } finally {
-            this.isStopping = false;
-        }
+        this.playbackManager.stopMedia(reason);
     }
 
     /**
@@ -577,14 +472,11 @@ class App {
         const isStopped = this.status === "stopped";
         const isVideo = this.currentMedia?.mediaType?.includes("video");
 
-        const hasMedia = !!this.currentMedia;
-        const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : "auto";
-        const isWebViewVisible = this.ui.isWebViewVisible();
-
-        if (isStopped && !hasMedia && !isWebViewVisible) {
-            this.ui.showOperationGuide(zoomMode);
-        } else if (hasMedia || isWebViewVisible) {
-            this.ui.hideOperationGuide();
+        // Logic for Operation Guide/Overlay is now centralized in UIManager
+        // We only call it if we are in a stopped state with no media.
+        // Other cases are handled by specific action triggers (ensurePreviewVisible).
+        if (isStopped && !this.currentMedia && !this.ui.isWebViewVisible()) {
+            this.ui.updateMainOverlay('guide');
         }
 
         // --- View Logic ---
