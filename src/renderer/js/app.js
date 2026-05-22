@@ -390,19 +390,19 @@ class App {
 
     /**
      * Triggers the Zoom sharing mechanism via IPC.
-     * 
-     * @param {string} mode - Zoom mode identifier.
+     *
+     * @param {string|boolean} mode - Zoom mode identifier or false to stop.
      */
     triggerZoomSharing(mode) {
-        console.log(`[App] Triggering Zoom Sharing (${mode})`);
+        const active = (mode !== false && mode !== 'off');
+        console.log(`[App] Triggering Zoom Sharing: active=${active}, mode=${mode}`);
         const args = [];
-        if (this.zoomCoords) {
+        if (active && this.zoomCoords) {
             args.push(`--x=${this.zoomCoords.x}`);
             args.push(`--y=${this.zoomCoords.y}`);
         }
-        this.ipc.setZoomSharing(true, args);
+        this.ipc.setZoomSharing(active, args);
     }
-
     // goLive was absorbed into playMedia for simplicity.
     // Removed to avoid confusion.
 
