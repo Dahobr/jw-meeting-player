@@ -250,6 +250,10 @@ class EventHandler {
             this.ui.zoomModeSelect.onchange = (e) => {
                 this.ipc.updateConfig({ zoomMode: e.target.value });
                 console.log(`[EventHandler] Zoom mode updated to: ${e.target.value}`);
+                // Re-render guide if currently visible
+                if (this.ui.operationGuide.style.display !== 'none') {
+                    this.ui.updateMainOverlay('guide');
+                }
                 this.app.updatePlaybackUI();
             };
         }
