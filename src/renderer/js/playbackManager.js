@@ -138,11 +138,14 @@ class PlaybackManager {
 
         this.ui.ensurePreviewVisible();
 
+        const currentTime = this.ui.previewVideo ? this.ui.previewVideo.currentTime : 0;
+
         this.ui.previewVideo.play().catch(e => { 
             if(e.name !== 'AbortError') console.error('[PlaybackManager] play() failed:', e); 
         });
 
         if (this.app.hasSecondaryDisplay) {
+            this.ipc.playbackControl({ action: 'seek', time: currentTime });
             this.ipc.playbackControl({ action: 'play' });
             this.app.isPlayingOnSlave = true;
         }
