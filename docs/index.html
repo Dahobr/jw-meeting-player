@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JW Meeting Player</title>
+    <style>
+        :root { --primary-blue: #0070c9; --bg-color: #f8fafc; --text-color: #333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: var(--text-color); background: var(--bg-color); margin: 0; padding: 0; }
+        header { background: white; padding: 2rem 0; text-align: center; border-bottom: 3px solid var(--primary-blue); }
+        .logo { width: 80px; height: 80px; margin-bottom: 1rem; }
+        .section-container { padding: 3rem 1rem; }
+        .features-section { background: white; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .hero { 
+            text-align: center; 
+            margin-bottom: 0; 
+            background: linear-gradient(135deg, #f0f7ff, #ffffff); 
+            padding: 3rem 2rem; 
+            border-bottom: 1px solid #e1e8ed;
+        }
+        .hero h2 { font-size: 2.5rem; color: var(--primary-blue); margin-bottom: 0.5rem; }
+        .hero .tagline { font-size: 1.4rem; color: #333; margin-bottom: 2rem; }
+        .problems-solved { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+        .problem-item { 
+            background: white; 
+            padding: 1rem 2rem; 
+            border-radius: 50px; 
+            border: 2px solid var(--primary-blue);
+            color: var(--primary-blue);
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .free-badge { text-align: center; font-size: 1.2rem; font-weight: 600; color: #27ae60; margin: 1.5rem 0; }
+        .ss { width: 80%; display: block; margin: 2rem auto 0 auto; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+        .btn { display: inline-block; background: var(--primary-blue); color: white; padding: 0.8rem 2rem; border-radius: 5px; text-decoration: none; font-weight: bold; }
+        .features-stack { display: flex; flex-direction: column; gap: 2rem; margin-top: 2rem; }
+        .feature-card { 
+            background: var(--bg-color); 
+            padding: 1.5rem; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            border: 1px solid #e2e8f0; 
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+        .feature-text { flex: 1; }
+        .feature-text p { font-size: 1.2rem; line-height: 1.6; }
+        .feature-text ul { font-size: 1.2rem; padding-left: 1.5rem; }
+        .feature-text li { margin-bottom: 0.5rem; }
+        .feature-img { width: 300px; flex-shrink: 0; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h2 { color: var(--primary-blue); margin-top: 0; }
+        footer { text-align: center; padding: 3rem; font-size: 0.9rem; color: #666; background: white; }
+        @media (max-width: 600px) { .feature-card { flex-direction: column; } .feature-img { width: 100%; } }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="assets/jwmp-icon.png" alt="Logo" class="logo">
+        <h1>JW Meeting Player</h1>
+        <p>Integração simplificada para suas reuniões</p>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h2>Uma alternativa ao JW Library.</h2>
+            <p class="tagline">Para apresentações profissionais e sem estresse.</p>
+            <div class="problems-solved">
+                <div class="problem-item">✅ Sem quedas no Zoom</div>
+                <div class="problem-item">✅ Downloads estáveis</div>
+            </div>
+            
+            <div style="margin-top: 3rem;">
+                <a href="https://github.com/Dahobr/jw-meeting-player/releases/download/v1.5.0/jw-meeting-player.Setup.1.5.0.exe" class="btn">Baixar JW Meeting Player v1.5.0</a>
+            </div>
+
+            <img src="assets/main.png" alt="Main Interface" class="ss" style="margin-top: 2rem;">
+            <div class="card" style="margin-top: 2rem; text-align: left; border: none; box-shadow: none; background: transparent;">
+                <p style="font-size: 1.2rem;">O <b>JW Library</b> é um excelente programa, mas que pode ocasionar contratempos em momentos cruciais: a exibição de vídeos ou imagens compartilhadas pode <b>desaparecer da tela dos espectadores</b> ou o Windows pode impedir que os arquivos sejam <b>baixados corretamente</b>.</p>
+                <p style="font-size: 1.2rem;">O <b>JW Meeting Player</b> foi criado para resolver essas instabilidades, oferecendo uma alternativa focada na confiabilidade e no fluxo de trabalho contínuo das reuniões.</p>
+            </div>
+            <div class="free-badge">Totalmente Grátis &nbsp; • &nbsp; 🛡️ Sem vírus</div>
+        </div>
+    </section>
+
+    <section class="section-container features-section">
+        <div class="container">
+            <h2>Recursos Principais</h2>
+            <div class="features-stack">
+                <div class="feature-card">
+                    <img src="assets/create-list.png" alt="Playlist Management" class="feature-img">
+                    <div class="feature-text">
+                        <h2>📁 Uma playlist para a reunião toda</h2>
+                        <p>Centralize tudo o que precisa em um só lugar:</p>
+                        <ul>
+                            <li><b>Integração direta:</b> Importe vídeos, imagens e esboços diretamente do site do JW.</li>
+                            <li><b>Gestão unificada:</b> Todos os arquivos ficam centralizados no app, eliminando a confusão de arquivos espalhados pelo computador.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-container" style="background: #edf2f7;">
+        <div class="container">
+            <div class="card feature-card">
+                <div class="feature-text">
+                    <h2>🎥 Integração Inteligente com Zoom</h2>
+                    <p>Automação que acelera o fluxo da reunião:</p>
+                    <ul>
+                        <li><b>Sem compartilhamento manual:</b> O app gerencia o Zoom e inicia o compartilhamento de tela automaticamente.</li>
+                        <li><b>Sincronização perfeita:</b> O vídeo começa a rodar exatamente no momento em que a transmissão inicia.</li>
+                    </ul>
+                </div>
+                <video class="feature-img" autoplay loop muted playsinline>
+                    <source src="assets/zoom-demo.mp4" type="video/mp4">
+                    Seu navegador não suporta vídeos.
+                </video>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-container features-section">
+        <div class="container">
+            <div class="features-stack">
+                <div class="feature-card">
+                    <img src="assets/onplay.png" alt="Media Playback" class="feature-img">
+                    <div class="feature-text">
+                        <h2>▶️ Reprodução Profissional de Mídia</h2>
+                        <p>Controle total sobre a apresentação:</p>
+                        <ul>
+                            <li><b>Media Standby:</b> Pré-visualize o conteúdo e deixe-o pronto para exibição sem afetar a tela para exibição.</li>
+                            <li><b>Transição automática:</b> O sistema carrega o próximo item da playlist automaticamente após o término da reprodução atual.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-container" style="text-align: center; padding: 2rem 1rem;">
+        <a href="https://github.com/Dahobr/jw-meeting-player/releases/download/v1.5.0/jw-meeting-player.Setup.1.5.0.exe" class="btn">Baixar JW Meeting Player v1.5.0</a>
+        <p style="margin-top: 1.5rem; font-size: 0.9rem; color: #666;">
+            Este programa é um projeto pessoal e independente, não afiliado ao JW.org.<br>
+            Operamos em conformidade com os termos de uso do site JW.org.
+        </p>
+    </section>
+
+    <footer>
+        <p>Projeto oficial disponível no <a href="https://github.com/Dahobr/jw-meeting-player" style="color: var(--primary-blue); font-weight: bold;">GitHub</a></p>
+        <p>&copy; 2026 JW Meeting Player - Desenvolvido para sua conveniência.</p>
+    </footer>
+</body>
+</html>
