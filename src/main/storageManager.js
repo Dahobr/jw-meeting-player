@@ -98,7 +98,7 @@ class StorageManager {
 
         ipcMain.handle('select-year-verse-image', async (event) => {
             console.log('[StorageManager] select-year-verse-image called');
-            const win = require('electron').BrowserWindow.getFocusedWindow();
+            const win = require('electron').BrowserWindow.getAllWindows()[0];
             const result = await dialog.showOpenDialog(win, {
                 title: 'Selecionar Versículo do Ano',
                 properties: ['openFile'],
