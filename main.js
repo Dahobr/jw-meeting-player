@@ -11,12 +11,6 @@ const { spawn } = require('child_process');
 const { marked } = require('marked');
 const { autoUpdater } = require('electron-updater');
 
-// Register 'media' as a standard and secure protocol before app is ready
-// This is global and affects all sessions
-protocol.registerSchemesAsPrivileged([
-    { scheme: 'media', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } }
-]);
-
 // Disable HTTP/2 to fix ERR_HTTP2_PROTOCOL_ERROR
 app.commandLine.appendSwitch('disable-http2');
 
@@ -31,75 +25,12 @@ app.on('ready', () => {
     console.log(`[Perf] Time to Ready: ${Date.now() - startTime}ms`);
 });
 
-// Helper to register the media protocol on a specific session
-function registerMediaProtocol(ses) {
-    const sesName = ses === session.defaultSession ? 'default' : 'persist:jw_session';
-    console.log(`[Main] Registering 'media' protocol for session: ${sesName}`);
-
-    ses.protocol.registerFileProtocol('media', (request, callback) => {
-        // 1. Extract the path from the URL
-        // media://app/C:/path... -> app/C:/path...
-        // media://C:/path... -> C:/path...
-        let rawPath = request.url.substring(8); // Skip 'media://'
-        if (rawPath.startsWith('app/')) {
-            rawPath = rawPath.substring(4); // Skip 'app/'
-        }
-        
-        try {
-            // 2. Decode URL encoding (e.g., %20 -> space)
-            let decodedPath = decodeURIComponent(rawPath);
-            
-            // 3. Fix Windows drive letters: '/C:/Users' or 'C/Users'
-            decodedPath = decodedPath.replace(/^\/([a-zA-Z]:)/, '$1'); // Remove leading slash before drive
-            if (decodedPath.match(/^[a-zA-Z][\\\/]/)) {
-                decodedPath = decodedPath[0] + ':' + decodedPath.substring(1);
-            }
-            
-            // 4. Normalize and resolve
-            let absolutePath = path.normalize(decodedPath);
-            
-            // If it's not absolute, try to resolve it relative to the app's parent dir
-            if (!path.isAbsolute(absolutePath) && !/^[a-zA-Z]:/.test(absolutePath)) {
-                const baseDir = path.join(app.getPath('userData'), '..');
-                absolutePath = path.resolve(baseDir, absolutePath);
-            }
-
-            // 5. Check existence and fallback
-            if (fs.existsSync(absolutePath)) {
-                // console.log(`[Main] Protocol serving: ${absolutePath}`);
-                return callback(absolutePath);
-            } else {
-                console.warn(`[Main] Protocol file NOT FOUND: ${absolutePath}`);
-                const fileName = path.basename(absolutePath);
-                const newPath = path.join(app.getPath('userData'), 'JwMeetingPlayer', 'downloads', fileName);
-                const oldPath = path.join(app.getPath('userData'), 'ElectronPlaylistApp', 'downloads', fileName);
-                
-                if (fs.existsSync(newPath)) {
-                    return callback(newPath);
-                }
-                if (fs.existsSync(oldPath)) {
-                    return callback(oldPath);
-                }
-                
-                // Per design guidelines: MUST return a string, or an error code number.
-                // return callback({ error: -6 }); // net::ERR_FILE_NOT_FOUND (Object return is discouraged)
-                return callback(-6); // Return error code number directly
-            }
-        } catch (error) {
-            console.error('[Main] Protocol Handler Error:', error, 'for URL:', request.url);
-            return callback(-2); // net::ERR_FAILED
-        }
-    });
-}
-
-
-
-
 // Import Managers
 const protocolManager = require('./src/main/protocolManager');
 const storageManager = require('./src/main/storageManager');
 const displayManager = require('./src/main/displayManager');
 const downloadManager = require('./src/main/downloadManager');
+const contentManager = require('./src/main/contentManager');
 const { setupZoomIntegration } = require('./zoomIntegration');
 
 let mainWindow;
@@ -110,6 +41,7 @@ function initializeGlobalManagers() {
     protocolManager.init();
     storageManager.init();
     displayManager.initGlobal();
+    contentManager.init();
 }
 
 function createMainWindow() {
@@ -317,39 +249,6 @@ function setupContextMenu() {
 
 ipcMain.handle('select-year-verse-image', async () => {
     return await storageManager.selectYearVerseImage(mainWindow);
-});
-
-ipcMain.handle('get-help-content', async () => {
-    try {
-        const helpPath = path.join(__dirname, 'HELP.md');
-        if (fs.existsSync(helpPath)) {
-            const mdContent = fs.readFileSync(helpPath, 'utf8');
-            return marked.parse(mdContent);
-        }
-        return '<h1>Erro</h1><p>Arquivo HELP.md não encontrado.</p>';
-    } catch (err) {
-        console.error('[Main] Error reading HELP.md:', err);
-        return `<h1>Erro</h1><p>${err.message}</p>`;
-    }
-});
-
-ipcMain.handle('get-about-content', async () => {
-    try {
-        const licensePath = path.join(__dirname, 'LICENSE');
-        const thirdPartyPath = path.join(__dirname, 'LICENSE-THIRD-PARTY.md');
-        
-        let content = '<h1>Sobre</h1>';
-        if (fs.existsSync(licensePath)) {
-            content += '<h2>Licença</h2><pre>' + fs.readFileSync(licensePath, 'utf8') + '</pre>';
-        }
-        if (fs.existsSync(thirdPartyPath)) {
-            content += '<h2>Licenças de Terceiros</h2>' + marked.parse(fs.readFileSync(thirdPartyPath, 'utf8'));
-        }
-        return content;
-    } catch (err) {
-        console.error('[Main] Error reading license files:', err);
-        return `<h1>Erro</h1><p>${err.message}</p>`;
-    }
 });
 
 // App Lifecycle
