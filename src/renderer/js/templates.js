@@ -35,13 +35,30 @@ window.templates = {
                     <div class="guide-step">
                         <div class="guide-step-num">2</div>
                         <div class="guide-step-content">
+                            <div class="guide-step-title">Adicionar Mídia à Playlist</div>
+                            <div class="guide-step-desc">
+                                Clique no botão <b>[Reuniões]</b> e escolha uma reunião:<br>
+                                <ul>
+                                    <li><b>Vídeos:</b> Clique no link de download.</li>
+                                    <li><b>Imagens:</b> Clique com o botão direito na imagem > <b>"Adicionar imagem à playlist"</b>.</li>
+                                </ul>
+                                <b>Dicas:</b><br>
+                                - Use <b>"Voltar"</b> no menu do botão direito para navegar.<br>
+                                - Para outros conteúdos, use os botões <b>[Cântico]</b>, <b>[Vídeos]</b> ou <b>[Esboços]</b>.
+                            </div>
+                        </div>
+                        <div class="guide-icon-box">🖼️</div>
+                    </div>
+                    <div class="guide-step">
+                        <div class="guide-step-num">3</div>
+                        <div class="guide-step-content">
                             <div class="guide-step-title">Selecionar Mídia (Standby)</div>
                             <div class="guide-step-desc">Clique no item. Ele ficará pronto, mas <b>não aparecerá</b> na TV ainda.</div>
                         </div>
                         <div class="guide-icon-box">🖱️</div>
                     </div>
                     <div class="guide-step">
-                        <div class="guide-step-num">3</div>
+                        <div class="guide-step-num">4</div>
                         <div class="guide-step-content">
                             <div class="guide-step-title">Iniciar Reprodução</div>
                             <div class="guide-step-desc">Clique no <b>Reproduzir</b>. O vídeo aparecerá na <b>2ª tela</b> ${!isAuto ? 'e você deve compartilhar pelo Zoom manualmente.' : 'e o Zoom será acionado.'}</div>
@@ -50,7 +67,7 @@ window.templates = {
                     </div>
                     ${(isAuto || isSemi) ? `
                     <div class="guide-step zoom-step">
-                        <div class="guide-step-num">4</div>
+                        <div class="guide-step-num">5</div>
                         <div class="guide-step-content">
                             <span class="guide-zoom-tag">Na janela do Zoom (Apenas na 1ª vez)</span>
                             <div class="guide-step-title">Marcar "Otimizar"</div>
@@ -59,7 +76,7 @@ window.templates = {
                         <div class="guide-icon-box">✅</div>
                     </div>
                     <div class="guide-step zoom-step">
-                        <div class="guide-step-num">5</div>
+                        <div class="guide-step-num">6</div>
                         <div class="guide-step-content">
                             <span class="guide-zoom-tag">${isAuto ? 'Na janela do Zoom (Apenas na 1ª vez)' : 'Na janela do Zoom (Sempre)'}</span>
                             <div class="guide-step-title">Clique Duplo na Tela 2</div>
@@ -73,7 +90,7 @@ window.templates = {
                 <div class="guide-attention" style="text-align: left;">
                     <b style="display: block; text-align: center;">⚠️ ATENÇÃO</b>
                     <ul style="padding-left: 20px; margin: 10px 0 0 0;">
-                        <li>Estes passos (4 e 5) são necessários apenas no primeiro uso.</li>
+                        <li>Estes passos (5 e 6) são necessários apenas no primeiro uso.</li>
                         <li>A partir da segunda vez, o sistema assume o controle automaticamente.</li>
                         <li>Não mexa no mouse durante o processamento!</li>
                     </ul>
