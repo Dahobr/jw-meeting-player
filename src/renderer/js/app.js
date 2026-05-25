@@ -3,8 +3,6 @@
  * Renderer Main Entry Point - Orchestrates Store, UI, and IPC.
  */
 
-import tutorialManager from './tutorialManager.js';
-
 class App {
     static PLAY_ICON = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
     static PAUSE_ICON = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="currentColor"/></svg>';
@@ -79,7 +77,12 @@ class App {
         this.setupPreviewListeners();
 
         // Initialize Tutorial
-        await this.ui.initTutorial(tutorialManager);
+        try {
+            const { default: tutorialManager } = await import('./tutorialManager.js');
+            await this.ui.initTutorial(tutorialManager);
+        } catch (e) {
+            console.error('[App] Failed to load tutorialManager:', e);
+        }
 
         const data = await this.ipc.loadPlaylists();
         this.store.init(data);
