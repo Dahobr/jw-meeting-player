@@ -1,22 +1,47 @@
 using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
+using System.Linq;
+using System.Windows.Automation;
 using System.Threading;
 
 class Program
 {
-    [DllImport("user32.dll", SetLastError = true)]
-    static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    static extern bool SetForegroundWindow(IntPtr hWnd);
-
     static void Main()
     {
-        // Zoom設定ウィンドウはメインウィンドウのメニューから開く必要があるため、
-        // 単純な実行ファイル起動では制御が難しいため、
-        // ここではUI Automationを用いて設定ボタンを押す操作を完結させるツールとして設計します。
-        // ※まずは環境調査用のスタブとして作成
-        Console.WriteLine("Zoom Settings Opener Initialized.");
+        // Find the Zoom Workplace process
+        Process[] processes = Process.GetProcessesByName("Zoom");
+        if (processes.Length == 0)
+        {
+            Console.WriteLine("Zoom process not found.");
+            return;
+        }
+
+        // Get the main window handle
+        IntPtr hwnd = processes[0].MainWindowHandle;
+        if (hwnd == IntPtr.Zero)
+        {
+            Console.WriteLine("Zoom main window not found.");
+            return;
+        }
+
+        // Use UI Automation to find the "Configurações" button
+        AutomationElement zoomWindow = AutomationElement.FromHandle(hwnd);
+        if (zoomWindow == null) return;
+
+        // Condition to find button with specific Name (localized)
+        // Note: Portuguese localization used here based on user confirmation
+        Condition condition = new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Button);
+        var buttons = zoomWindow.FindAll(TreeScope.Descendants, condition);
+
+        foreach (AutomationElement btn in buttons)
+        {
+            if (btn.Current.Name.Contains("Configura"))
+            {
+                InvokePattern invokePattern = btn.GetCurrentPattern(InvokePattern.Pattern) as InvokePattern;
+                invokePattern?.Invoke();
+                Console.WriteLine("Settings button clicked.");
+                return;
+            }
+        }
     }
 }
