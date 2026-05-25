@@ -192,13 +192,6 @@ class UIManager {
     }
 
     /**
-     * Atualiza o estado visual do botão de reprodução/pausa no rodapé.
-     */
-        /**
-     * Atualiza o estado visual do bot?o de reprodu??o/pausa no rodap?.
-     * Recebe um estado de exibi??o calculado para evitar l?gica de neg?cio no UI Manager.
-     */
-    /**
      * Updates the visual state of the footer playback buttons based on the provided configuration.
      * 
      * @param {Object} config - Configuration object for footer buttons.
@@ -635,30 +628,16 @@ class UIManager {
     }
 
     /**
-     * Atualiza a interface da playlist (ícones e estado dos botões) 
-     * com base no status atual da reprodução.
-     * 
-     * @execution_context 
-     * - Chamado por: App.updatePlaybackUI() em app.js
-     * - Quando: Sempre que o status da reprodução (playing, staged, etc.) é alterado.
-     * 
-     * @param {string} status - Status atual ('playing', 'paused', 'staged', 'stopped')
-     * @param {string|number|null} activeItemId - ID do item que está sendo reproduzido ou em preparação
-     */
-        /**
-     * Atualiza a interface da playlist (?cones e estado dos bot?es) 
-     * com base no estado de exibi??o calculado.
+     * Updates the playback state UI.
      */
     updatePlaybackStateUI(config) {
         const { statusLabel, statusClass, items } = config;
 
-        // Update top-left state label (PREPARADO / NO AR)
         if (this.stateLabel) {
             this.stateLabel.textContent = statusLabel || "";
             this.stateLabel.className = "state-label " + (statusClass || "");
         }
 
-        // Update each item in the list
         const liElements = this.itemsList.querySelectorAll(".playlist-item-li");
         liElements.forEach(li => {
             const itemId = li.dataset.id;
@@ -688,7 +667,6 @@ class UIManager {
      * @param {string} text - The status information text in "Label: Value" format.
      */
     updateCurrentItemInfo(text) {
-        // text is expected as "Label: Value" (e.g., "Reproduzindo: Video.mp4" or "O segundo monitor: Conectado")
         const parts = text.split(': ');
         const label = parts[0];
         const value = parts.slice(1).join(': ');
@@ -706,12 +684,8 @@ class UIManager {
 
     /**
      * Updates the display status indicator.
-     * 
-     * @param {string} status - Display connection status ('connected' or 'waiting').
      */
     updateDisplayStatus(status) {
-        // This is now primarily managed by app.js updatePlaybackUI for the text,
-        // but we'll keep this as a helper for specific warning styles.
         if (status === 'waiting') {
             this.currentItemInfo.classList.add('status-warning');
         } else {
@@ -721,9 +695,6 @@ class UIManager {
 
     /**
      * Shows a notification message.
-     * 
-     * @param {string} message - The message content.
-     * @param {string} [type='info'] - The type of notification.
      */
     showNotification(message, type = 'info') {
         console.log(`[UI] Notification (${type}): ${message}`);
@@ -731,8 +702,6 @@ class UIManager {
 
     /**
      * Gets the webview container's bounding rectangle.
-     * 
-     * @returns {Object} Bounds object with x, y, width, and height.
      */
     getWebViewBounds() {
         const rect = this.webviewContainer.getBoundingClientRect();
@@ -746,31 +715,22 @@ class UIManager {
 
     /**
      * Handles UI updates on download completion.
-     * 
-     * @param {string} itemId - The ID of the item.
-     * @param {Object} newItemData - The new item data.
      */
     onDownloadComplete(itemId, newItemData) {
         const li = this.itemsList.querySelector(`li[data-id="${itemId}"]`);
         if (li) {
             li.classList.remove('downloading');
-            // Remove style tag for progress bar
             const style = document.getElementById(`style-progress-${itemId}`);
             if (style) style.remove();
         }
     }
 
     /**
-     * Displays an error message for a download or item action.
-     * 
-     * @param {string} itemId - The ID of the item.
-     * @param {string} message - The error message.
-     * @param {string} [filename=''] - The filename associated with the error.
+     * Displays an error message.
      */
     showError(itemId, message, filename = '') {
         let li = this.itemsList.querySelector(`li[data-id="${itemId}"]`);
         if (!li) {
-            // Create a temporary error item if it doesn't exist
             li = document.createElement('li');
             li.className = 'playlist-item-li error';
             li.dataset.id = itemId;
@@ -785,7 +745,6 @@ class UIManager {
             `;
             this.itemsList.appendChild(li);
         } else {
-            // Update existing loading item
             const thumbnail = li.querySelector('.item-thumbnail');
             const titleSpan = li.querySelector('.item-title');
             const typeSpan = li.querySelector('.item-type');
@@ -804,58 +763,14 @@ class UIManager {
         }, 4000);
     }
 
-    /**
-     * Callback for playlist selection.
-     * 
-     * @param {string} id - Playlist ID.
-     */
+    // Callbacks
     onPlaylistSelect(id) {}
-
-    /**
-     * Callback for playlist deletion.
-     * 
-     * @param {string} id - Playlist ID.
-     */
     onPlaylistDelete(id) {}
-
-    /**
-     * Callback for playlist renaming.
-     * 
-     * @param {string} id - Playlist ID.
-     * @param {string} newName - New playlist name.
-     */
     onPlaylistRename(id, newName) {}
-
-    /**
-     * Callback for item selection.
-     * 
-     * @param {Object} item - Item object.
-     */
     onItemSelect(item) {}
-
-    /**
-     * Callback for item playback.
-     * 
-     * @param {Object} item - Item object.
-     */
     onItemPlay(item) {}
-
-    /**
-     * Callback for item removal.
-     * 
-     * @param {string} playlistId - Playlist ID.
-     * @param {string} itemId - Item ID.
-     */
     onItemRemove(playlistId, itemId) {}
-
-    /**
-     * Callback for item renaming.
-     * 
-     * @param {string} itemId - Item ID.
-     * @param {string} newName - New item name.
-     */
     onItemRename(itemId, newName) {}
-
 
     // --- Modal Helpers ---
     showConfirmModal(message, onConfirm, onCancel) {
@@ -891,8 +806,7 @@ class UIManager {
             window.electronAPI.toggleWebView(visible);
         }
     }
-    isPlaylistView() { return this.viewPlaylists.style.display !== 'none'; }
-
+    
     setFooterTransportVisibility(visible) {
         const footerTransportButtons = document.querySelector('.transport-buttons');
         if (footerTransportButtons) {
@@ -906,8 +820,15 @@ class UIManager {
         }
     }
 
+    /**
+     * Initializes the tutorial system.
+     */
+    async initTutorial(tutorialManager) {
+        await tutorialManager.init();
+        if (!tutorialManager.isSkipped()) {
+            tutorialManager.show();
+        }
+    }
 }
-
-
 
 window.uiManager = new UIManager();
