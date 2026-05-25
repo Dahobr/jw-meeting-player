@@ -82,6 +82,17 @@ function createMainWindow() {
     // Zoom Integration
     setupZoomIntegration(mainWindow, () => displayManager.getPlaybackWindow());
 
+    // Zoom設定起動用IPCハンドラー
+    ipcMain.handle('open-zoom-settings', () => {
+        const { exec } = require('child_process');
+        const scriptPath = path.join(__dirname, 'scripts', 'ZoomSettingsOpener', 'ZoomSettingsOpener.exe');
+        if (fs.existsSync(scriptPath)) {
+            exec(scriptPath);
+        } else {
+            console.error('ZoomSettingsOpener.exe not found at:', scriptPath);
+        }
+    });
+
     mainWindow.on('closed', () => {
         mainWindow = null;
         // Close playback window if it exists
