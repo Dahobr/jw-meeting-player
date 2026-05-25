@@ -1,47 +1,48 @@
 using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Windows.Automation;
-using System.Threading;
 
 class Program
 {
     static void Main()
     {
-        // Find the Zoom Workplace process
+        // 1. Get all Zoom processes
         Process[] processes = Process.GetProcessesByName("Zoom");
-        if (processes.Length == 0)
+        
+        foreach (var proc in processes)
         {
-            Console.WriteLine("Zoom process not found.");
-            return;
-        }
+            if (proc.MainWindowHandle == IntPtr.Zero) continue;
 
-        // Get the main window handle
-        IntPtr hwnd = processes[0].MainWindowHandle;
-        if (hwnd == IntPtr.Zero)
-        {
-            Console.WriteLine("Zoom main window not found.");
-            return;
-        }
-
-        // Use UI Automation to find the "Configurações" button
-        AutomationElement zoomWindow = AutomationElement.FromHandle(hwnd);
-        if (zoomWindow == null) return;
-
-        // Condition to find button with specific Name (localized)
-        // Note: Portuguese localization used here based on user confirmation
-        Condition condition = new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Button);
-        var buttons = zoomWindow.FindAll(TreeScope.Descendants, condition);
-
-        foreach (AutomationElement btn in buttons)
-        {
-            if (btn.Current.Name.Contains("Configura"))
+            try
             {
-                InvokePattern invokePattern = btn.GetCurrentPattern(InvokePattern.Pattern) as InvokePattern;
-                invokePattern?.Invoke();
-                Console.WriteLine("Settings button clicked.");
-                return;
+                // 2. Try to find the "Configurações" button in this window
+                AutomationElement window = AutomationElement.FromHandle(proc.MainWindowHandle);
+                if (window == null) continue;
+
+                Condition btnCondition = new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Button);
+                var buttons = window.FindAll(TreeScope.Descendants, btnCondition);
+
+                foreach (AutomationElement btn in buttons)
+                {
+                    // Check for the specific button name
+                    if (btn.Current.Name != null && btn.Current.Name.Contains("Configura"))
+                    {
+                        InvokePattern invokePattern = btn.GetCurrentPattern(InvokePattern.Pattern) as InvokePattern;
+                        if (invokePattern != null)
+                        {
+                            invokePattern.Invoke();
+                            Console.WriteLine("Settings button clicked successfully.");
+                            return;
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Ignore windows where access is denied or UI Automation fails
+                continue;
             }
         }
+        Console.WriteLine("Could not find a Zoom window with the settings button.");
     }
 }
