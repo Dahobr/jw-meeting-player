@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setZoomSharing: (active, args) => ipcRenderer.send('set-zoom-sharing', active, args),
 
   // --- Zoom Automation ---
+  openZoomSettings: () => ipcRenderer.invoke('open-zoom-settings'),
   spawnZoomProcess: (args) => ipcRenderer.invoke('spawn-zoom-process', args),
   onZoomProcStdout: (callback) => ipcRenderer.on('zoom-proc-stdout', (_event, data) => callback(data)),
   removeZoomStdoutListener: (callback) => ipcRenderer.removeListener('zoom-proc-stdout', callback),
