@@ -1,13 +1,25 @@
-<div id="tutorial-overlay" class="hidden">
-    <div id="tutorial-card">
-        <h2 id="tutorial-title"></h2>
-        <div id="tutorial-content"></div>
-        <button id="tutorial-action-btn" class="hidden"></button>
-        <div class="controls">
-            <button id="btn-prev">Voltar</button>
-            <button id="btn-skip">Pular</button>
-            <button id="btn-next">Próximo</button>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Tutorial - JW Meeting Player</title>
+    <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+    <div id="tutorial-overlay">
+        <div id="tutorial-card">
+            <h2 id="tutorial-title"></h2>
+            <div id="tutorial-content"></div>
+            <div class="controls">
+                <div class="control-left">
+                    <button id="btn-prev">Voltar</button>
+                    <label class="hidden"><input type="checkbox" id="check-no-show"> Não mostrar novamente</label>
+                </div>
+                <button id="btn-skip">Pular</button>
+                <button id="btn-next">Próximo</button>
+            </div>
         </div>
-        <label><input type="checkbox" id="check-no-show"> 今後表示しない</label>
     </div>
-</div>
+    <script type="module" src="js/tutorialManager.js"></script>
+</body>
+</html>

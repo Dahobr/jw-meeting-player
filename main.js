@@ -14,7 +14,6 @@ const { marked } = require('marked');
 app.commandLine.appendSwitch('disable-http2');
 
 // --- Audio Quality Optimization: Revert to simplest working state ---
-// The user said it was best when it only had basic processing disabled.
 app.commandLine.appendSwitch('disable-audio-track-processing');
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
@@ -42,13 +41,16 @@ const { setupZoomIntegration } = require('./zoomIntegration');
 
 let mainWindow;
 let mainView; // The UI Layer
+let globalManagersInitialized = false;
 
-function initializeGlobalManagers() {
+function initializeGlobalManagers(window) {
+    if (globalManagersInitialized) return;
     protocolManager.initSessions();
     storageManager.init();
     displayManager.initGlobal();
-    menuManager.init();
+    menuManager.init(window); 
     contentManager.init();
+    globalManagersInitialized = true;
 }
 
 function createMainWindow() {
@@ -69,8 +71,26 @@ function createMainWindow() {
         },
     });
 
+    initializeGlobalManagers(mainWindow);
+
     mainWindow.loadFile('src/renderer/index.html');
-    mainWindow.setMenuBarVisibility(false);
+    mainWindow.setMenuBarVisibility(false); // Hide menu bar by default
+
+    // Auto-open tutorial
+    mainWindow.webContents.once('did-finish-load', () => {
+        const bounds = mainWindow.getBounds();
+        let tutorialWindow = new BrowserWindow({
+            width: Math.floor(bounds.width / 2),
+            height: Math.floor(bounds.height / 2),
+            center: true,
+            webPreferences: {
+                preload: path.join(__dirname, 'preload.js'),
+                contextIsolation: true,
+                enableRemoteModule: false,
+            },
+        });
+        tutorialWindow.loadFile('src/renderer/tutorial.html');
+    });
 
     // Initialize SiteView and ContextMenu
     siteViewManager.init(mainWindow);
@@ -93,6 +113,27 @@ function createMainWindow() {
         }
     });
 
+    // Tutorial Window
+    ipcMain.handle('show-tutorial', () => {
+        const bounds = mainWindow.getBounds();
+        let tutorialWindow = new BrowserWindow({
+            width: Math.floor(bounds.width / 2),
+            height: Math.floor(bounds.height / 2),
+            center: true,
+            webPreferences: {
+                preload: path.join(__dirname, 'preload.js'),
+                contextIsolation: true,
+                enableRemoteModule: false,
+            },
+        });
+        tutorialWindow.loadFile('src/renderer/tutorial.html');
+        return tutorialWindow;
+    });
+
+    ipcMain.on('show-tutorial-requested', () => {
+        ipcMain.emit('show-tutorial');
+    });
+
     mainWindow.on('closed', () => {
         mainWindow = null;
         // Close playback window if it exists
@@ -109,7 +150,6 @@ function createMainWindow() {
 app.whenReady().then(() => {
     updateManager.init();
 
-    initializeGlobalManagers();
     createMainWindow();
 
     // Register will-download handler globally for all sessions once app is ready

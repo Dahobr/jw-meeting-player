@@ -4,11 +4,8 @@
  */
 
 const tutorialManager = {
-    // UI elements cache
     elements: {},
 
-    // Hierarchical structure: Sections contain Steps
-    // Sections use numeric IDs as requested
     sections: [
         {
             id: 0,
@@ -19,62 +16,95 @@ const tutorialManager = {
         {
             id: 1,
             title: "Integração com o Zoom",
-            description: "O aplicativo oferece três formas de interagir com o Zoom, que você pode selecionar no <b>canto superior direito</b> da tela.",
+            description: "O aplicativo oferece três formas de interagir com o Zoom. Para que a automação funcione, precisamos também ajustar algumas configurações no próprio Zoom.",
             steps: [
                 { 
                     title: "Escolha o Melhor Modo", 
-                    content: `<ul style="text-align: left; list-style-type: none; padding: 0; margin: 0;">
-                        <li style="margin-bottom: 10px;"><b>• Manual:</b> Você controla tudo manualmente no Zoom.</li>
-                        <li style="margin-bottom: 10px;"><b>• Semiautomático:</b> O app prepara a mídia e você inicia a partilha.</li>
-                        <li style="margin-bottom: 10px;"><b>• Automático:</b> (Recomendado) O app faz tudo por você de forma automática.</li>
-                    </ul>`, 
+                    content: `O aplicativo oferece três formas para iniciar o compartilhamento de mídia no Zoom, que podem ser selecionadas no <b>canto superior direito</b> da tela:
+                    <ol style="text-align: left; padding-left: 20px; margin-top: 10px;">
+                        <li style="margin-bottom: 10px;"><b>Automático:</b> (Recomendado) Após o início da reprodução, o app realiza todo o processo de compartilhamento no Zoom de forma automática.</li>
+                        <li style="margin-bottom: 10px;"><b>Semiautomático:</b> Ao reproduzir uma mídia, o app abre automaticamente a janela de compartilhamento do Zoom; você então seleciona a tela desejada e inicia o compartilhamento.</li>
+                        <li style="margin-bottom: 10px;"><b>Manual:</b> Você controla tudo manualmente no Zoom, abrindo a janela e iniciando o compartilhamento por conta própria.</li>
+                    </ol>`, 
+                    action: null 
+                },
+                { 
+                    title: "Configuração do Zoom", 
+                    content: `<p>Para que a automação funcione, precisamos ajustar as configurações de atalhos dentro do próprio Zoom.</p>
+                              <p>Se o Zoom ainda não estiver aberto, abra-o primeiro. Depois, clique no botão abaixo para abrir a tela de <b>configurações</b> do seu aplicativo Zoom:</p>
+                              <button id="btn-zoom-settings" class="tutorial-btn">Abrir Configurações do Zoom</button>
+                              <p style="margin-top: 15px;">Nas configurações de 'Atalhos de Teclado' do Zoom, marque o <b>Alt+S</b> como <b>'Atalho Global'</b>.</p>
+                              <p>Lembre-se de que, ao utilizar o modo <b>Automático</b>, as configurações detalhadas na seção de <b>Reprodução</b> são fundamentais para o sucesso da automação.</p>`, 
+                    action: null 
+                }            
+            ]
+        },
+        {
+            id: 2,
+            title: "Criação de Playlists",
+            description: "Aprenda a organizar suas reuniões criando listas personalizadas e importando os arquivos necessários para a exibição.",
+            steps: [
+                { 
+                    title: "Criar Playlists", 
+                    content: `<p>Para criar uma playlist, digite um nome fácil de identificar na caixa de texto localizada no painel esquerdo e, em seguida, clique no botão <b>'+'</b> ou pressione a tecla <b>Enter</b>.</p>
+                              <p>Após a criação, basta clicar sobre o nome da lista para começar a adicionar conteúdos a ela.</p>`, 
+                    action: null 
+                },
+                { 
+                    title: "Adicionar mídia", 
+                    content: `<p>Clique no botão <b>Reuniões</b> no topo da página e selecione <b>Apostila</b> ou <b>Estudo de A Sentinela</b>.</p>
+                              <p>Ao encontrar um link de vídeo ou cântico, basta clicar nele para fazer o download, e o item será automaticamente adicionado à sua playlist.</p>
+                              <p>Para adicionar imagens, clique com o botão direito sobre ela e selecione <b>Adicionar a imagem à playlist</b>.</p>
+                              <p>Você também pode utilizar botões específicos nas páginas do JW.ORG para encontrar outros itens de mídia.</p>
+                              <p>Para navegar pelas páginas, utilize o botão direito do mouse para acessar as opções de <b>Voltar</b> ou <b>Avançar</b>.</p>`, 
+                    action: null 
+                },
+                { 
+                    title: "Importar outros itens", 
+                    content: `<p>Você pode importar seus próprios arquivos de imagem ou vídeo clicando no botão <b>Importar Arquivos</b>, localizado no canto inferior esquerdo.</p>
+                              <p>Também é possível importar playlists do <b>JW Library</b>. Note que, no momento, o processo de importação permite apenas imagens e pode não manter a ordem original, sendo necessário reordená-las manualmente na lista.</p>`, 
                     action: null 
                 }
             ]
         },
         {
-            id: 2,
-            title: "Configuração do Zoom",
-            description: "Para que a automação funcione, precisamos ajustar algumas configurações dentro do próprio Zoom.",
-            steps: [
-                { title: "Abrir Configurações", content: "Clique no botão abaixo para abrir a tela de <b>configurações</b> do seu aplicativo Zoom.", action: "open-zoom-settings" },
-                { title: "Atalho Global (Alt+S)", content: "Nas configurações de 'Atalhos de Teclado' do Zoom, marque o <b>Alt+S</b> como <b>'Atalho Global'</b> para garantir o controle fora da janela do Zoom.", action: null }
-            ]
-        },
-        {
             id: 3,
-            title: "Guia de Operação",
-            description: "Agora que o Zoom está pronto, vamos aprender a usar as principais funções do aplicativo.",
+            title: "Reprodução",
+            description: "Aprenda como controlar a exibição dos conteúdos durante a sua reunião.",
             steps: [
-                { title: "Criar Playlists", content: "Use o botão <b>'+'</b> no painel esquerdo para organizar suas reuniões por listas.", action: null },
-                { title: "Importar Arquivos", content: "Arraste seus vídeos e imagens ou use o botão <b>'Importar'</b> para adicioná-los à lista.", action: null },
-                { title: "Controle de Reprodução", content: "Clique em um item para prepará-lo e use os controles do <b>rodapé</b> para exibir o conteúdo para a congregação.", action: null }
+                { 
+                    title: "Modo de Espera (Standby)", 
+                    content: `<p>Ao clicar em um item da playlist, ele entra no modo de espera (standby). Nesse estado, o item é exibido apenas na visualização prévia, sem causar qualquer alteração no segundo monitor ou no Zoom.</p>`, 
+                    action: null 
+                },
+                { 
+                    title: "Reproduzir", 
+                    content: `<p>Clique no botão de reprodução no <b>rodapé</b> para iniciar a exibição.</p>
+                              <p>Se o modo do Zoom estiver definido como <b>Automático</b> ou <b>Semiautomático</b>, a janela de compartilhamento será aberta automaticamente.</p>
+                              <p>Ao realizar o primeiro compartilhamento, siga estes passos:</p>
+                              <ol style="text-align: left; padding-left: 20px; margin-top: 5px;">
+                                <li style="margin-bottom: 5px;">Marque a opção <b>Otimizar para vídeo</b>.</li>
+                                <li style="margin-bottom: 5px;">Dê um <b>clique duplo</b> na tela que deseja compartilhar (geralmente <b>Tela 2</b>).</li>
+                              </ol>
+                              <p>Por seguir estes passos:</p>
+                              <ul style="text-align: left; padding-left: 20px; margin-top: 5px;">
+                                <li style="margin-bottom: 5px;">No modo <b>Automático</b>, o aplicativo memorizará a posição da tela para agilizar os próximos compartilhamentos.</li>
+                                <li style="margin-bottom: 5px;">Nos modos <b>Automático</b> e <b>Semiautomático</b>, a reprodução do vídeo iniciará automaticamente assim que o compartilhamento for estabelecido.</li>
+                              </ul>`, 
+                    action: null 
+                }
             ]
         }
     ],
 
     currentSectionIdx: 0,
-    currentStepIdx: -1, // -1 means we are showing the Section Intro
+    currentStepIdx: -1,
 
-    /**
-     * Initializes the tutorial system, loading UI and caching DOM elements.
-     */
     init: async () => {
-        const response = await fetch('tutorial.html');
-        const html = await response.text();
-        document.body.insertAdjacentHTML('beforeend', html);
-        
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'tutorial.css';
-        document.head.appendChild(link);
-
-        // Cache DOM elements
         tutorialManager.elements = {
             overlay: document.getElementById('tutorial-overlay'),
             title: document.getElementById('tutorial-title'),
             content: document.getElementById('tutorial-content'),
-            actionBtn: document.getElementById('tutorial-action-btn'),
             btnPrev: document.getElementById('btn-prev'),
             btnNext: document.getElementById('btn-next'),
             btnSkip: document.getElementById('btn-skip'),
@@ -82,25 +112,19 @@ const tutorialManager = {
             noShowLabel: document.querySelector('label[for="check-no-show"]') || document.querySelector('label')
         };
 
-        // Attach event listeners
         tutorialManager.elements.btnNext.onclick = () => tutorialManager.next();
         tutorialManager.elements.btnPrev.onclick = () => tutorialManager.prev();
         tutorialManager.elements.btnSkip.onclick = () => tutorialManager.skipSection();
-        tutorialManager.elements.actionBtn.onclick = () => tutorialManager.performAction();
         
-        // Localize fixed labels
-        tutorialManager.elements.btnPrev.textContent = "Voltar";
-        tutorialManager.elements.btnSkip.textContent = "Pular";
-        if (tutorialManager.elements.noShowLabel) {
-            tutorialManager.elements.noShowLabel.childNodes[1].textContent = " Não mostrar novamente";
-        }
-
+        tutorialManager.elements.content.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'btn-zoom-settings') {
+                window.electronAPI.openZoomSettings();
+            }
+        });
+        
         tutorialManager.render();
     },
 
-    /**
-     * Renders the current tutorial state (Section Intro or specific Step).
-     */
     render: () => {
         const section = tutorialManager.sections[tutorialManager.currentSectionIdx];
         const el = tutorialManager.elements;
@@ -108,53 +132,38 @@ const tutorialManager = {
         const isFirstScreen = (tutorialManager.currentSectionIdx === 0 && tutorialManager.currentStepIdx === -1);
 
         if (isIntro) {
-            // Render Section Introduction
-            el.title.innerHTML = section.title;
+            const titlePrefix = section.id > 0 ? `${section.id}. ` : "";
+            el.title.innerHTML = titlePrefix + section.title;
             el.content.innerHTML = section.description;
-            el.actionBtn.classList.add('hidden');
-            // Show Skip only on Intro, BUT hide it on the very first screen
-            el.btnSkip.classList.toggle('hidden', isFirstScreen);
         } else {
-            // Render Specific Step
             const step = section.steps[tutorialManager.currentStepIdx];
-            el.title.innerHTML = step.title;
+            el.title.innerHTML = `${section.id}.${tutorialManager.currentStepIdx + 1} ${step.title}`;
             el.content.innerHTML = step.content;
-            el.btnSkip.classList.add('hidden'); // Hide Skip during steps
-
-            if (step.action) {
-                el.actionBtn.textContent = "Abrir Configurações do Zoom";
-                el.actionBtn.classList.remove('hidden');
-            } else {
-                el.actionBtn.classList.add('hidden');
-            }
         }
 
-        // Navigation state logic
-        // Hide Voltar on the first screen entirely instead of just disabling it
         el.btnPrev.classList.toggle('hidden', isFirstScreen);
         el.btnPrev.disabled = isFirstScreen;
         
         const isLastSection = (tutorialManager.currentSectionIdx === tutorialManager.sections.length - 1);
         const isLastStep = (section.steps.length > 0 && tutorialManager.currentStepIdx === section.steps.length - 1);
         el.btnNext.textContent = (isLastSection && (isLastStep || section.steps.length === 0)) ? "Finalizar" : "Próximo";
-
-        // "Don't show again" only on the very first screen
-        if (el.noShowLabel) {
-            el.noShowLabel.classList.toggle('hidden', !isFirstScreen);
+        
+        const controls = document.querySelector('.controls');
+        if (isFirstScreen) {
+            if (el.noShowLabel && !controls.contains(el.noShowLabel)) {
+                controls.insertBefore(el.noShowLabel, controls.firstChild);
+            }
+            el.noShowLabel.classList.remove('hidden');
+        } else {
+            el.noShowLabel.classList.add('hidden');
         }
     },
 
-    /**
-     * Advances to the next state (Step or next Section).
-     */
     next: () => {
         const section = tutorialManager.sections[tutorialManager.currentSectionIdx];
-        
         if (tutorialManager.currentStepIdx < section.steps.length - 1) {
-            // Go to next step in current section
             tutorialManager.currentStepIdx++;
         } else {
-            // Move to next section intro
             if (tutorialManager.currentSectionIdx < tutorialManager.sections.length - 1) {
                 tutorialManager.currentSectionIdx++;
                 tutorialManager.currentStepIdx = -1;
@@ -166,15 +175,10 @@ const tutorialManager = {
         tutorialManager.render();
     },
 
-    /**
-     * Returns to the previous state.
-     */
     prev: () => {
         if (tutorialManager.currentStepIdx > -1) {
-            // Go back to intro or previous step
             tutorialManager.currentStepIdx--;
         } else {
-            // Go back to the last step of the previous section
             if (tutorialManager.currentSectionIdx > 0) {
                 tutorialManager.currentSectionIdx--;
                 const prevSection = tutorialManager.sections[tutorialManager.currentSectionIdx];
@@ -184,9 +188,6 @@ const tutorialManager = {
         tutorialManager.render();
     },
 
-    /**
-     * Skips the current section and moves to the next section intro.
-     */
     skipSection: () => {
         if (tutorialManager.currentSectionIdx < tutorialManager.sections.length - 1) {
             tutorialManager.currentSectionIdx++;
@@ -197,34 +198,17 @@ const tutorialManager = {
         }
     },
 
-    /**
-     * Finishes the tutorial and saves preferences.
-     */
     finish: () => {
         if (tutorialManager.elements.checkNoShow && tutorialManager.elements.checkNoShow.checked) {
             tutorialManager.setSkipped(true);
         }
-        tutorialManager.hide();
-        // Reset state for next time (since user said "start from beginning")
-        tutorialManager.currentSectionIdx = 0;
-        tutorialManager.currentStepIdx = -1;
+        window.close();
     },
 
-    /**
-     * Executes actions.
-     */
-    performAction: async () => {
-        const section = tutorialManager.sections[tutorialManager.currentSectionIdx];
-        const step = section.steps[tutorialManager.currentStepIdx];
-        if (step && step.action === 'open-zoom-settings') {
-            await window.electronAPI.openZoomSettings();
-        }
-    },
-
-    show: () => tutorialManager.elements.overlay.classList.remove('hidden'),
-    hide: () => tutorialManager.elements.overlay.classList.add('hidden'),
     isSkipped: () => localStorage.getItem('tutorial-skipped') === 'true',
     setSkipped: (skipped) => localStorage.setItem('tutorial-skipped', skipped)
 };
+
+tutorialManager.init();
 
 export default tutorialManager;

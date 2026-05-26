@@ -140,6 +140,10 @@ class EventHandler {
         this.ui.btnVideos.onclick = () => handleNav('videos');
         this.ui.btnEsbocos.onclick = () => handleNav('esbocos');
 
+        this.ui.btnMenuTutorial.onclick = () => {
+            window.electronAPI.showTutorial();
+            this.ui.headerMenu.classList.remove('show');
+        };
         this.ui.btnMenuYear.onclick = () => window.electronAPI.openYearVerseFolder();
         this.ui.btnMenuDownloads.onclick = () => this.ipc.openDownloadFolder();
         

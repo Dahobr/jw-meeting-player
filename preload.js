@@ -38,6 +38,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onSetPlaybackPlaylist: (callback) => ipcRenderer.on('set-playback-playlist', (_event, data) => callback(data)),
 
   // --- UI & View State ---
+  showTutorial: () => ipcRenderer.invoke('show-tutorial'),
   updateViewBounds: (bounds) => ipcRenderer.send('update-view-bounds', bounds),
   toggleWebView: (visible) => ipcRenderer.send('toggle-webview', visible),
   showItemContextMenu: (data) => ipcRenderer.send('show-item-context-menu', data),

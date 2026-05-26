@@ -13,13 +13,16 @@
 }
 
 #tutorial-card {
-    background: #ffffff;
+    background: #f9f9f9;
     padding: 35px;
-    width: 420px;
+    width: 600px;
+    max-height: 80vh;
     border-radius: 12px;
     box-shadow: 0 15px 35px rgba(0,0,0,0.3);
     text-align: center;
     animation: fadeIn 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
 }
 
 @keyframes fadeIn {
@@ -32,14 +35,31 @@
     margin-top: 0;
     margin-bottom: 15px;
     font-size: 1.4rem;
+    flex-shrink: 0;
 }
 
 #tutorial-content {
     margin-bottom: 25px;
     line-height: 1.5;
     font-size: 1rem;
-    white-space: pre-line; /* Correctly handle \n for list-like content */
+    overflow-y: auto;
+    flex-grow: 1;
 }
+
+#tutorial-content p {
+    margin-top: 0;
+    margin-bottom: 0.8em;
+    text-align: left;
+}
+
+.tutorial-btn {
+    background: #27ae60;
+    color: white;
+    width: 100%;
+    margin: 0.5em 0;
+    padding: 12px;
+}
+.tutorial-btn:hover { background: #219150; }
 
 .controls {
     display: flex;
@@ -48,29 +68,30 @@
     gap: 10px;
     padding-top: 15px;
     border-top: 1px solid #34495e;
-    position: relative; /* Base for absolute centering */
+    flex-wrap: wrap;
 }
 
 #btn-prev { 
     background: #34495e; 
     color: #ecf0f1;
-    z-index: 2;
 }
 
 #btn-skip { 
     background: transparent; 
-    color: #7f8c8d; 
+    color: #555; 
     font-size: 0.8rem;
+    font-weight: 600;
+}
+
+#btn-skip.centered {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 1;
 }
 
 #btn-next { 
     background: #3498db; 
     color: white; 
-    z-index: 2;
     margin-left: auto;
 }
 
@@ -88,7 +109,7 @@ button {
 
 #btn-prev:hover { background: #bdc3c7; color: #fff; }
 
-#btn-skip:hover { color: #e74c3c; }
+#btn-skip:hover { color: #c0392b; }
 
 #tutorial-action-btn {
     background: #27ae60;
@@ -100,11 +121,12 @@ button {
 #tutorial-action-btn:hover { background: #219150; }
 
 label {
-    display: block;
-    margin-top: 20px;
     font-size: 0.85rem;
-    color: #7f8c8d;
+    color: #555;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .hidden { display: none !important; }

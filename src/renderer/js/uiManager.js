@@ -59,6 +59,7 @@ class UIManager {
 
         this.btnMenu = document.getElementById('btn-menu');
         this.headerMenu = document.getElementById('header-menu');
+        this.btnMenuTutorial = document.getElementById('btn-menu-tutorial');
         this.btnMenuYear = document.getElementById('btn-menu-year');
         this.btnMenuDownloads = document.getElementById('btn-menu-downloads');
         this.btnMenuHelp = document.getElementById('btn-menu-help');
@@ -745,17 +746,6 @@ class UIManager {
     setPreviewControlsOverlayVisibility(visible) {
         if (this.previewControlsOverlay) {
             this.previewControlsOverlay.style.display = visible ? 'block' : 'none';
-        }
-    }
-
-    /**
-     * Initializes the tutorial system.
-     * @param {Object} tutorialManager - The tutorial manager module.
-     */
-    async initTutorial(tutorialManager) {
-        await tutorialManager.init();
-        if (!tutorialManager.isSkipped()) {
-            tutorialManager.show();
         }
     }
 }
