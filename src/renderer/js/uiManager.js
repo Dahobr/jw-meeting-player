@@ -191,6 +191,47 @@ class UIManager {
     static PAUSE_ICON = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="currentColor"/></svg>';
 
     /**
+     * Updates the visual state of the footer playback buttons.
+     */
+    updateFooterPlaybackUI(config, isVideo) {
+        const { isVisible, isEnabled, icon, title, isHighlighted, isStopHighlighted, isStopEnabled } = config;
+        
+        let finalIcon = icon;
+        let finalEnabled = isEnabled;
+        let finalTitle = title;
+        let finalHighlighted = isHighlighted;
+
+        if (!isVideo && isEnabled === false) {
+            finalIcon = this.icons.play;
+            finalEnabled = false;
+            finalTitle = "Reproduzindo";
+            finalHighlighted = false;
+        }
+        
+        this.btnFooterPlayPause.style.display = isVisible ? "inline-flex" : "none";
+        this.btnFooterPlayPause.disabled = !finalEnabled;
+        this.btnFooterPlayPause.style.opacity = finalEnabled ? "1" : "0.5";
+        this.btnFooterPlayPause.style.cursor = finalEnabled ? "pointer" : "default";
+        this.btnFooterPlayPause.innerHTML = finalIcon;
+        this.btnFooterPlayPause.title = finalTitle;
+
+        if (finalHighlighted) {
+            this.btnFooterPlayPause.classList.add("btn-paused-highlight");
+        } else {
+            this.btnFooterPlayPause.classList.remove("btn-paused-highlight");
+        }
+
+        const btnStop = document.getElementById("btn-stop");
+        if (btnStop) {
+            btnStop.disabled = !isStopEnabled;
+            btnStop.style.opacity = isStopEnabled ? "1" : "0.5";
+            btnStop.style.cursor = isStopEnabled ? "pointer" : "default";
+            if (isStopHighlighted) btnStop.classList.add("btn-paused-highlight");
+            else btnStop.classList.remove("btn-paused-highlight");
+        }
+    }
+
+    /**
      * Renders the entire playback UI based on the given state.
      */
     renderAllPlaybackUI(state) {
