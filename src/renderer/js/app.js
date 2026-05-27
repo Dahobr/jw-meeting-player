@@ -388,63 +388,24 @@ class App {
     }
 
     updatePlaybackUI() {
-        const isStaged = this.status === "staged";
-        const isPlaying = this.status === "playing";
-        const isPaused = this.status === "paused";
-        const isStopped = this.status === "stopped";
-        const isVideo = this.currentMedia?.mediaType?.includes("video");
+        const state = {
+            status: this.status,
+            currentMedia: this.currentMedia,
+            isPlaylistView: this.ui.isPlaylistView(),
+            hasSecondaryDisplay: this.hasSecondaryDisplay,
+            isWebViewVisible: this.ui.isWebViewVisible()
+        };
 
-        if (isStopped && !this.currentMedia && !this.ui.isWebViewVisible()) {
+        if (this.status === "stopped" && !this.currentMedia && !state.isWebViewVisible) {
             this.ui.updateMainOverlay('guide');
         }
 
-        const isPlaylistView = this.ui.isPlaylistView();
-        let statusText = "";
+        this.ui.renderAllPlaybackUI(state);
+
+        const isPlaying = this.status === "playing";
+        const isPaused = this.status === "paused";
+        const isStaged = this.status === "staged";
         
-        if (isPlaylistView) {
-            statusText = this.hasSecondaryDisplay 
-                ? "O segundo monitor: Conectado" 
-                : "O segundo monitor: ⚠️ Não detectado";
-            this.ui.updateDisplayStatus(this.hasSecondaryDisplay ? "connected" : "waiting");
-        } else {
-            statusText = "Parado: Nenhum item";
-            if (this.currentMedia) {
-                const fileName = this.currentMedia.title || this.currentMedia.filename;
-                if (isPlaying) statusText = `Reproduzindo: ${fileName}`;
-                else if (isPaused) statusText = `Pausado: ${fileName}`;
-                else if (isStaged) statusText = `Preparado: ${fileName}`;
-            }
-            this.ui.updateDisplayStatus("connected");
-        }
-        
-        this.ui.updateCurrentItemInfo(statusText);
-        this.ui.setFooterTransportVisibility(!isPlaylistView);
-        this.ui.setPreviewControlsOverlayVisibility(!isVideo);
-
-        const footerConfig = {
-            isVisible: true,
-            isEnabled: true,
-            icon: isPlaying ? App.PAUSE_ICON : App.PLAY_ICON,
-            title: isPlaying ? "Pausar" : (isStaged ? "Reproduzir" : "Retomar"),
-            isHighlighted: (isPaused || isStaged),
-            isStopEnabled: !(isStaged || isStopped),
-            isStopHighlighted: !(isPaused || isStaged) && (isPlaying || isStopped)
-        };
-
-        if (!isVideo) {
-            if (isPlaying) {
-                footerConfig.isEnabled = false;
-                footerConfig.icon = App.PLAY_ICON; // 画像は再生アイコンのまま
-                footerConfig.isHighlighted = false;
-                footerConfig.isStopHighlighted = true;
-            } else if (isStaged) {
-                footerConfig.title = "Reproduzir";
-                footerConfig.isHighlighted = true;
-                footerConfig.isStopHighlighted = false;
-            }
-        }
-        this.ui.updateFooterPlaybackUI(footerConfig, isVideo);
-
         const playlistConfig = {
             statusLabel: (isPlaying || isPaused) ? "NO AR" : (isStaged ? "PREPARADO" : ""),
             statusClass: isStaged ? "staged" : (isPlaying || isPaused ? this.status : ""),
@@ -452,6 +413,7 @@ class App {
         };
 
         if (this.currentMedia) {
+            const isVideo = this.currentMedia?.mediaType?.includes("video");
             playlistConfig.items[this.currentMedia.id] = {
                 class: (isPlaying || isPaused) ? "playing" : "standby",
                 icon: (isPlaying && isVideo) ? this.ui.icons.pause : (isPlaying ? this.ui.icons.stop : this.ui.icons.play),
