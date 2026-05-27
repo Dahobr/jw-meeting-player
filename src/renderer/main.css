@@ -1178,18 +1178,25 @@ body {
 }
 
 /* Navigation Buttons */
-#btn-footer-prev, #btn-footer-next {
+.nav-btn {
     background: transparent;
     color: white;
     border: 1px solid white;
-    padding: 8px 12px;
+    padding: 0;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     cursor: pointer;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6em;
 }
 
-#btn-footer-prev:hover, #btn-footer-next:hover {
+.nav-btn:hover {
     background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
 }
 
 .guide-attention b { display: block; margin-bottom: 4px; }
