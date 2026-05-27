@@ -79,10 +79,17 @@ function createMainWindow() {
     // Auto-open tutorial
     mainWindow.webContents.once('did-finish-load', () => {
         const bounds = mainWindow.getBounds();
+        const tutorialWidth = Math.floor(bounds.width * 0.7);
+        const tutorialHeight = Math.floor(bounds.height * 0.7);
+        const x = bounds.x + Math.floor((bounds.width - tutorialWidth) / 2);
+        const y = bounds.y + Math.floor((bounds.height - tutorialHeight) / 2);
+
         let tutorialWindow = new BrowserWindow({
-            width: Math.floor(bounds.width / 2),
-            height: Math.floor(bounds.height / 2),
-            center: true,
+            parent: mainWindow,
+            width: tutorialWidth,
+            height: tutorialHeight,
+            x: x,
+            y: y,
             webPreferences: {
                 preload: path.join(__dirname, 'preload.js'),
                 contextIsolation: true,
@@ -116,10 +123,17 @@ function createMainWindow() {
     // Tutorial Window
     ipcMain.handle('show-tutorial', () => {
         const bounds = mainWindow.getBounds();
+        const tutorialWidth = Math.floor(bounds.width * 0.7);
+        const tutorialHeight = Math.floor(bounds.height * 0.7);
+        const x = bounds.x + Math.floor((bounds.width - tutorialWidth) / 2);
+        const y = bounds.y + Math.floor((bounds.height - tutorialHeight) / 2);
+
         let tutorialWindow = new BrowserWindow({
-            width: Math.floor(bounds.width / 2),
-            height: Math.floor(bounds.height / 2),
-            center: true,
+            parent: mainWindow,
+            width: tutorialWidth,
+            height: tutorialHeight,
+            x: x,
+            y: y,
             webPreferences: {
                 preload: path.join(__dirname, 'preload.js'),
                 contextIsolation: true,

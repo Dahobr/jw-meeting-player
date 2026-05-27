@@ -148,6 +148,10 @@ const tutorialManager = {
         const isLastStep = (section.steps.length > 0 && tutorialManager.currentStepIdx === section.steps.length - 1);
         el.btnNext.textContent = (isLastSection && (isLastStep || section.steps.length === 0)) ? "Finalizar" : "Próximo";
         
+        // Skip button logic: Show only for section intro, excluding the very first welcome screen
+        const isSkipVisible = (isIntro && !isFirstScreen);
+        el.btnSkip.classList.toggle('hidden', !isSkipVisible);
+        
         const controls = document.querySelector('.controls');
         if (isFirstScreen) {
             if (el.noShowLabel && !controls.contains(el.noShowLabel)) {

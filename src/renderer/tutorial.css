@@ -4,8 +4,6 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(44, 62, 80, 0.85);
-    z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -16,9 +14,7 @@
     background: #f9f9f9;
     padding: 35px;
     width: 600px;
-    max-height: 80vh;
-    border-radius: 12px;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    height: 100%;
     text-align: center;
     animation: fadeIn 0.3s ease-out;
     display: flex;
@@ -32,8 +28,8 @@
 
 #tutorial-title {
     color: #2c3e50;
-    margin-top: 0;
-    margin-bottom: 15px;
+    margin-top: 20px;
+    margin-bottom: 30px;
     font-size: 1.4rem;
     flex-shrink: 0;
 }
@@ -44,6 +40,7 @@
     font-size: 1rem;
     overflow-y: auto;
     flex-grow: 1;
+    text-align: left;
 }
 
 #tutorial-content p {
@@ -67,8 +64,10 @@
     align-items: center;
     gap: 10px;
     padding-top: 15px;
+    padding-bottom: 15px;
     border-top: 1px solid #34495e;
     flex-wrap: wrap;
+    position: relative;
 }
 
 #btn-prev { 
@@ -81,6 +80,9 @@
     color: #555; 
     font-size: 0.8rem;
     font-weight: 600;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 #btn-skip.centered {
