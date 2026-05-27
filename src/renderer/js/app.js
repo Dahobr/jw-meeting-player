@@ -455,7 +455,7 @@ class App {
             playlistConfig.items[this.currentMedia.id] = {
                 class: (isPlaying || isPaused) ? "playing" : "standby",
                 icon: (isPlaying && isVideo) ? this.ui.icons.pause : (isPlaying ? this.ui.icons.stop : this.ui.icons.play),
-                title: (isPlaying && isVideo) ? "Pausar" : (isPaused ? "Retomar" : "Reproduzir")
+                title: (isPlaying && isVideo) ? "Pausar" : (isPlaying ? "Parar" : (isPaused ? "Retomar" : "Reproduzir"))
             };
         }
         this.ui.updatePlaybackStateUI(playlistConfig);
