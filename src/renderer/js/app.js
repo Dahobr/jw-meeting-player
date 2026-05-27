@@ -427,6 +427,7 @@ class App {
             icon: isPlaying ? App.PAUSE_ICON : App.PLAY_ICON,
             title: isPlaying ? "Pausar" : (isStaged ? "Reproduzir" : "Retomar"),
             isHighlighted: (isPaused || isStaged),
+            isStopEnabled: !(isStaged || isStopped),
             isStopHighlighted: !(isPaused || isStaged) && (isPlaying || isStopped)
         };
 

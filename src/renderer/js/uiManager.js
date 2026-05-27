@@ -190,7 +190,7 @@ class UIManager {
      * Updates the visual state of the footer playback buttons.
      */
     updateFooterPlaybackUI(config) {
-        const { isVisible, isEnabled, icon, title, isHighlighted, isStopHighlighted } = config;
+        const { isVisible, isEnabled, icon, title, isHighlighted, isStopHighlighted, isStopEnabled } = config;
         
         this.btnFooterPlayPause.style.display = isVisible ? "inline-flex" : "none";
         this.btnFooterPlayPause.disabled = !isEnabled;
@@ -207,6 +207,9 @@ class UIManager {
 
         const btnStop = document.getElementById("btn-stop");
         if (btnStop) {
+            btnStop.disabled = !isStopEnabled;
+            btnStop.style.opacity = isStopEnabled ? "1" : "0.5";
+            btnStop.style.cursor = isStopEnabled ? "pointer" : "default";
             if (isStopHighlighted) btnStop.classList.add("btn-paused-highlight");
             else btnStop.classList.remove("btn-paused-highlight");
         }
