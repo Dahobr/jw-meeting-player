@@ -189,17 +189,29 @@ class UIManager {
     /**
      * Updates the visual state of the footer playback buttons.
      */
-    updateFooterPlaybackUI(config) {
+    updateFooterPlaybackUI(config, isVideo) {
         const { isVisible, isEnabled, icon, title, isHighlighted, isStopHighlighted, isStopEnabled } = config;
         
-        this.btnFooterPlayPause.style.display = isVisible ? "inline-flex" : "none";
-        this.btnFooterPlayPause.disabled = !isEnabled;
-        this.btnFooterPlayPause.style.opacity = isEnabled ? "1" : "0.5";
-        this.btnFooterPlayPause.style.cursor = isEnabled ? "pointer" : "default";
-        this.btnFooterPlayPause.innerHTML = icon;
-        this.btnFooterPlayPause.title = title;
+        let finalIcon = icon;
+        let finalEnabled = isEnabled;
+        let finalTitle = title;
+        let finalHighlighted = isHighlighted;
 
-        if (isHighlighted) {
+        if (!isVideo && isEnabled === false) {
+            finalIcon = this.icons.play;
+            finalEnabled = false;
+            finalTitle = "Reproduzindo";
+            finalHighlighted = false;
+        }
+        
+        this.btnFooterPlayPause.style.display = isVisible ? "inline-flex" : "none";
+        this.btnFooterPlayPause.disabled = !finalEnabled;
+        this.btnFooterPlayPause.style.opacity = finalEnabled ? "1" : "0.5";
+        this.btnFooterPlayPause.style.cursor = finalEnabled ? "pointer" : "default";
+        this.btnFooterPlayPause.innerHTML = finalIcon;
+        this.btnFooterPlayPause.title = finalTitle;
+
+        if (finalHighlighted) {
             this.btnFooterPlayPause.classList.add("btn-paused-highlight");
         } else {
             this.btnFooterPlayPause.classList.remove("btn-paused-highlight");

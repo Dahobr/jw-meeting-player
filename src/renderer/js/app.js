@@ -432,17 +432,18 @@ class App {
         };
 
         if (!isVideo) {
-            if (isStaged) {
+            if (isPlaying) {
+                footerConfig.isEnabled = false;
+                footerConfig.icon = App.PLAY_ICON; // 画像は再生アイコンのまま
+                footerConfig.isHighlighted = false;
+                footerConfig.isStopHighlighted = true;
+            } else if (isStaged) {
                 footerConfig.title = "Reproduzir";
                 footerConfig.isHighlighted = true;
                 footerConfig.isStopHighlighted = false;
-            } else if (isPlaying) {
-                footerConfig.isEnabled = false;
-                footerConfig.isHighlighted = false;
-                footerConfig.isStopHighlighted = true;
             }
         }
-        this.ui.updateFooterPlaybackUI(footerConfig);
+        this.ui.updateFooterPlaybackUI(footerConfig, isVideo);
 
         const playlistConfig = {
             statusLabel: (isPlaying || isPaused) ? "NO AR" : (isStaged ? "PREPARADO" : ""),
