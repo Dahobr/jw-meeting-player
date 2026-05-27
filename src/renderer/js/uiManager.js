@@ -186,45 +186,78 @@ class UIManager {
         }
     }
 
+    // UI Constants
+    static PLAY_ICON = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
+    static PAUSE_ICON = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="currentColor"/></svg>';
+
     /**
-     * Updates the visual state of the footer playback buttons.
+     * Renders the entire playback UI based on the given state.
      */
-    updateFooterPlaybackUI(config, isVideo) {
-        const { isVisible, isEnabled, icon, title, isHighlighted, isStopHighlighted, isStopEnabled } = config;
+    renderAllPlaybackUI(state) {
+        const isVideo = state.currentMedia?.mediaType?.includes("video");
         
-        let finalIcon = icon;
-        let finalEnabled = isEnabled;
-        let finalTitle = title;
-        let finalHighlighted = isHighlighted;
+        // Update footer buttons
+        const footerConfig = this.buildFooterConfig(state);
+        this.updateFooterPlaybackUI(footerConfig, isVideo);
+        
+        // Update display status
+        const displayStatus = state.hasSecondaryDisplay ? "connected" : "waiting";
+        this.updateDisplayStatus(displayStatus);
+        
+        // Update status text
+        const statusText = this.getStatusText(state);
+        this.updateCurrentItemInfo(statusText);
+        
+        // Visibility
+        this.setFooterTransportVisibility(!state.isPlaylistView);
+        this.setPreviewControlsOverlayVisibility(!isVideo);
+    }
 
-        if (!isVideo && isEnabled === false) {
-            finalIcon = this.icons.play;
-            finalEnabled = false;
-            finalTitle = "Reproduzindo";
-            finalHighlighted = false;
+    buildFooterConfig(state) {
+        const { status, currentMedia, isVideo } = state;
+        const isStaged = status === "staged";
+        const isPlaying = status === "playing";
+        const isPaused = status === "paused";
+        const isStopped = status === "stopped";
+
+        const config = {
+            isVisible: true,
+            isEnabled: true,
+            icon: isPlaying ? UIManager.PAUSE_ICON : UIManager.PLAY_ICON,
+            title: isPlaying ? "Pausar" : (isStaged ? "Reproduzir" : "Retomar"),
+            isHighlighted: (isPaused || isStaged),
+            isStopEnabled: !(isStaged || isStopped),
+            isStopHighlighted: !(isPaused || isStaged) && (isPlaying || isStopped)
+        };
+
+        if (!isVideo) {
+            if (isPlaying) {
+                config.isEnabled = false;
+                config.icon = UIManager.PLAY_ICON;
+                config.isHighlighted = false;
+                config.isStopHighlighted = true;
+            } else if (isStaged) {
+                config.title = "Reproduzir";
+                config.isHighlighted = true;
+                config.isStopHighlighted = false;
+            }
+        }
+        return config;
+    }
+
+    getStatusText(state) {
+        if (state.isPlaylistView) {
+            return state.hasSecondaryDisplay ? "O segundo monitor: Conectado" : "O segundo monitor: ⚠️ Não detectado";
         }
         
-        this.btnFooterPlayPause.style.display = isVisible ? "inline-flex" : "none";
-        this.btnFooterPlayPause.disabled = !finalEnabled;
-        this.btnFooterPlayPause.style.opacity = finalEnabled ? "1" : "0.5";
-        this.btnFooterPlayPause.style.cursor = finalEnabled ? "pointer" : "default";
-        this.btnFooterPlayPause.innerHTML = finalIcon;
-        this.btnFooterPlayPause.title = finalTitle;
-
-        if (finalHighlighted) {
-            this.btnFooterPlayPause.classList.add("btn-paused-highlight");
-        } else {
-            this.btnFooterPlayPause.classList.remove("btn-paused-highlight");
+        let text = "Parado: Nenhum item";
+        if (state.currentMedia) {
+            const fileName = state.currentMedia.title || state.currentMedia.filename;
+            if (state.status === 'playing') text = `Reproduzindo: ${fileName}`;
+            else if (state.status === 'paused') text = `Pausado: ${fileName}`;
+            else if (state.status === 'staged') text = `Preparado: ${fileName}`;
         }
-
-        const btnStop = document.getElementById("btn-stop");
-        if (btnStop) {
-            btnStop.disabled = !isStopEnabled;
-            btnStop.style.opacity = isStopEnabled ? "1" : "0.5";
-            btnStop.style.cursor = isStopEnabled ? "pointer" : "default";
-            if (isStopHighlighted) btnStop.classList.add("btn-paused-highlight");
-            else btnStop.classList.remove("btn-paused-highlight");
-        }
+        return text;
     }
 
     /**
