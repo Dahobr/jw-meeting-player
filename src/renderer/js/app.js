@@ -72,6 +72,38 @@ class App {
         this.updatePlaybackUI();
         this.startBoundsMonitoring();
 
+        uiManager.onPrevious = () => {
+            const { playlists, currentPlaylistId } = app.store.getState();
+            const playlist = playlists[currentPlaylistId];
+            if (playlist && playlist.items.length > 0) {
+                const currentIdx = playlist.items.findIndex(i => i.id === app.currentMedia?.id);
+                const prevIdx = (currentIdx - 1 + playlist.items.length) % playlist.items.length;
+                const item = playlist.items[prevIdx];
+
+                if (app.status === 'staged') {
+                    app.playbackManager.prepareStagingMedia(item);
+                } else {
+                    app.playbackManager.playMedia(item);
+                }
+            }
+        };
+
+        uiManager.onNext = () => {
+            const { playlists, currentPlaylistId } = app.store.getState();
+            const playlist = playlists[currentPlaylistId];
+            if (playlist && playlist.items.length > 0) {
+                const currentIdx = playlist.items.findIndex(i => i.id === app.currentMedia?.id);
+                const nextIdx = (currentIdx + 1) % playlist.items.length;
+                const item = playlist.items[nextIdx];
+
+                if (app.status === 'staged') {
+                    app.playbackManager.prepareStagingMedia(item);
+                } else {
+                    app.playbackManager.playMedia(item);
+                }
+            }
+        };
+
         try {
             const config = await this.ipc.getConfig();
             if (this.ui.zoomModeSelect) {
