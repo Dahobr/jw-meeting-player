@@ -72,23 +72,35 @@ class App {
         this.updatePlaybackUI();
         this.startBoundsMonitoring();
 
-        this.ui.onPrevious = () => {
-            const { playlists, currentPlaylistId } = this.store.getState();
+        uiManager.onPrevious = () => {
+            const { playlists, currentPlaylistId } = app.store.getState();
             const playlist = playlists[currentPlaylistId];
             if (playlist && playlist.items.length > 0) {
-                const currentIdx = playlist.items.findIndex(i => i.id === this.currentMedia?.id);
+                const currentIdx = playlist.items.findIndex(i => i.id === app.currentMedia?.id);
                 const prevIdx = (currentIdx - 1 + playlist.items.length) % playlist.items.length;
-                this.playbackManager.playMedia(playlist.items[prevIdx]);
+                const item = playlist.items[prevIdx];
+
+                if (app.status === 'staged') {
+                    app.playbackManager.prepareStagingMedia(item);
+                } else {
+                    app.playbackManager.playMedia(item);
+                }
             }
         };
 
-        this.ui.onNext = () => {
-            const { playlists, currentPlaylistId } = this.store.getState();
+        uiManager.onNext = () => {
+            const { playlists, currentPlaylistId } = app.store.getState();
             const playlist = playlists[currentPlaylistId];
             if (playlist && playlist.items.length > 0) {
-                const currentIdx = playlist.items.findIndex(i => i.id === this.currentMedia?.id);
+                const currentIdx = playlist.items.findIndex(i => i.id === app.currentMedia?.id);
                 const nextIdx = (currentIdx + 1) % playlist.items.length;
-                this.playbackManager.playMedia(playlist.items[nextIdx]);
+                const item = playlist.items[nextIdx];
+
+                if (app.status === 'staged') {
+                    app.playbackManager.prepareStagingMedia(item);
+                } else {
+                    app.playbackManager.playMedia(item);
+                }
             }
         };
 
