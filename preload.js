@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setZoomSharing: (active, args) => ipcRenderer.send('set-zoom-sharing', active, args),
 
   // --- Zoom Automation ---
+  openZoomSettings: () => ipcRenderer.invoke('open-zoom-settings'),
   spawnZoomProcess: (args) => ipcRenderer.invoke('spawn-zoom-process', args),
   onZoomProcStdout: (callback) => ipcRenderer.on('zoom-proc-stdout', (_event, data) => callback(data)),
   removeZoomStdoutListener: (callback) => ipcRenderer.removeListener('zoom-proc-stdout', callback),
@@ -37,6 +38,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onSetPlaybackPlaylist: (callback) => ipcRenderer.on('set-playback-playlist', (_event, data) => callback(data)),
 
   // --- UI & View State ---
+  showTutorial: () => ipcRenderer.invoke('show-tutorial'),
   updateViewBounds: (bounds) => ipcRenderer.send('update-view-bounds', bounds),
   toggleWebView: (visible) => ipcRenderer.send('toggle-webview', visible),
   showItemContextMenu: (data) => ipcRenderer.send('show-item-context-menu', data),

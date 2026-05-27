@@ -14,7 +14,6 @@ const { marked } = require('marked');
 app.commandLine.appendSwitch('disable-http2');
 
 // --- Audio Quality Optimization: Revert to simplest working state ---
-// The user said it was best when it only had basic processing disabled.
 app.commandLine.appendSwitch('disable-audio-track-processing');
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
@@ -42,13 +41,16 @@ const { setupZoomIntegration } = require('./zoomIntegration');
 
 let mainWindow;
 let mainView; // The UI Layer
+let globalManagersInitialized = false;
 
-function initializeGlobalManagers() {
+function initializeGlobalManagers(window) {
+    if (globalManagersInitialized) return;
     protocolManager.initSessions();
     storageManager.init();
     displayManager.initGlobal();
-    menuManager.init();
+    menuManager.init(window); 
     contentManager.init();
+    globalManagersInitialized = true;
 }
 
 function createMainWindow() {
@@ -69,8 +71,33 @@ function createMainWindow() {
         },
     });
 
+    initializeGlobalManagers(mainWindow);
+
     mainWindow.loadFile('src/renderer/index.html');
-    mainWindow.setMenuBarVisibility(false);
+    mainWindow.setMenuBarVisibility(false); // Hide menu bar by default
+
+    // Auto-open tutorial
+    mainWindow.webContents.once('did-finish-load', () => {
+        const bounds = mainWindow.getBounds();
+        const tutorialWidth = Math.floor(bounds.width * 0.7);
+        const tutorialHeight = Math.floor(bounds.height * 0.7);
+        const x = bounds.x + Math.floor((bounds.width - tutorialWidth) / 2);
+        const y = bounds.y + Math.floor((bounds.height - tutorialHeight) / 2);
+
+        let tutorialWindow = new BrowserWindow({
+            parent: mainWindow,
+            width: tutorialWidth,
+            height: tutorialHeight,
+            x: x,
+            y: y,
+            webPreferences: {
+                preload: path.join(__dirname, 'preload.js'),
+                contextIsolation: true,
+                enableRemoteModule: false,
+            },
+        });
+        tutorialWindow.loadFile('src/renderer/tutorial.html');
+    });
 
     // Initialize SiteView and ContextMenu
     siteViewManager.init(mainWindow);
@@ -81,6 +108,45 @@ function createMainWindow() {
     
     // Zoom Integration
     setupZoomIntegration(mainWindow, () => displayManager.getPlaybackWindow());
+
+    // Zoom設定起動用IPCハンドラー
+    ipcMain.handle('open-zoom-settings', () => {
+        const { exec } = require('child_process');
+        const scriptPath = path.join(__dirname, 'scripts', 'ZoomSettingsOpener', 'ZoomSettingsOpener.exe');
+        if (fs.existsSync(scriptPath)) {
+            exec(scriptPath);
+        } else {
+            console.error('ZoomSettingsOpener.exe not found at:', scriptPath);
+        }
+    });
+
+    // Tutorial Window
+    ipcMain.handle('show-tutorial', () => {
+        const bounds = mainWindow.getBounds();
+        const tutorialWidth = Math.floor(bounds.width * 0.7);
+        const tutorialHeight = Math.floor(bounds.height * 0.7);
+        const x = bounds.x + Math.floor((bounds.width - tutorialWidth) / 2);
+        const y = bounds.y + Math.floor((bounds.height - tutorialHeight) / 2);
+
+        let tutorialWindow = new BrowserWindow({
+            parent: mainWindow,
+            width: tutorialWidth,
+            height: tutorialHeight,
+            x: x,
+            y: y,
+            webPreferences: {
+                preload: path.join(__dirname, 'preload.js'),
+                contextIsolation: true,
+                enableRemoteModule: false,
+            },
+        });
+        tutorialWindow.loadFile('src/renderer/tutorial.html');
+        return tutorialWindow;
+    });
+
+    ipcMain.on('show-tutorial-requested', () => {
+        ipcMain.emit('show-tutorial');
+    });
 
     mainWindow.on('closed', () => {
         mainWindow = null;
@@ -98,7 +164,6 @@ function createMainWindow() {
 app.whenReady().then(() => {
     updateManager.init();
 
-    initializeGlobalManagers();
     createMainWindow();
 
     // Register will-download handler globally for all sessions once app is ready

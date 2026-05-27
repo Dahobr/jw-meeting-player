@@ -1,8 +1,17 @@
 const { ipcMain, Menu, MenuItem, BrowserWindow } = require('electron');
 
 class MenuManager {
-    init() {
+    init(mainWindow) {
+        this.mainWindow = mainWindow;
+        this.setupMenu();
         this.setupIpcHandlers();
+    }
+
+    setupMenu() {
+        // Menu bar is hidden by default in main.js. 
+        // We set application menu to null to avoid the default Electron menu if needed,
+        // or just don't set it at all.
+        Menu.setApplicationMenu(null);
     }
 
     setupIpcHandlers() {
