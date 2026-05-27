@@ -72,6 +72,26 @@ class App {
         this.updatePlaybackUI();
         this.startBoundsMonitoring();
 
+        this.ui.onPrevious = () => {
+            const { playlists, currentPlaylistId } = this.store.getState();
+            const playlist = playlists[currentPlaylistId];
+            if (playlist && playlist.items.length > 0) {
+                const currentIdx = playlist.items.findIndex(i => i.id === this.currentMedia?.id);
+                const prevIdx = (currentIdx - 1 + playlist.items.length) % playlist.items.length;
+                this.playbackManager.playMedia(playlist.items[prevIdx]);
+            }
+        };
+
+        this.ui.onNext = () => {
+            const { playlists, currentPlaylistId } = this.store.getState();
+            const playlist = playlists[currentPlaylistId];
+            if (playlist && playlist.items.length > 0) {
+                const currentIdx = playlist.items.findIndex(i => i.id === this.currentMedia?.id);
+                const nextIdx = (currentIdx + 1) % playlist.items.length;
+                this.playbackManager.playMedia(playlist.items[nextIdx]);
+            }
+        };
+
         try {
             const config = await this.ipc.getConfig();
             if (this.ui.zoomModeSelect) {

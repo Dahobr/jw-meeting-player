@@ -938,6 +938,7 @@ body {
   display: flex;
   justify-content: center;
   gap: 20px;
+  align-items: center; /* 垂直中央揃え */
 }
 
 .main-transport-btn {
@@ -1176,7 +1177,23 @@ body {
     text-align: center;
 }
 
+/* Navigation Buttons */
+#btn-footer-prev, #btn-footer-next {
+    background: transparent;
+    color: white;
+    border: 1px solid white;
+    padding: 8px 12px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#btn-footer-prev:hover, #btn-footer-next:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
 .guide-attention b { display: block; margin-bottom: 4px; }
+
 
 
 
