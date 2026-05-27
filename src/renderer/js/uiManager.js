@@ -189,17 +189,29 @@ class UIManager {
     /**
      * Updates the visual state of the footer playback buttons.
      */
-    updateFooterPlaybackUI(config) {
-        const { isVisible, isEnabled, icon, title, isHighlighted, isStopHighlighted } = config;
+    updateFooterPlaybackUI(config, isVideo) {
+        const { isVisible, isEnabled, icon, title, isHighlighted, isStopHighlighted, isStopEnabled } = config;
+        
+        let finalIcon = icon;
+        let finalEnabled = isEnabled;
+        let finalTitle = title;
+        let finalHighlighted = isHighlighted;
+
+        if (!isVideo && isEnabled === false) {
+            finalIcon = this.icons.play;
+            finalEnabled = false;
+            finalTitle = "Reproduzindo";
+            finalHighlighted = false;
+        }
         
         this.btnFooterPlayPause.style.display = isVisible ? "inline-flex" : "none";
-        this.btnFooterPlayPause.disabled = !isEnabled;
-        this.btnFooterPlayPause.style.opacity = isEnabled ? "1" : "0.5";
-        this.btnFooterPlayPause.style.cursor = isEnabled ? "pointer" : "default";
-        this.btnFooterPlayPause.innerHTML = icon;
-        this.btnFooterPlayPause.title = title;
+        this.btnFooterPlayPause.disabled = !finalEnabled;
+        this.btnFooterPlayPause.style.opacity = finalEnabled ? "1" : "0.5";
+        this.btnFooterPlayPause.style.cursor = finalEnabled ? "pointer" : "default";
+        this.btnFooterPlayPause.innerHTML = finalIcon;
+        this.btnFooterPlayPause.title = finalTitle;
 
-        if (isHighlighted) {
+        if (finalHighlighted) {
             this.btnFooterPlayPause.classList.add("btn-paused-highlight");
         } else {
             this.btnFooterPlayPause.classList.remove("btn-paused-highlight");
@@ -207,6 +219,9 @@ class UIManager {
 
         const btnStop = document.getElementById("btn-stop");
         if (btnStop) {
+            btnStop.disabled = !isStopEnabled;
+            btnStop.style.opacity = isStopEnabled ? "1" : "0.5";
+            btnStop.style.cursor = isStopEnabled ? "pointer" : "default";
             if (isStopHighlighted) btnStop.classList.add("btn-paused-highlight");
             else btnStop.classList.remove("btn-paused-highlight");
         }
