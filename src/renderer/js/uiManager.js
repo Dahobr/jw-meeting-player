@@ -21,6 +21,12 @@ class UIManager {
         this.zoomModeSelect = document.getElementById('zoom-mode-select');
         
         this.btnFooterPlayPause = document.getElementById('btn-footer-play-pause');
+        this.btnFooterPrev = document.getElementById('btn-footer-prev');
+        this.btnFooterNext = document.getElementById('btn-footer-next');
+
+        // Add click listeners
+        this.btnFooterPrev.onclick = () => this.onPrevious();
+        this.btnFooterNext.onclick = () => this.onNext();
         
         this.newPlaylistInput = document.getElementById('new-playlist-name');
         this.playlistList = document.getElementById('playlist-list');
@@ -700,6 +706,8 @@ class UIManager {
     onItemPlay(item) {}
     onItemRemove(playlistId, itemId) {}
     onItemRename(itemId, newName) {}
+    onPrevious() {}
+    onNext() {}
 
     // --- Modal Helpers ---
     showConfirmModal(message, onConfirm, onCancel) {

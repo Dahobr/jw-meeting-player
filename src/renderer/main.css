@@ -894,6 +894,18 @@ body {
     white-space: nowrap;
 }
 
+/* Navigation Buttons */
+#btn-footer-prev, #btn-footer-next {
+    background: transparent;
+    color: white;
+    border: 1px solid white;
+    padding: 8px 12px;
+}
+
+#btn-footer-prev:hover, #btn-footer-next:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
 /* Footer / Playback Controls */
 .app-footer {
   background-color: var(--header-footer-color);
