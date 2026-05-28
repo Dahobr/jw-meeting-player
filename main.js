@@ -23,7 +23,7 @@ const protocolManager = require('./src/main/protocolManager');
 // Register privileged schemes early
 protocolManager.init();
 
-// 起動時間の計測
+// Measure startup performance
 const startTime = Date.now();
 app.on('ready', () => {
     console.log(`[Perf] Time to Ready: ${Date.now() - startTime}ms`);
@@ -110,7 +110,7 @@ function createMainWindow() {
     // Zoom Integration
     setupZoomIntegration(mainWindow, () => displayManager.getPlaybackWindow());
 
-    // Zoom設定起動用IPCハンドラー
+    // IPC handler to open Zoom settings
     ipcMain.handle('open-zoom-settings', () => {
         const { exec } = require('child_process');
         const scriptPath = path.join(__dirname, 'scripts', 'ZoomSettingsOpener', 'ZoomSettingsOpener.exe');

@@ -1,12 +1,18 @@
 /**
- * app.js
+ * App
  * Renderer Main Entry Point - Orchestrates Store, UI, and IPC.
+ * This class acts as a central controller for the renderer process.
  */
-
 class App {
     static PLAY_ICON = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
     static PAUSE_ICON = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="currentColor"/></svg>';
 
+    /**
+     * Initializes the App instance.
+     * @param {Object} store - The playlist store instance.
+     * @param {UIManager} ui - The UI Manager instance.
+     * @param {IPCClient} ipc - The IPC Client instance.
+     */
     constructor(store, ui, ipc) {
         this.store = store;
         this.ui = ui;
@@ -25,6 +31,11 @@ class App {
         this.lastStagedItemPerPlaylist = {};
     }
 
+    /**
+     * Shows a custom confirmation modal, temporarily hiding the WebView if visible.
+     * @param {string} message - The message to display in the modal.
+     * @returns {Promise<boolean>} A promise that resolves to true if confirmed, false otherwise.
+     */
     async showCustomConfirm(message) {
         return new Promise((resolve) => {
             const wasWebViewVisible = this.ui.isWebViewVisible();
@@ -53,6 +64,10 @@ class App {
         });
     }
 
+    /**
+     * Initializes the application, setting up managers, listeners, and loading initial data.
+     * @returns {Promise<void>}
+     */
     async init() {
         if (this.initialized) return;
         this.playbackManager = new PlaybackManager(this, this.ui, this.ipc, this.store);
@@ -124,6 +139,10 @@ class App {
         console.log('[App] Renderer Initialized.');
     }
 
+    /**
+     * Sets up event listeners for the preview media player and seeker controls.
+     * Handles seek synchronization between local preview and secondary display playback.
+     */
     setupPreviewListeners() {
         let lastSeekTime = 0;
         const seekThrottleMs = 100; 
@@ -199,6 +218,9 @@ class App {
         };
     }
 
+    /**
+     * Handles the creation of a new playlist from the UI input.
+     */
     handleCreatePlaylist() {
         const name = this.ui.newPlaylistInput.value.trim();
         if (name) {
@@ -207,6 +229,10 @@ class App {
         }
     }
 
+    /**
+     * Sets up listeners for IPC events from the main process.
+     * Handles downloads, display status changes, and external playback commands.
+     */
     setupIPCListeners() {
         this.ipc.onRequestSaveImage(async (url) => {
             await this.saveBrowserImage(url);
@@ -283,10 +309,17 @@ class App {
         });
     }
 
+    /**
+     * Resumes playback via PlaybackManager.
+     */
     resumePlayback() {
         this.playbackManager.resumePlayback();
     }
 
+    /**
+     * Fetches an image from a URL and saves it via IPC.
+     * @param {string} url - The URL of the image to save.
+     */
     async saveBrowserImage(url) {
         try {
             const response = await fetch(url);
@@ -305,6 +338,11 @@ class App {
         }
     }
 
+    /**
+     * Handles changes in the playlist store state.
+     * Persists data and triggers UI updates.
+     * @param {Object} state - The new store state.
+     */
     handleStoreChange(state) {
         this.ipc.savePlaylists(state);
         this.ui.renderPlaylists(state.playlists, state.currentPlaylistId);
@@ -314,6 +352,9 @@ class App {
         this.updatePlaybackUI();
     }
 
+    /**
+     * Handles file/playlist import via a file dialog.
+     */
     async handleImport() {
         const result = await this.ipc.openFileDialog();
         if (!result) return;
@@ -335,14 +376,27 @@ class App {
         this.ui.ensurePreviewVisible();
     }
 
+    /**
+     * Prepares a media item for staging.
+     * @param {Object} item - The media item to stage.
+     */
     prepareStagingMedia(item) {
         this.playbackManager.prepareStagingMedia(item);
     }
 
+    /**
+     * Normalizes a media type string.
+     * @param {Object} item - The media item.
+     * @returns {string} The normalized type.
+     */
     getNormalizedType(item) {
         return this.playbackManager.getNormalizedType(item);
     }
 
+    /**
+     * Triggers Zoom screen sharing control.
+     * @param {string|boolean} mode - The sharing mode or false to turn off.
+     */
     triggerZoomSharing(mode) {
         const active = (mode !== false && mode !== 'off');
         const args = [];
@@ -353,12 +407,18 @@ class App {
         this.ipc.setZoomSharing(active, args);
     }
 
+    /**
+     * Updates the mute state of the local preview player based on secondary display status.
+     */
     updateAudioMuteState() {
         if (this.ui.previewVideo) {
             this.ui.previewVideo.muted = this.hasSecondaryDisplay && this.isPlayingOnSlave;
         }
     }
 
+    /**
+     * Toggles between play and pause/stop states.
+     */
     togglePlayback() {
         if (this.status === 'stopped' || this.status === 'staged') {
             if (this.currentMedia) this.playbackManager.playMedia(this.currentMedia);
@@ -377,14 +437,24 @@ class App {
         }
     }
 
+    /**
+     * Pauses video playback.
+     */
     pausePlayback() {
         this.playbackManager.pausePlayback();
     }
 
+    /**
+     * Stops media playback.
+     * @param {string} reason - The reason for stopping.
+     */
     stopMedia(reason = 'unknown') {
         this.playbackManager.stopMedia(reason);
     }
 
+    /**
+     * Triggers a full UI update based on the current application state.
+     */
     updatePlaybackUI() {
         const state = {
             status: this.status,
@@ -398,6 +468,9 @@ class App {
         this.ui.renderAllPlaybackUI(state);
     }
 
+    /**
+     * Starts periodic monitoring of WebView bounds for IPC updates.
+     */
     startBoundsMonitoring() {
         const update = () => this.ipc.updateViewBounds(this.ui.getWebViewBounds());
         window.addEventListener('resize', update);
