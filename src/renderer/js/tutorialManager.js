@@ -30,13 +30,13 @@ const tutorialManager = {
                 },
                 { 
                     title: "Configuração do Zoom", 
-                    content: `<p>Para que a automação funcione, precisamos ajustar as configurações de atalhos dentro do próprio Zoom.</p>
-                              <p>Se o Zoom ainda não estiver aberto, abra-o primeiro. Depois, clique no botão abaixo para abrir a tela de <b>configurações</b> do seu aplicativo Zoom:</p>
+                    content: `<p>Para que a automação funcione, siga as instruções abaixo:</p>
+                              <p>1. Clique no botão abaixo para abrir as configurações do Zoom:</p>
                               <button id="btn-zoom-settings" class="tutorial-btn">Abrir Configurações do Zoom</button>
-                              <p style="margin-top: 15px;">Nas configurações de 'Atalhos de Teclado' do Zoom, marque o <b>Alt+S</b> como <b>'Atalho Global'</b>.</p>
-                              <p>Lembre-se de que, ao utilizar o modo <b>Automático</b>, as configurações detalhadas na seção de <b>Reprodução</b> são fundamentais para o sucesso da automação.</p>`, 
+                              <p style="margin-top: 15px;">2. No menu lateral esquerdo, entre em <b>Atalhos do Teclado</b>. Em seguida, localize <b>'Iniciar/interromper compartilhamento de tela'</b> e marque o <b>Alt+S</b> como <b>'Atalho Global'</b>.</p>
+                              <p class="tutorial-note"><b>Lembre-se:</b><br> - Esta configuração é necessária apenas uma vez.<br> - O primeiro compartilhamento deve ser feito manualmente, mas a partir da segunda vez, será automático. Consulte a seção <a href="#" class="toc-link" data-section="3">Reprodução</a> para mais detalhes.</p>`, 
                     action: null 
-                }            
+                }
             ]
         },
         {
@@ -134,9 +134,26 @@ const tutorialManager = {
             };
         }
         
-        tutorialManager.elements.content.addEventListener('click', (e) => {
+        tutorialManager.elements.content.addEventListener('click', async (e) => {
             if (e.target && e.target.id === 'btn-zoom-settings') {
-                window.electronAPI.openZoomSettings();
+                const result = await window.electronAPI.openZoomSettings();
+                const warning = document.getElementById('zoom-warning');
+                
+                if (result.success) {
+                    if (warning) warning.style.display = 'none';
+                } else {
+                    let warnEl = warning;
+                    if (!warnEl) {
+                        warnEl = document.createElement('p');
+                        warnEl.id = 'zoom-warning';
+                        warnEl.style.color = '#e74c3c';
+                        warnEl.style.marginTop = '10px';
+                        warnEl.style.fontWeight = 'bold';
+                        e.target.parentNode.insertBefore(warnEl, e.target.nextSibling);
+                    }
+                    warnEl.textContent = 'Zoom não detectado ou botão de configurações não encontrado. Por favor, abra o Zoom e tente novamente.';
+                    warnEl.style.display = 'block';
+                }
             } else if (e.target && e.target.classList.contains('toc-link')) {
                 e.preventDefault();
                 const sectionId = parseInt(e.target.dataset.section);
@@ -254,16 +271,6 @@ const tutorialManager = {
             }
         }
         tutorialManager.render();
-    },
-
-    skipSection: () => {
-        if (tutorialManager.currentSectionIdx < tutorialManager.sections.length - 1) {
-            tutorialManager.currentSectionIdx++;
-            tutorialManager.currentStepIdx = -1;
-            tutorialManager.render();
-        } else {
-            tutorialManager.finish();
-        }
     },
 
     finish: () => {
