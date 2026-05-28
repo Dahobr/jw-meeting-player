@@ -209,8 +209,11 @@ const tutorialManager = {
         window.close();
     },
 
-    isSkipped: () => localStorage.getItem('tutorial-skipped') === 'true',
-    setSkipped: (skipped) => localStorage.setItem('tutorial-skipped', skipped)
+    setSkipped: (skipped) => {
+        if (window.electronAPI && window.electronAPI.updateConfig) {
+            window.electronAPI.updateConfig({ tutorialSkipped: skipped });
+        }
+    }
 };
 
 tutorialManager.init();

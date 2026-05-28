@@ -20,7 +20,8 @@ class StorageManager {
         
         this.config = {
             yearVersePath: null,
-            zoomMode: 'off'
+            zoomMode: 'off',
+            tutorialSkipped: false
         };
         
         this.loadConfig();

@@ -79,6 +79,11 @@ function createMainWindow() {
 
     // Auto-open tutorial
     mainWindow.webContents.once('did-finish-load', () => {
+        if (storageManager.config.tutorialSkipped) {
+            console.log('[Main] Tutorial skipped based on config.');
+            return;
+        }
+
         const bounds = mainWindow.getBounds();
         const tutorialWidth = Math.floor(bounds.width * 0.7);
         const tutorialHeight = Math.floor(bounds.height * 0.7);
