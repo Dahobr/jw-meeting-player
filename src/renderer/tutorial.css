@@ -75,7 +75,7 @@
     color: #ecf0f1;
 }
 
-#btn-skip { 
+#btn-sumario { 
     background: transparent; 
     color: #555; 
     font-size: 0.8rem;
@@ -85,11 +85,13 @@
     transform: translateX(-50%);
 }
 
-#btn-skip.centered {
+#btn-sumario.centered {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
 }
+
+#btn-sumario:hover { color: #3498db; }
 
 #btn-next { 
     background: #3498db; 
