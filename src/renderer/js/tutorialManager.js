@@ -107,7 +107,7 @@ const tutorialManager = {
             content: document.getElementById('tutorial-content'),
             btnPrev: document.getElementById('btn-prev'),
             btnNext: document.getElementById('btn-next'),
-            btnSkip: document.getElementById('btn-skip'),
+            btnSumario: document.getElementById('btn-sumario'),
             checkNoShow: document.getElementById('check-no-show'),
             noShowLabel: document.querySelector('label[for="check-no-show"]') || document.querySelector('label')
         };
@@ -126,7 +126,7 @@ const tutorialManager = {
 
         tutorialManager.elements.btnNext.onclick = () => tutorialManager.next();
         tutorialManager.elements.btnPrev.onclick = () => tutorialManager.prev();
-        tutorialManager.elements.btnSkip.onclick = () => tutorialManager.skipSection();
+        tutorialManager.elements.btnSumario.onclick = () => tutorialManager.jumpToSection(0);
 
         if (tutorialManager.elements.checkNoShow) {
             tutorialManager.elements.checkNoShow.onchange = (e) => {
@@ -208,13 +208,13 @@ const tutorialManager = {
         el.btnPrev.classList.toggle('hidden', isFirstScreen);
         el.btnPrev.disabled = isFirstScreen;
         
+        // Show Sumário button only if not on the first screen (Bem-vindo)
+        el.btnSumario.classList.toggle('hidden', isFirstScreen);
+        el.btnSumario.disabled = isFirstScreen;
+        
         const isLastSection = (tutorialManager.currentSectionIdx === tutorialManager.sections.length - 1);
         const isLastStep = (section.steps.length > 0 && tutorialManager.currentStepIdx === section.steps.length - 1);
         el.btnNext.textContent = (isLastSection && (isLastStep || section.steps.length === 0)) ? "Finalizar" : "Próximo";
-        
-        // Skip button logic: Show only for section intro, excluding the very first welcome screen
-        const isSkipVisible = (isIntro && !isFirstScreen);
-        el.btnSkip.classList.toggle('hidden', !isSkipVisible);
         
         const controls = document.querySelector('.controls');
         if (isFirstScreen) {
