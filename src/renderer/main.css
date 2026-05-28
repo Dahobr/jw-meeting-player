@@ -922,7 +922,7 @@ body {
 }
 
 .misc-controls {
-  flex: 0 0 40%; /* Updated to 40% width */
+  flex: 0 0 25%; /* Reduced from 40% to shift controls right */
   text-align: left; /* Changed to left */
   font-size: 0.85em;
   color: #bbb;
@@ -934,11 +934,20 @@ body {
 }
 
 .transport-buttons {
-  flex: 1; /* Takes remaining space (approx 60%) */
+  flex: 1; /* Takes remaining space */
   display: flex;
   justify-content: center;
   gap: 20px;
   align-items: center; /* 垂直中央揃え */
+}
+
+.app-version-info {
+  flex: 0 0 15%;
+  text-align: right;
+  font-size: 0.75em;
+  color: #7f8c8d;
+  align-self: flex-end;
+  padding-bottom: 10px;
 }
 
 .main-transport-btn {

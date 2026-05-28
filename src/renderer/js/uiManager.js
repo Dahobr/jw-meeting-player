@@ -87,6 +87,21 @@ class UIManager {
         };
 
         this.previewMediaWrapper = document.querySelector('.preview-media-wrapper');
+        this.appVersionSpan = document.getElementById('app-version');
+
+        this.initAppVersion();
+    }
+
+    async initAppVersion() {
+        if (this.appVersionSpan && window.electronAPI && window.electronAPI.getAppVersion) {
+            try {
+                const version = await window.electronAPI.getAppVersion();
+                this.appVersionSpan.textContent = `v${version}`;
+            } catch (err) {
+                console.error('[UI] Failed to fetch app version:', err);
+                this.appVersionSpan.textContent = '';
+            }
+        }
     }
 
     /**
