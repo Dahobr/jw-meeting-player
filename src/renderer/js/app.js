@@ -391,6 +391,7 @@ class App {
         const state = {
             status: this.status,
             currentMedia: this.currentMedia,
+            isVideo: this.currentMedia?.mediaType?.includes("video"),
             isPlaylistView: this.ui.isPlaylistView(),
             hasSecondaryDisplay: this.hasSecondaryDisplay,
             isWebViewVisible: this.ui.isWebViewVisible()
