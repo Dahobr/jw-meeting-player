@@ -83,12 +83,12 @@ const tutorialManager = {
                               <p>Se o modo do Zoom estiver definido como <b>Automático</b> ou <b>Semiautomático</b>, a janela de compartilhamento será aberta automaticamente.</p>
                               <p>Ao realizar o primeiro compartilhamento, siga estes passos:</p>
                               <ol style="text-align: left; padding-left: 20px; margin-top: 5px;">
-                                <li style="margin-bottom: 5px;">Marque a opção <b>Otimizar para vídeo</b>.</li>
+                                <li style="margin-bottom: 5px;">Marque a opção <b>Otimizar para clipe de vídeo</b>.</li>
                                 <li style="margin-bottom: 5px;">Dê um <b>clique duplo</b> na tela que deseja compartilhar (geralmente <b>Tela 2</b>).</li>
                               </ol>
                               <p>Por seguir estes passos:</p>
                               <ul style="text-align: left; padding-left: 20px; margin-top: 5px;">
-                                <li style="margin-bottom: 5px;">No modo <b>Automático</b>, o aplicativo memorizará a posição da tela para agilizar os próximos compartilhamentos.</li>
+                                <li style="margin-bottom: 5px;">No modo <b>Automático</b>, o aplicativo memorizará a posição da tela para realizar os próximos compartilhamentos.</li>
                                 <li style="margin-bottom: 5px;">Nos modos <b>Automático</b> e <b>Semiautomático</b>, a reprodução do vídeo iniciará automaticamente assim que o compartilhamento for estabelecido.</li>
                               </ul>`, 
                     action: null 
@@ -96,9 +96,28 @@ const tutorialManager = {
                 {
                     title: "Navegação entre Itens",
                     content: `<p>Utilize os botões de <b>Anterior</b> e <b>Próximo</b> no rodapé para alternar entre os itens da playlist.</p>
-                              <p><b>Modo de Espera (Standby):</b> Esses botões permitem alternar entre os itens na fila de espera sem afetar o que está sendo exibido na tela secundária e no Zoom.</p>
+                              <p><b>Modo de Espera (Standby):</b> Esses botões permitem alternar entre os itens na fila de espera sem afetar o que está sendo exibido na tela secundária.</p>
                               <p><b>Modo Em Exibição (No Ar):</b> Os botões permitem pular para o próximo ou anterior item sem precisar interromper o compartilhamento de tela no Zoom.</p>`,
                     action: null
+                }
+            ]
+        },
+        {
+            id: 4,
+            title: "Dicas e Soluções",
+            description: "Solucione problemas comuns e otimize o uso do player com estas dicas práticas.",
+            steps: [
+                { 
+                    title: "Dicas de Uso", 
+                    content: `<p><b>Segurança:</b> O modo Standby é ideal para conferir se o conteúdo está correto antes de exibir para a audiência.</p>
+                              <p><b>Navegação:</b> O navegador integrado permite acesso a outros sites além do JW.ORG, funcionando como um navegador comum.</p>`, 
+                    action: null 
+                },
+                { 
+                    title: "Solução de Problemas", 
+                    content: `<p><b>Problemas com o Zoom?</b> Verifique se o Zoom está aberto e se o atalho Alt+S está configurado como 'Atalho Global'.</p>
+                              <p><b>Item não aparece?</b> Verifique se o download foi concluído ou se há uma playlist selecionada.</p>`, 
+                    action: null 
                 }
             ]
         }
