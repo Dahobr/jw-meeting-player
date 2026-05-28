@@ -137,7 +137,7 @@ function createMainWindow() {
         });
         tutorialWindow.loadFile('src/renderer/tutorial.html');
         // tutorialWindow.webContents.openDevTools();
-        return tutorialWindow;
+        return { success: true };
     });
 
     ipcMain.on('show-tutorial-requested', () => {
@@ -180,12 +180,19 @@ app.whenReady().then(() => {
     });
 
     ipcMain.handle('open-zoom-settings', () => {
-        const { exec } = require('child_process');
+        const { spawnSync } = require('child_process');
         const scriptPath = path.join(__dirname, 'scripts', 'ZoomSettingsOpener', 'ZoomSettingsOpener.exe');
         if (fs.existsSync(scriptPath)) {
-            exec(scriptPath);
+            const result = spawnSync(scriptPath);
+            const output = result.stdout.toString();
+            console.log('[Main] ZoomSettingsOpener output:', output);
+            if (output.includes('successfully')) {
+                return { success: true };
+            } else {
+                return { success: false, message: 'Settings button not found.' };
+            }
         } else {
-            console.error('ZoomSettingsOpener.exe not found at:', scriptPath);
+            return { success: false, message: 'Opener executable not found.' };
         }
     });
 });
