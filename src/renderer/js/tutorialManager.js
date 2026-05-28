@@ -141,6 +141,10 @@ const tutorialManager = {
                 e.preventDefault();
                 const sectionId = parseInt(e.target.dataset.section);
                 tutorialManager.jumpToSection(sectionId);
+            } else if (e.target && e.target.classList.contains('step-link')) {
+                e.preventDefault();
+                const stepIdx = parseInt(e.target.dataset.step);
+                tutorialManager.jumpToStep(stepIdx);
             }
         });
         
@@ -154,6 +158,11 @@ const tutorialManager = {
             tutorialManager.currentStepIdx = -1;
             tutorialManager.render();
         }
+    },
+
+    jumpToStep: (stepIdx) => {
+        tutorialManager.currentStepIdx = stepIdx;
+        tutorialManager.render();
     },
 
     render: () => {
@@ -177,7 +186,18 @@ const tutorialManager = {
                 </div>`;
                 el.content.innerHTML = section.description + tocHtml;
             } else {
-                el.content.innerHTML = section.description;
+                let stepsHtml = '';
+                if (section.steps && section.steps.length > 0) {
+                    stepsHtml = `<div class="tutorial-toc section-toc">
+                        <h4>Nesta seção:</h4>
+                        <ul>
+                            ${section.steps.map((step, idx) => `
+                                <li><a href="#" class="step-link" data-step="${idx}">${section.id}.${idx + 1} ${step.title}</a></li>
+                            `).join('')}
+                        </ul>
+                    </div>`;
+                }
+                el.content.innerHTML = section.description + stepsHtml;
             }
         } else {
             const step = section.steps[tutorialManager.currentStepIdx];

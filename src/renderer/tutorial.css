@@ -174,3 +174,25 @@ label {
     text-decoration: underline;
     color: #2980b9;
 }
+
+.section-toc {
+    margin-top: 20px;
+    padding: 15px;
+}
+
+.section-toc h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1rem;
+    color: #555;
+}
+
+.step-link {
+    color: #3498db;
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+
+.step-link:hover {
+    text-decoration: underline;
+}
