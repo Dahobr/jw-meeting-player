@@ -137,10 +137,23 @@ const tutorialManager = {
         tutorialManager.elements.content.addEventListener('click', (e) => {
             if (e.target && e.target.id === 'btn-zoom-settings') {
                 window.electronAPI.openZoomSettings();
+            } else if (e.target && e.target.classList.contains('toc-link')) {
+                e.preventDefault();
+                const sectionId = parseInt(e.target.dataset.section);
+                tutorialManager.jumpToSection(sectionId);
             }
         });
         
         tutorialManager.render();
+    },
+
+    jumpToSection: (sectionId) => {
+        const idx = tutorialManager.sections.findIndex(s => s.id === sectionId);
+        if (idx !== -1) {
+            tutorialManager.currentSectionIdx = idx;
+            tutorialManager.currentStepIdx = -1;
+            tutorialManager.render();
+        }
     },
 
     render: () => {
@@ -152,7 +165,20 @@ const tutorialManager = {
         if (isIntro) {
             const titlePrefix = section.id > 0 ? `${section.id}. ` : "";
             el.title.innerHTML = titlePrefix + section.title;
-            el.content.innerHTML = section.description;
+            
+            if (isFirstScreen) {
+                let tocHtml = `<div class="tutorial-toc">
+                    <h3>Sumário:</h3>
+                    <ul>
+                        ${tutorialManager.sections.slice(1).map(s => `
+                            <li><a href="#" class="toc-link" data-section="${s.id}">${s.id}. ${s.title}</a></li>
+                        `).join('')}
+                    </ul>
+                </div>`;
+                el.content.innerHTML = section.description + tocHtml;
+            } else {
+                el.content.innerHTML = section.description;
+            }
         } else {
             const step = section.steps[tutorialManager.currentStepIdx];
             el.title.innerHTML = `${section.id}.${tutorialManager.currentStepIdx + 1} ${step.title}`;
