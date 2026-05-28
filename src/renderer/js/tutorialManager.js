@@ -34,7 +34,7 @@ const tutorialManager = {
                               <p>1. Clique no botão abaixo para abrir as configurações do Zoom:</p>
                               <button id="btn-zoom-settings" class="tutorial-btn">Abrir Configurações do Zoom</button>
                               <p style="margin-top: 15px;">2. No menu lateral esquerdo, entre em <b>Atalhos do Teclado</b>. Em seguida, localize <b>'Iniciar/interromper compartilhamento de tela'</b> e marque o <b>Alt+S</b> como <b>'Atalho Global'</b>.</p>
-                              <p class="tutorial-note"><b>Lembre-se:</b><br> - Esta configuração é necessária apenas uma vez.<br> - O primeiro compartilhamento deve ser feito manualmente, mas a partir da segunda vez, será automático. Consulte a seção <a href="#" class="toc-link" data-section="3">Reprodução</a> para mais detalhes.</p>`, 
+                              <p class="tutorial-note">Lembre-se: esta configuração é necessária apenas uma vez. O primeiro compartilhamento deve ser feito manualmente, mas a partir da segunda vez, será automático. Consulte a seção <a href="#" class="toc-link" data-section="3">Controle de Apresentação</a> para mais detalhes.</p>`, 
                     action: null 
                 }
             ]
@@ -69,7 +69,7 @@ const tutorialManager = {
         },
         {
             id: 3,
-            title: "Reprodução",
+            title: "Controle de Apresentação",
             description: "Aprenda como controlar a exibição dos conteúdos durante a sua reunião.",
             steps: [
                 { 
@@ -78,7 +78,7 @@ const tutorialManager = {
                     action: null 
                 },
                 { 
-                    title: "Reproduzir", 
+                    title: "Colocar no Ar", 
                     content: `<p>Clique no botão de reprodução no <b>rodapé</b> para iniciar a exibição.</p>
                               <p>Se o modo do Zoom estiver definido como <b>Automático</b> ou <b>Semiautomático</b>, a janela de compartilhamento será aberta automaticamente.</p>
                               <p>Ao realizar o primeiro compartilhamento, siga estes passos:</p>
@@ -92,6 +92,13 @@ const tutorialManager = {
                                 <li style="margin-bottom: 5px;">Nos modos <b>Automático</b> e <b>Semiautomático</b>, a reprodução do vídeo iniciará automaticamente assim que o compartilhamento for estabelecido.</li>
                               </ul>`, 
                     action: null 
+                },
+                {
+                    title: "Navegação entre Itens",
+                    content: `<p>Utilize os botões de <b>Anterior</b> e <b>Próximo</b> no rodapé para alternar entre os itens da playlist.</p>
+                              <p><b>Modo de Espera (Standby):</b> Esses botões permitem alternar entre os itens na fila de espera sem afetar o que está sendo exibido na tela secundária e no Zoom.</p>
+                              <p><b>Modo Em Exibição (No Ar):</b> Os botões permitem pular para o próximo ou anterior item sem precisar interromper o compartilhamento de tela no Zoom.</p>`,
+                    action: null
                 }
             ]
         }
