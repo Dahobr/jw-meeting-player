@@ -112,9 +112,27 @@ const tutorialManager = {
             noShowLabel: document.querySelector('label[for="check-no-show"]') || document.querySelector('label')
         };
 
+        // Load initial state from config
+        if (window.electronAPI && window.electronAPI.getConfig) {
+            try {
+                const config = await window.electronAPI.getConfig();
+                if (tutorialManager.elements.checkNoShow) {
+                    tutorialManager.elements.checkNoShow.checked = config.tutorialSkipped || false;
+                }
+            } catch (err) {
+                console.error('[Tutorial] Failed to load config:', err);
+            }
+        }
+
         tutorialManager.elements.btnNext.onclick = () => tutorialManager.next();
         tutorialManager.elements.btnPrev.onclick = () => tutorialManager.prev();
         tutorialManager.elements.btnSkip.onclick = () => tutorialManager.skipSection();
+
+        if (tutorialManager.elements.checkNoShow) {
+            tutorialManager.elements.checkNoShow.onchange = (e) => {
+                tutorialManager.setSkipped(e.target.checked);
+            };
+        }
         
         tutorialManager.elements.content.addEventListener('click', (e) => {
             if (e.target && e.target.id === 'btn-zoom-settings') {
@@ -203,14 +221,14 @@ const tutorialManager = {
     },
 
     finish: () => {
-        if (tutorialManager.elements.checkNoShow && tutorialManager.elements.checkNoShow.checked) {
-            tutorialManager.setSkipped(true);
-        }
         window.close();
     },
 
-    isSkipped: () => localStorage.getItem('tutorial-skipped') === 'true',
-    setSkipped: (skipped) => localStorage.setItem('tutorial-skipped', skipped)
+    setSkipped: (skipped) => {
+        if (window.electronAPI && window.electronAPI.updateConfig) {
+            window.electronAPI.updateConfig({ tutorialSkipped: skipped });
+        }
+    }
 };
 
 tutorialManager.init();
