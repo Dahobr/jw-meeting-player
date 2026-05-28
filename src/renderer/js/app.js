@@ -106,9 +106,7 @@ class App {
 
         try {
             const config = await this.ipc.getConfig();
-            if (this.ui.zoomModeSelect) {
-                this.ui.zoomModeSelect.value = config.zoomMode || 'auto';
-            }
+            this.ui.setZoomMode(config.zoomMode);
             this.updatePlaybackUI();
         } catch (e) {
             console.error('[App] Failed to load config:', e);
@@ -397,31 +395,7 @@ class App {
             isWebViewVisible: this.ui.isWebViewVisible()
         };
 
-        if (this.status === "stopped" && !this.currentMedia && !state.isWebViewVisible) {
-            this.ui.updateMainOverlay('guide');
-        }
-
         this.ui.renderAllPlaybackUI(state);
-
-        const isPlaying = this.status === "playing";
-        const isPaused = this.status === "paused";
-        const isStaged = this.status === "staged";
-        
-        const playlistConfig = {
-            statusLabel: (isPlaying || isPaused) ? "NO AR" : (isStaged ? "PREPARADO" : ""),
-            statusClass: isStaged ? "staged" : (isPlaying || isPaused ? this.status : ""),
-            items: {}
-        };
-
-        if (this.currentMedia) {
-            const isVideo = this.currentMedia?.mediaType?.includes("video");
-            playlistConfig.items[this.currentMedia.id] = {
-                class: (isPlaying || isPaused) ? "playing" : "standby",
-                icon: (isPlaying && isVideo) ? this.ui.icons.pause : (isPlaying ? this.ui.icons.stop : this.ui.icons.play),
-                title: (isPlaying && isVideo) ? "Pausar" : (isPlaying ? "Parar" : (isPaused ? "Retomar" : "Reproduzir"))
-            };
-        }
-        this.ui.updatePlaybackStateUI(playlistConfig);
     }
 
     startBoundsMonitoring() {
