@@ -165,12 +165,6 @@ class EventHandler {
             }
         };
 
-        this.ui.btnMenuGuide.onclick = () => {
-            const zoomMode = this.ui.zoomModeSelect ? this.ui.zoomModeSelect.value : 'auto';
-            this.ui.showOperationGuide(zoomMode);
-            this.ui.headerMenu.classList.remove('show');
-        };
-
         this.ui.btnImportFile.onclick = () => this.app.handleImport();
 
         this.ui.btnCreatePlaylist.onclick = () => this.app.handleCreatePlaylist();
@@ -254,10 +248,6 @@ class EventHandler {
             this.ui.zoomModeSelect.onchange = (e) => {
                 this.ipc.updateConfig({ zoomMode: e.target.value });
                 console.log(`[EventHandler] Zoom mode updated to: ${e.target.value}`);
-                // Re-render guide if currently visible
-                if (this.ui.operationGuide.style.display !== 'none') {
-                    this.ui.updateMainOverlay('guide');
-                }
                 this.app.updatePlaybackUI();
             };
         }

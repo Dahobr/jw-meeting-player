@@ -70,7 +70,6 @@ class UIManager {
         this.btnMenuDownloads = document.getElementById('btn-menu-downloads');
         this.btnMenuHelp = document.getElementById('btn-menu-help');
         this.btnMenuAbout = document.getElementById('btn-menu-about');
-        this.btnMenuGuide = document.getElementById('btn-menu-guide');
 
         // Global click listener to close dropdowns
         document.addEventListener('click', (e) => {
@@ -87,13 +86,12 @@ class UIManager {
             this.headerMenu.classList.toggle('show');
         };
 
-        this.operationGuide = document.getElementById('operation-guide');
         this.previewMediaWrapper = document.querySelector('.preview-media-wrapper');
     }
 
     /**
      * Centralized method to manage main content overlays.
-     * @param {string} mode - The view mode to display: 'preview', 'guide', 'help', or 'webview'.
+     * @param {string} mode - The view mode to display: 'preview', 'help', or 'webview'.
      */
     updateMainOverlay(mode) {
         console.log(`[UI] updateMainOverlay: ${mode}`);
@@ -101,7 +99,6 @@ class UIManager {
 
         // 1. Hide everything by default
         this.previewArea.style.display = 'none';
-        this.operationGuide.style.display = 'none';
         this.helpView.style.display = 'none';
         
         // Native WebView visibility
@@ -115,14 +112,11 @@ class UIManager {
                 case 'webview':
                     webViewVisible = true;
                     break;
-                case 'guide':
-                case 'preview': // Fallback to guide in playlist view
+                case 'preview':
                 default:
-                    this.operationGuide.style.display = 'flex';
                     this.previewMediaWrapper.style.display = 'none';
                     this.previewControls.style.display = 'none';
                     if (this.stateLabel) this.stateLabel.style.display = 'none';
-                    this.renderOperationGuide(this.zoomModeSelect ? this.zoomModeSelect.value : 'auto');
                     break;
             }
         } else {
@@ -135,11 +129,6 @@ class UIManager {
                 case 'help':
                     this.helpView.style.display = 'flex';
                     this.previewArea.style.display = 'none';
-                    break;
-                case 'guide':
-                    this.operationGuide.style.display = 'flex';
-                    this.previewArea.style.display = 'none';
-                    this.renderOperationGuide(this.zoomModeSelect ? this.zoomModeSelect.value : 'auto');
                     break;
                 case 'webview':
                     webViewVisible = true;
@@ -239,7 +228,7 @@ class UIManager {
 
         // Auto overlay management
         if (status === "stopped" && !currentMedia && !isWebViewVisible) {
-            this.updateMainOverlay('guide');
+            this.updateMainOverlay('preview');
         }
         
         // Update footer buttons
@@ -410,33 +399,12 @@ class UIManager {
     }
 
     /**
-     * Shows the operation guide view.
-     */
-    showOperationGuide(zoomMode) {
-        this.updateMainOverlay('guide');
-    }
-
-    /**
      * Sets the value of the Zoom mode selector.
      */
     setZoomMode(mode) {
         if (this.zoomModeSelect) {
             this.zoomModeSelect.value = mode || 'auto';
         }
-    }
-
-    /**
-     * Hides the operation guide view.
-     */
-    hideOperationGuide() {
-        this.updateMainOverlay('preview');
-    }
-
-    /**
-     * Renders the operation guide template.
-     */
-    renderOperationGuide(zoomMode) {
-        this.operationGuide.innerHTML = window.templates.renderOperationGuide(zoomMode);
     }
 
     /**
