@@ -235,7 +235,12 @@ class UIManager {
      * Renders the entire playback UI based on the given state.
      */
     renderAllPlaybackUI(state) {
-        const isVideo = state.currentMedia?.mediaType?.includes("video");
+        const { isVideo, status, currentMedia, isWebViewVisible, isPlaylistView } = state;
+
+        // Auto overlay management
+        if (status === "stopped" && !currentMedia && !isWebViewVisible) {
+            this.updateMainOverlay('guide');
+        }
         
         // Update footer buttons
         const footerConfig = this.buildFooterConfig(state);
@@ -249,8 +254,12 @@ class UIManager {
         const statusText = this.getStatusText(state);
         this.updateCurrentItemInfo(statusText);
         
+        // Update playlist items UI
+        const playlistConfig = this.buildPlaylistConfig(state);
+        this.updatePlaybackStateUI(playlistConfig);
+
         // Visibility
-        this.setFooterTransportVisibility(!state.isPlaylistView);
+        this.setFooterTransportVisibility(!isPlaylistView);
         this.setPreviewControlsOverlayVisibility(!isVideo);
     }
 
@@ -282,6 +291,28 @@ class UIManager {
                 config.isHighlighted = true;
                 config.isStopHighlighted = false;
             }
+        }
+        return config;
+    }
+
+    buildPlaylistConfig(state) {
+        const { status, currentMedia, isVideo } = state;
+        const isPlaying = status === "playing";
+        const isPaused = status === "paused";
+        const isStaged = status === "staged";
+
+        const config = {
+            statusLabel: (isPlaying || isPaused) ? "NO AR" : (isStaged ? "PREPARADO" : ""),
+            statusClass: isStaged ? "staged" : (isPlaying || isPaused ? status : ""),
+            items: {}
+        };
+
+        if (currentMedia) {
+            config.items[currentMedia.id] = {
+                class: (isPlaying || isPaused) ? "playing" : "standby",
+                icon: (isPlaying && isVideo) ? this.icons.pause : (isPlaying ? this.icons.stop : this.icons.play),
+                title: (isPlaying && isVideo) ? "Pausar" : (isPlaying ? "Parar" : (isPaused ? "Retomar" : "Reproduzir"))
+            };
         }
         return config;
     }
@@ -383,6 +414,15 @@ class UIManager {
      */
     showOperationGuide(zoomMode) {
         this.updateMainOverlay('guide');
+    }
+
+    /**
+     * Sets the value of the Zoom mode selector.
+     */
+    setZoomMode(mode) {
+        if (this.zoomModeSelect) {
+            this.zoomModeSelect.value = mode || 'auto';
+        }
     }
 
     /**
