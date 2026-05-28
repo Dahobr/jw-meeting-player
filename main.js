@@ -110,17 +110,6 @@ function createMainWindow() {
     // Zoom Integration
     setupZoomIntegration(mainWindow, () => displayManager.getPlaybackWindow());
 
-    // IPC handler to open Zoom settings
-    ipcMain.handle('open-zoom-settings', () => {
-        const { exec } = require('child_process');
-        const scriptPath = path.join(__dirname, 'scripts', 'ZoomSettingsOpener', 'ZoomSettingsOpener.exe');
-        if (fs.existsSync(scriptPath)) {
-            exec(scriptPath);
-        } else {
-            console.error('ZoomSettingsOpener.exe not found at:', scriptPath);
-        }
-    });
-
     // Tutorial Window
     ipcMain.handle('show-tutorial', () => {
         const bounds = mainWindow.getBounds();
@@ -177,6 +166,22 @@ app.whenReady().then(() => {
         ses.on('will-download', (event, item, webContents) => {
             downloadManager.handleDownload(event, item, webContents);
         });
+    });
+
+    // Register global IPC handlers
+    ipcMain.handle('get-app-version', () => {
+        const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
+        return pkg.version;
+    });
+
+    ipcMain.handle('open-zoom-settings', () => {
+        const { exec } = require('child_process');
+        const scriptPath = path.join(__dirname, 'scripts', 'ZoomSettingsOpener', 'ZoomSettingsOpener.exe');
+        if (fs.existsSync(scriptPath)) {
+            exec(scriptPath);
+        } else {
+            console.error('ZoomSettingsOpener.exe not found at:', scriptPath);
+        }
     });
 });
 

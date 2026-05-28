@@ -39,6 +39,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // --- UI & View State ---
   showTutorial: () => ipcRenderer.invoke('show-tutorial'),
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   updateViewBounds: (bounds) => ipcRenderer.send('update-view-bounds', bounds),
   toggleWebView: (visible) => ipcRenderer.send('toggle-webview', visible),
   showItemContextMenu: (data) => ipcRenderer.send('show-item-context-menu', data),
