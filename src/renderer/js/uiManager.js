@@ -68,7 +68,6 @@ class UIManager {
         this.btnMenuTutorial = document.getElementById('btn-menu-tutorial');
         this.btnMenuYear = document.getElementById('btn-menu-year');
         this.btnMenuDownloads = document.getElementById('btn-menu-downloads');
-        this.btnMenuHelp = document.getElementById('btn-menu-help');
         this.btnMenuAbout = document.getElementById('btn-menu-about');
 
         // Global click listener to close dropdowns
