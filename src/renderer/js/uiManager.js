@@ -210,6 +210,17 @@ class UIManager {
         this.router.hideHelp();
     }
 
+    // Callbacks passed to PlaylistListRenderer
+    onPlaylistSelect(id) {}
+    onPlaylistDelete(id) {}
+    onPlaylistRename(id, newName) {}
+    onItemSelect(item) {}
+    onItemPlay(item) {}
+    onItemRemove(playlistId, itemId) {}
+    onItemRename(itemId, newName) {}
+    onPrevious() {}
+    onNext() {}
+
     // UI Constants
     static PLAY_ICON = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
     static PAUSE_ICON = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="currentColor"/></svg>';
@@ -474,6 +485,40 @@ class UIManager {
         
         this.previewTimeCurrent.textContent = format(current);
         this.previewTimeTotal.textContent = format(total || 0);
+    }
+
+    /**
+     * Updates the playback state UI.
+     */
+    updatePlaybackStateUI(config) {
+        const { statusLabel, statusClass, items } = config;
+
+        if (this.stateLabel) {
+            this.stateLabel.textContent = statusLabel || "";
+            this.stateLabel.className = "state-label " + (statusClass || "");
+        }
+
+        // Delegate playlist item rendering update to PlaylistListRenderer
+        this.playlistRenderer.updatePlaybackStateUI(config, this.itemsList);
+    }
+
+    /**
+     * Updates information about the current media item.
+     */
+    updateCurrentItemInfo(text) {
+        const parts = text.split(': ');
+        const label = parts[0];
+        const value = parts.slice(1).join(': ');
+        
+        let colorClass = '';
+        if (label === 'Preparado') colorClass = 'status-preparado';
+        else if (label === 'Reproduzindo') colorClass = 'status-reproduzindo';
+        else if (label === 'Pausado') colorClass = 'status-pausado';
+
+        this.currentItemInfo.innerHTML = `
+            <span id="current-item-status" class="${colorClass}">${label}: </span>
+            <span id="current-item-filename">${value}</span>
+        `;
     }
 
     /**
