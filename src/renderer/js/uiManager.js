@@ -89,6 +89,8 @@ class UIManager {
         this.previewMediaWrapper = DomUtils.query('.preview-media-wrapper');
         this.appVersionSpan = DomUtils.get('app-version');
 
+        this.playlistRenderer = new PlaylistListRenderer(this.playlistList);
+
         this.initAppVersion();
     }
 
@@ -475,59 +477,6 @@ class UIManager {
     }
 
     /**
-     * Renders the list of playlists.
-     */
-    renderPlaylists(playlists, currentId) {
-        this.playlistList.innerHTML = '';
-        Object.entries(playlists).forEach(([id, playlist]) => {
-            const div = DomUtils.create('div', { className: `playlist-item ${id === currentId ? 'active' : ''}` });
-            div.innerHTML = `
-                <div class="playlist-info">
-                    <span class="playlist-name" id="name-${id}" title="${playlist.name}">${playlist.name}</span>
-                    <input type="text" class="edit-playlist-input" id="input-${id}" value="${playlist.name}" style="display: none;">
-                    <span class="playlist-meta">${playlist.items.length} items</span>
-                </div>
-                <div class="playlist-item-actions">
-                  <button class="btn-edit-playlist" data-id="${id}" title="Renomear">${this.icons.edit}</button>
-                  <button class="btn-delete-playlist" data-id="${id}" title="Excluir">${this.icons.trash}</button>
-                </div>
-            `;
-            
-            div.addEventListener('click', (e) => {
-                if (!e.target.closest('button') && !e.target.closest('input')) {
-                    this.onPlaylistSelect(id);
-                }
-            });
-            
-            const btnEdit = DomUtils.query('.btn-edit-playlist', div);
-            btnEdit.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.togglePlaylistEdit(id);
-            });
-
-            const btnDelete = DomUtils.query('.btn-delete-playlist', div);
-            btnDelete.addEventListener('click', function(e) {
-                e.stopPropagation();
-                this.onPlaylistDelete(id);
-            }.bind(this));
-            
-            const input = DomUtils.query('.edit-playlist-input', div);
-            input.addEventListener('click', (e) => e.stopPropagation());
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    this.onPlaylistRename(id, input.value);
-                    this.togglePlaylistEdit(id, false);
-                }
-            });
-            input.addEventListener('blur', () => {
-                this.togglePlaylistEdit(id, false);
-            });
-            
-            this.playlistList.appendChild(div);
-        });
-    }
-
-    /**
      * Renders items for a specific playlist.
      */
     renderPlaylistItems(id, playlist) {
@@ -822,16 +771,12 @@ class UIManager {
         }, 4000);
     }
 
-    // Callbacks
-    onPlaylistSelect(id) {}
-    onPlaylistDelete(id) {}
-    onPlaylistRename(id, newName) {}
-    onItemSelect(item) {}
-    onItemPlay(item) {}
-    onItemRemove(playlistId, itemId) {}
-    onItemRename(itemId, newName) {}
-    onPrevious() {}
-    onNext() {}
+    /**
+     * Sets callbacks for PlaylistListRenderer.
+     */
+    setPlaylistCallbacks(callbacks) {
+        this.playlistRenderer.callbacks = callbacks;
+    }
 
     // --- Modal Helpers ---
     showConfirmModal(message, onConfirm, onCancel) {
