@@ -1,3 +1,9 @@
+/**
+ * @fileoverview DisplayManager
+ * Manages the secondary display, handles PlaybackWindow creation/control, 
+ * and processes IPC commands for media playback on the secondary monitor.
+ */
+
 const { BrowserWindow, screen, ipcMain } = require('electron');
 const path = require('path');
 const storageManager = require('./storageManager');

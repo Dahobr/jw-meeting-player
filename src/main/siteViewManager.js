@@ -1,3 +1,9 @@
+/**
+ * @fileoverview SiteViewManager
+ * Manages the embedded browser view (WebContentsView) used for browsing external sites,
+ * handling navigation, and integrating site-specific actions like media downloads.
+ */
+
 const { ipcMain, WebContentsView, Menu, MenuItem } = require('electron');
 const path = require('path');
 const downloadManager = require('./downloadManager');

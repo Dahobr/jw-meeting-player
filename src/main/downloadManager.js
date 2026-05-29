@@ -1,3 +1,9 @@
+/**
+ * @fileoverview DownloadManager
+ * Manages media file downloads, download state tracking, file saving, 
+ * and media metadata extraction (thumbnails/titles).
+ */
+
 const { app, ipcMain, shell, dialog } = require('electron');
 const fs = require('fs');
 const path = require('path');

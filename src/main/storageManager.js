@@ -1,3 +1,9 @@
+/**
+ * @fileoverview StorageManager
+ * Manages persistent application data, including playlists, configuration settings,
+ * file system structure, and media directory management.
+ */
+
 const { app, ipcMain, shell, dialog } = require('electron');
 const fs = require('fs');
 const path = require('path');

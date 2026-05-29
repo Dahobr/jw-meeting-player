@@ -1,3 +1,8 @@
+/**
+ * @fileoverview ContentManager
+ * Handles the loading and IPC providing of help documentation and license information.
+ */
+
 const { ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');

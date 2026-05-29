@@ -1,3 +1,9 @@
+/**
+ * @fileoverview MenuManager
+ * Handles application context menus, global shortcuts, and associated IPC handlers
+ * for menu-related interactions.
+ */
+
 const { ipcMain, Menu, MenuItem, BrowserWindow, globalShortcut } = require('electron');
 
 class MenuManager {
