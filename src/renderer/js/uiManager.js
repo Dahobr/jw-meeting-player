@@ -8,6 +8,7 @@ class UIManager {
      * Initializes the UIManager, setting up references to DOM elements and global event listeners.
      */
     constructor() {
+        this.router = new ViewRouter();
         // Elements
         this.btnCantico = DomUtils.get('btn-cantico');
         this.btnReunioes = DomUtils.get('btn-reunioes');
@@ -108,85 +109,103 @@ class UIManager {
      * @param {string} mode - The view mode to display: 'preview', 'help', or 'webview'.
      */
     updateMainOverlay(mode) {
-        console.log(`[UI] updateMainOverlay: ${mode}`);
-        const isPlaylist = this.isPlaylistView();
-
-        // 1. Hide everything by default
-        this.previewArea.style.display = 'none';
-        this.helpView.style.display = 'none';
-        
-        // Native WebView visibility
-        let webViewVisible = false;
-
-        if (isPlaylist) {
-            switch (mode) {
-                case 'help':
-                    this.helpView.style.display = 'flex';
-                    break;
-                case 'webview':
-                    webViewVisible = true;
-                    break;
-                case 'preview':
-                default:
-                    this.previewMediaWrapper.style.display = 'none';
-                    this.previewControls.style.display = 'none';
-                    if (this.stateLabel) this.stateLabel.style.display = 'none';
-                    break;
-            }
-        } else {
-            this.previewArea.style.display = 'flex';
-            this.previewMediaWrapper.style.display = 'flex';
-            this.previewControls.style.display = 'flex';
-            if (this.stateLabel) this.stateLabel.style.display = 'block';
-
-            switch (mode) {
-                case 'help':
-                    this.helpView.style.display = 'flex';
-                    this.previewArea.style.display = 'none';
-                    break;
-                case 'webview':
-                    webViewVisible = true;
-                    this.previewArea.style.display = 'none';
-                    break;
-                case 'preview':
-                default:
-                    break;
-            }
-        }
-
-        if (window.electronAPI && window.electronAPI.toggleWebView) {
-            window.electronAPI.toggleWebView(webViewVisible);
-        }
+        this.router.updateMainOverlay(mode);
     }
 
     /**
      * Resets the UI to show the preview area, hiding all overlays.
      */
     ensurePreviewVisible() {
-        if (this.isPlaylistView()) return;
-        this.updateMainOverlay('preview');
+        if (this.router.isPlaylistView()) return;
+        this.router.updateMainOverlay('preview');
     }
 
     /**
      * Checks if the playlist view is currently displayed.
      */
     isPlaylistView() {
-        return this.viewPlaylists.style.display !== 'none';
+        return this.router.isPlaylistView();
     }
 
     /**
      * Switches the UI view between 'playlists' and 'items'.
      */
     switchView(viewName) {
-        if (viewName === 'playlists') {
-            this.viewPlaylists.style.display = 'block';
-            this.viewItems.style.display = 'none';
-            this.updateMainOverlay('guide');
+        this.router.switchView(viewName);
+    }
+
+    /**
+     * Displays a media item in the preview area.
+     */
+    showPreview(type, filePath, autoPlay = true) {
+        console.log(`[UI] showPreview: ${type} -> ${filePath} (AutoPlay: ${autoPlay})`);
+        
+        this.router.updateMainOverlay('preview');
+
+        const isVideo = type.includes('video') || filePath.toLowerCase().endsWith('.mp4');
+        
+        const normalizedPath = filePath.replace(/\\/g, '/');
+        const safeUrl = `media://app/${normalizedPath}`;
+        
+        if (isVideo) {
+            const newSrc = safeUrl;
+            if (this.previewVideo.src !== newSrc) {
+                this.previewVideo.onerror = (e) => console.error('[UI] Preview video error:', e, this.previewVideo.error);
+                this.previewVideo.src = newSrc;
+                this.previewSeeker.value = 0;
+                this.previewSeeker.style.backgroundSize = `0% 100%`;
+                this.previewVideo.load();
+            }
+            this.previewVideo.style.display = 'block';
+            this.previewImage.style.display = 'none';
+            if (autoPlay) {
+                this.previewVideo.play().catch(e => {
+                    if (e.name !== 'AbortError') console.warn('[UI] Preview auto-play failed:', e);
+                });
+            } else {
+                this.previewVideo.pause();
+            }
         } else {
-            this.viewPlaylists.style.display = 'none';
-            this.viewItems.style.display = 'block';
-            this.updateMainOverlay('preview');
+            this.previewImage.onerror = (e) => console.error('[UI] Preview image error:', e);
+            this.previewImage.src = safeUrl;
+            this.previewImage.style.display = 'block';
+            this.previewVideo.style.display = 'none';
+            this.previewVideo.pause();
+            this.previewVideo.removeAttribute('src');
+            this.previewVideo.load();
         }
+    }
+
+    /**
+     * Hides the preview area and restores the main content view.
+     */
+    hidePreview() {
+        this.router.hidePreview();
+        this.previewVideo.pause();
+
+        if (this.stateLabel) {
+            this.stateLabel.textContent = '';
+            this.stateLabel.className = 'state-label';
+        }
+        
+        this.previewVideo.removeAttribute('src');
+        this.previewVideo.load();
+        
+        this.previewImage.removeAttribute('src');
+    }
+
+    /**
+     * Displays help content in the UI.
+     */
+    showHelp(html) {
+        this.router.showHelp(html);
+    }
+
+    /**
+     * Hides the help view.
+     */
+    hideHelp() {
+        this.router.hideHelp();
     }
 
     // UI Constants
