@@ -77,7 +77,7 @@ class UIManager {
                     this.headerMenu.classList.remove('show');
                 }
             }
-            DomUtils.query('.item-dropdown.show') && DomUtils.query('.item-dropdown.show').forEach(d => d.classList.remove('show'));
+            DomUtils.queryAll('.item-dropdown.show').forEach(d => d.classList.remove('show'));
         });
 
         this.btnMenu.onclick = (e) => {
@@ -461,8 +461,7 @@ class UIManager {
     renderPlaylists(playlists, currentId) {
         this.playlistList.innerHTML = '';
         Object.entries(playlists).forEach(([id, playlist]) => {
-            const div = document.createElement('div');
-            div.className = `playlist-item ${id === currentId ? 'active' : ''}`;
+            const div = DomUtils.create('div', { className: `playlist-item ${id === currentId ? 'active' : ''}` });
             div.innerHTML = `
                 <div class="playlist-info">
                     <span class="playlist-name" id="name-${id}" title="${playlist.name}">${playlist.name}</span>
@@ -481,19 +480,19 @@ class UIManager {
                 }
             });
             
-            const btnEdit = div.querySelector('.btn-edit-playlist');
+            const btnEdit = DomUtils.query('.btn-edit-playlist', div);
             btnEdit.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.togglePlaylistEdit(id);
             });
 
-            const btnDelete = div.querySelector('.btn-delete-playlist');
+            const btnDelete = DomUtils.query('.btn-delete-playlist', div);
             btnDelete.addEventListener('click', function(e) {
                 e.stopPropagation();
                 this.onPlaylistDelete(id);
             }.bind(this));
             
-            const input = div.querySelector('.edit-playlist-input');
+            const input = DomUtils.query('.edit-playlist-input', div);
             input.addEventListener('click', (e) => e.stopPropagation());
             input.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
@@ -517,17 +516,14 @@ class UIManager {
         this.itemsList.innerHTML = '';
         
         if (playlist.items.length === 0) {
-            const li = document.createElement('li');
-            li.className = 'playlist-empty-msg';
-            li.textContent = 'Nenhum item';
+            const li = DomUtils.create('li', { className: 'playlist-empty-msg', innerHTML: 'Nenhum item' });
             this.itemsList.appendChild(li);
             return;
         }
 
         playlist.items.forEach((item, index) => {
             if (!item) return;
-            const li = document.createElement('li');
-            li.className = 'playlist-item-li';
+            const li = DomUtils.create('li', { className: 'playlist-item-li' });
             li.dataset.id = item.id;
             li.dataset.index = index;
             
@@ -560,37 +556,37 @@ class UIManager {
                 }
             });
             
-            const btnPlay = li.querySelector('.btn-play-item');
+            const btnPlay = DomUtils.query('.btn-play-item', li);
             btnPlay.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.onItemPlay(item);
             });
 
-            const moreActions = li.querySelector('.item-more-actions');
-            const dropdown = li.querySelector('.item-dropdown');
+            const moreActions = DomUtils.query('.item-more-actions', li);
+            const dropdown = DomUtils.query('.item-dropdown', li);
             moreActions.addEventListener('click', (e) => {
                 e.stopPropagation();
-                DomUtils.query('.item-dropdown.show') && DomUtils.query('.item-dropdown.show').forEach(d => {
+                DomUtils.queryAll('.item-dropdown.show', this.itemsList).forEach(d => {
                     if (d !== dropdown) d.classList.remove('show');
                 });
                 dropdown.classList.toggle('show');
             });
 
-            const btnEdit = li.querySelector('.btn-edit-item');
+            const btnEdit = DomUtils.query('.btn-edit-item', li);
             btnEdit.addEventListener('click', (e) => {
                 e.stopPropagation();
                 dropdown.classList.remove('show');
                 this.toggleItemEdit(item.id);
             });
             
-            const btnDelete = li.querySelector('.btn-delete-item');
+            const btnDelete = DomUtils.query('.btn-delete-item', li);
             btnDelete.addEventListener('click', (e) => {
                 e.stopPropagation();
                 dropdown.classList.remove('show');
                 this.onItemRemove(id, item.id);
             });
 
-            const input = li.querySelector('.edit-item-input');
+            const input = DomUtils.query('.edit-item-input', li);
             input.addEventListener('click', (e) => e.stopPropagation());
             input.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
@@ -641,8 +637,7 @@ class UIManager {
      * Renders a download item in the list.
      */
     renderDownloadItem(itemId, filename) {
-        const li = document.createElement('li');
-        li.className = 'playlist-item-li downloading';
+        const li = DomUtils.create('li', { className: 'playlist-item-li downloading' });
         li.dataset.id = itemId;
         li.dataset.progress = 0;
         
@@ -662,10 +657,10 @@ class UIManager {
      * Updates the download progress indicator.
      */
     updateDownloadProgress(itemId, percentage, filename) {
-        const li = this.itemsList.querySelector(`li[data-id="${itemId}"]`);
+        const li = DomUtils.query(`li[data-id="${itemId}"]`, this.itemsList);
         if (li) {
             li.dataset.progress = percentage;
-            const thumbnail = li.querySelector('.item-thumbnail');
+            const thumbnail = DomUtils.query('.item-thumbnail', li);
             if (thumbnail) {
                 thumbnail.style.setProperty('--progress', percentage);
                 if (percentage >= 100) {
@@ -686,11 +681,11 @@ class UIManager {
             this.stateLabel.className = "state-label " + (statusClass || "");
         }
 
-        const liElements = this.itemsList.querySelectorAll(".playlist-item-li");
+        const liElements = DomUtils.queryAll(".playlist-item-li", this.itemsList);
         liElements.forEach(li => {
             const itemId = li.dataset.id;
             const itemConfig = items[itemId];
-            const btnPlay = li.querySelector(".btn-play-item");
+            const btnPlay = DomUtils.query(".btn-play-item", li);
 
             li.classList.remove("playing", "standby");
             
@@ -763,7 +758,7 @@ class UIManager {
      * Handles UI updates on download completion.
      */
     onDownloadComplete(itemId, newItemData) {
-        const li = this.itemsList.querySelector(`li[data-id="${itemId}"]`);
+        const li = DomUtils.query(`li[data-id="${itemId}"]`, this.itemsList);
         if (li) {
             li.classList.remove('downloading');
             const style = DomUtils.get(`style-progress-${itemId}`);
@@ -775,10 +770,9 @@ class UIManager {
      * Displays an error message.
      */
     showError(itemId, message, filename = '') {
-        let li = this.itemsList.querySelector(`li[data-id="${itemId}"]`);
+        let li = DomUtils.query(`li[data-id="${itemId}"]`, this.itemsList);
         if (!li) {
-            li = document.createElement('li');
-            li.className = 'playlist-item-li error';
+            li = DomUtils.create('li', { className: 'playlist-item-li error' });
             li.dataset.id = itemId;
             li.innerHTML = `
                 <div class="item-content">
@@ -791,9 +785,9 @@ class UIManager {
             `;
             this.itemsList.appendChild(li);
         } else {
-            const thumbnail = li.querySelector('.item-thumbnail');
-            const titleSpan = li.querySelector('.item-title');
-            const typeSpan = li.querySelector('.item-type');
+            const thumbnail = DomUtils.query('.item-thumbnail', li);
+            const titleSpan = DomUtils.query('.item-title', li);
+            const typeSpan = DomUtils.query('.item-type', li);
 
             thumbnail.classList.remove('loading');
             thumbnail.classList.add('error-icon');
