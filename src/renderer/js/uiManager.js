@@ -210,14 +210,7 @@ class UIManager {
         this.router.hideHelp();
     }
 
-    // Callbacks passed to PlaylistListRenderer
-    onPlaylistSelect(id) {}
-    onPlaylistDelete(id) {}
-    onPlaylistRename(id, newName) {}
-    onItemSelect(item) {}
-    onItemPlay(item) {}
-    onItemRemove(playlistId, itemId) {}
-    onItemRename(itemId, newName) {}
+    // Callbacks handled by UIManager
     onPrevious() {}
     onNext() {}
 
