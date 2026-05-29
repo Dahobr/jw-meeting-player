@@ -1,3 +1,8 @@
+/**
+ * @fileoverview UpdateManager
+ * Handles application auto-updates using electron-updater.
+ */
+
 const { autoUpdater } = require('electron-updater');
 
 function init() {

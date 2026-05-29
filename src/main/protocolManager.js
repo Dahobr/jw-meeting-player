@@ -1,6 +1,7 @@
 /**
- * protocolManager.js
- * Manages the custom 'media' protocol registration.
+ * @fileoverview ProtocolManager
+ * Registers and manages the custom 'media://' protocol to securely serve 
+ * local media files to the Electron renderer processes.
  */
 
 const { protocol, session, app, net } = require('electron');
