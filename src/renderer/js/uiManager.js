@@ -9,49 +9,49 @@ class UIManager {
      */
     constructor() {
         // Elements
-        this.btnCantico = document.getElementById('btn-cantico');
-        this.btnReunioes = document.getElementById('btn-reunioes');
-        this.btnVideos = document.getElementById('btn-videos');
-        this.btnEsbocos = document.getElementById('btn-esbocos');
-        this.btnOpenFolder = document.getElementById('btn-open-folder');
-        this.btnOpenYearVerseFolder = document.getElementById('btn-open-year-verse-folder');
-        this.btnCreatePlaylist = document.getElementById('btn-create-playlist');
-        this.btnBackToPlaylists = document.getElementById('btn-back-to-playlists');
-        this.btnImportFile = document.getElementById('btn-import-file');
-        this.zoomModeSelect = document.getElementById('zoom-mode-select');
+        this.btnCantico = DomUtils.get('btn-cantico');
+        this.btnReunioes = DomUtils.get('btn-reunioes');
+        this.btnVideos = DomUtils.get('btn-videos');
+        this.btnEsbocos = DomUtils.get('btn-esbocos');
+        this.btnOpenFolder = DomUtils.get('btn-open-folder');
+        this.btnOpenYearVerseFolder = DomUtils.get('btn-open-year-verse-folder');
+        this.btnCreatePlaylist = DomUtils.get('btn-create-playlist');
+        this.btnBackToPlaylists = DomUtils.get('btn-back-to-playlists');
+        this.btnImportFile = DomUtils.get('btn-import-file');
+        this.zoomModeSelect = DomUtils.get('zoom-mode-select');
         
-        this.btnFooterPlayPause = document.getElementById('btn-footer-play-pause');
-        this.btnFooterPrev = document.getElementById('btn-footer-prev');
-        this.btnFooterNext = document.getElementById('btn-footer-next');
+        this.btnFooterPlayPause = DomUtils.get('btn-footer-play-pause');
+        this.btnFooterPrev = DomUtils.get('btn-footer-prev');
+        this.btnFooterNext = DomUtils.get('btn-footer-next');
 
         // Add click listeners
         this.btnFooterPrev.onclick = () => this.onPrevious();
         this.btnFooterNext.onclick = () => this.onNext();
         
-        this.newPlaylistInput = document.getElementById('new-playlist-name');
-        this.playlistList = document.getElementById('playlist-list');
-        this.itemsList = document.getElementById('playlist-items-ul');
-        this.currentPlaylistTitle = document.getElementById('current-playlist-title');
-        this.currentItemInfo = document.getElementById('current-item-info');
+        this.newPlaylistInput = DomUtils.get('new-playlist-name');
+        this.playlistList = DomUtils.get('playlist-list');
+        this.itemsList = DomUtils.get('playlist-items-ul');
+        this.currentPlaylistTitle = DomUtils.get('current-playlist-title');
+        this.currentItemInfo = DomUtils.get('current-item-info');
         
-        this.viewPlaylists = document.getElementById('view-playlists');
-        this.viewItems = document.getElementById('view-items');
-        this.webviewContainer = document.querySelector('.webview-container');
+        this.viewPlaylists = DomUtils.get('view-playlists');
+        this.viewItems = DomUtils.get('view-items');
+        this.webviewContainer = DomUtils.query('.webview-container');
 
         // Preview Elements
-        this.previewArea = document.getElementById('preview-area');
-        this.previewVideo = document.getElementById('preview-video');
-        this.previewImage = document.getElementById('preview-image');
-        this.previewSeeker = document.getElementById('preview-seeker');
-        this.previewControls = document.getElementById('preview-controls-container');
-        this.previewControlsOverlay = document.getElementById('preview-controls-overlay');
-        this.previewTimeCurrent = document.getElementById('preview-time-current');
-        this.previewTimeTotal = document.getElementById('preview-time-total');
-        this.stateLabel = document.getElementById('preview-state-label');
+        this.previewArea = DomUtils.get('preview-area');
+        this.previewVideo = DomUtils.get('preview-video');
+        this.previewImage = DomUtils.get('preview-image');
+        this.previewSeeker = DomUtils.get('preview-seeker');
+        this.previewControls = DomUtils.get('preview-controls-container');
+        this.previewControlsOverlay = DomUtils.get('preview-controls-overlay');
+        this.previewTimeCurrent = DomUtils.get('preview-time-current');
+        this.previewTimeTotal = DomUtils.get('preview-time-total');
+        this.stateLabel = DomUtils.get('preview-state-label');
 
         // Help Elements
-        this.helpView = document.getElementById('help-view');
-        this.helpContainer = document.getElementById('help-html-container');
+        this.helpView = DomUtils.get('help-view');
+        this.helpContainer = DomUtils.get('help-html-container');
 
         // Common SVG Icons
         this.icons = {
@@ -63,12 +63,12 @@ class UIManager {
             trash: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>'
         };
 
-        this.btnMenu = document.getElementById('btn-menu');
-        this.headerMenu = document.getElementById('header-menu');
-        this.btnMenuTutorial = document.getElementById('btn-menu-tutorial');
-        this.btnMenuYear = document.getElementById('btn-menu-year');
-        this.btnMenuDownloads = document.getElementById('btn-menu-downloads');
-        this.btnMenuAbout = document.getElementById('btn-menu-about');
+        this.btnMenu = DomUtils.get('btn-menu');
+        this.headerMenu = DomUtils.get('header-menu');
+        this.btnMenuTutorial = DomUtils.get('btn-menu-tutorial');
+        this.btnMenuYear = DomUtils.get('btn-menu-year');
+        this.btnMenuDownloads = DomUtils.get('btn-menu-downloads');
+        this.btnMenuAbout = DomUtils.get('btn-menu-about');
 
         // Global click listener to close dropdowns
         document.addEventListener('click', (e) => {
@@ -77,7 +77,7 @@ class UIManager {
                     this.headerMenu.classList.remove('show');
                 }
             }
-            document.querySelectorAll('.item-dropdown.show').forEach(d => d.classList.remove('show'));
+            DomUtils.query('.item-dropdown.show') && DomUtils.query('.item-dropdown.show').forEach(d => d.classList.remove('show'));
         });
 
         this.btnMenu.onclick = (e) => {
@@ -85,8 +85,8 @@ class UIManager {
             this.headerMenu.classList.toggle('show');
         };
 
-        this.previewMediaWrapper = document.querySelector('.preview-media-wrapper');
-        this.appVersionSpan = document.getElementById('app-version');
+        this.previewMediaWrapper = DomUtils.query('.preview-media-wrapper');
+        this.appVersionSpan = DomUtils.get('app-version');
 
         this.initAppVersion();
     }
@@ -224,7 +224,7 @@ class UIManager {
             this.btnFooterPlayPause.classList.remove("btn-paused-highlight");
         }
 
-        const btnStop = document.getElementById("btn-stop");
+        const btnStop = DomUtils.get("btn-stop");
         if (btnStop) {
             btnStop.disabled = !isStopEnabled;
             btnStop.style.opacity = isStopEnabled ? "1" : "0.5";
@@ -570,7 +570,7 @@ class UIManager {
             const dropdown = li.querySelector('.item-dropdown');
             moreActions.addEventListener('click', (e) => {
                 e.stopPropagation();
-                document.querySelectorAll('.item-dropdown.show').forEach(d => {
+                DomUtils.query('.item-dropdown.show') && DomUtils.query('.item-dropdown.show').forEach(d => {
                     if (d !== dropdown) d.classList.remove('show');
                 });
                 dropdown.classList.toggle('show');
@@ -610,8 +610,8 @@ class UIManager {
      * Toggles the edit mode for a playlist item.
      */
     togglePlaylistEdit(id, show = true) {
-        const nameSpan = document.getElementById(`name-${id}`);
-        const input = document.getElementById(`input-${id}`);
+        const nameSpan = DomUtils.get(`name-${id}`);
+        const input = DomUtils.get(`input-${id}`);
         if (nameSpan && input) {
             nameSpan.style.display = show ? 'none' : 'block';
             input.style.display = show ? 'block' : 'none';
@@ -628,8 +628,8 @@ class UIManager {
      * Toggles the edit mode for a specific playlist item.
      */
     toggleItemEdit(id, show = true) {
-        const nameSpan = document.getElementById(`item-name-${id}`);
-        const input = document.getElementById(`item-input-${id}`);
+        const nameSpan = DomUtils.get(`item-name-${id}`);
+        const input = DomUtils.get(`item-input-${id}`);
         if (nameSpan && input) {
             nameSpan.style.display = show ? 'none' : 'block';
             input.style.display = show ? 'block' : 'none';
@@ -766,7 +766,7 @@ class UIManager {
         const li = this.itemsList.querySelector(`li[data-id="${itemId}"]`);
         if (li) {
             li.classList.remove('downloading');
-            const style = document.getElementById(`style-progress-${itemId}`);
+            const style = DomUtils.get(`style-progress-${itemId}`);
             if (style) style.remove();
         }
     }
@@ -822,10 +822,10 @@ class UIManager {
 
     // --- Modal Helpers ---
     showConfirmModal(message, onConfirm, onCancel) {
-        const modal = document.getElementById('custom-modal');
-        const msgEl = document.getElementById('modal-message');
-        const btnConfirm = document.getElementById('modal-confirm');
-        const btnCancel = document.getElementById('modal-cancel');
+        const modal = DomUtils.get('custom-modal');
+        const msgEl = DomUtils.get('modal-message');
+        const btnConfirm = DomUtils.get('modal-confirm');
+        const btnCancel = DomUtils.get('modal-cancel');
 
         if (!modal || !msgEl || !btnConfirm || !btnCancel) return false;
 
@@ -856,7 +856,7 @@ class UIManager {
     }
     
     setFooterTransportVisibility(visible) {
-        const footerTransportButtons = document.querySelector('.transport-buttons');
+        const footerTransportButtons = DomUtils.query('.transport-buttons');
         if (footerTransportButtons) {
             footerTransportButtons.style.visibility = visible ? 'visible' : 'hidden';
         }
