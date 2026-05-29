@@ -240,11 +240,11 @@ class App {
 
         this.ipc.onDownloadStarted((data) => {
             this.ui.showNotification(`Download iniciado: ${data.filename}`);
-            this.ui.renderDownloadItem(data.id, data.filename);
+            this.ui.playlistRenderer.renderDownloadItem(data.id, data.filename, this.ui.itemsList);
         });
 
         this.ipc.onDownloadProgress((data) => {
-            this.ui.updateDownloadProgress(data.id, data.progress, data.filename);
+            this.ui.playlistRenderer.updateDownloadProgress(data.id, data.progress, this.ui.itemsList);
         });
 
         this.ipc.onDownloadComplete((data) => {
@@ -345,9 +345,26 @@ class App {
      */
     handleStoreChange(state) {
         this.ipc.savePlaylists(state);
-        this.ui.renderPlaylists(state.playlists, state.currentPlaylistId);
+        this.ui.playlistRenderer.render(state.playlists, state.currentPlaylistId, this.ui.playlistList, {
+            onPlaylistSelect: (id) => this.ui.onPlaylistSelect(id),
+            onPlaylistDelete: (id) => this.ui.onPlaylistDelete(id),
+            onPlaylistRename: (id, name) => this.ui.onPlaylistRename(id, name),
+            togglePlaylistEdit: (id, show) => this.ui.playlistRenderer.togglePlaylistEdit(id, show)
+        });
         if (state.currentPlaylistId && state.playlists[state.currentPlaylistId]) {
-            this.ui.renderPlaylistItems(state.currentPlaylistId, state.playlists[state.currentPlaylistId]);
+            this.ui.playlistRenderer.renderItems(
+                state.currentPlaylistId, 
+                state.playlists[state.currentPlaylistId], 
+                this.ui.itemsList, 
+                this.ui.currentPlaylistTitle,
+                {
+                    onItemSelect: (item) => this.ui.onItemSelect(item),
+                    onItemPlay: (item) => this.ui.onItemPlay(item),
+                    onItemRemove: (playlistId, itemId) => this.ui.onItemRemove(playlistId, itemId),
+                    onItemRename: (itemId, newName) => this.ui.onItemRename(itemId, newName),
+                    toggleItemEdit: (id, show) => this.ui.playlistRenderer.toggleItemEdit(id, show)
+                }
+            );
         }
         this.updatePlaybackUI();
     }

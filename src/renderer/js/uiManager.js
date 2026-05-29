@@ -210,6 +210,17 @@ class UIManager {
         this.router.hideHelp();
     }
 
+    // Callbacks passed to PlaylistListRenderer
+    onPlaylistSelect(id) {}
+    onPlaylistDelete(id) {}
+    onPlaylistRename(id, newName) {}
+    onItemSelect(item) {}
+    onItemPlay(item) {}
+    onItemRemove(playlistId, itemId) {}
+    onItemRename(itemId, newName) {}
+    onPrevious() {}
+    onNext() {}
+
     // UI Constants
     static PLAY_ICON = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
     static PAUSE_ICON = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="currentColor"/></svg>';
@@ -477,168 +488,6 @@ class UIManager {
     }
 
     /**
-     * Renders items for a specific playlist.
-     */
-    renderPlaylistItems(id, playlist) {
-        this.currentPlaylistTitle.textContent = playlist.name;
-        this.itemsList.innerHTML = '';
-        
-        if (playlist.items.length === 0) {
-            const li = DomUtils.create('li', { className: 'playlist-empty-msg', innerHTML: 'Nenhum item' });
-            this.itemsList.appendChild(li);
-            return;
-        }
-
-        playlist.items.forEach((item, index) => {
-            if (!item) return;
-            const li = DomUtils.create('li', { className: 'playlist-item-li' });
-            li.dataset.id = item.id;
-            li.dataset.index = index;
-            
-            li.innerHTML = `
-                <div class="item-content">
-                    <div class="item-thumbnail">
-                        ${item.thumbnailData ? `<img src="${item.thumbnailData}" alt="thumb">` : `<div class="placeholder">${item.mediaType === 'video' ? '🎬' : '🖼️'}</div>`}
-                    </div>
-                    <div class="item-info">
-                        <span class="item-title" id="item-name-${item.id}" title="${item.title || item.filename}">${item.title || item.filename}</span>
-                        <input type="text" class="edit-item-input" id="item-input-${item.id}" value="${item.title || item.filename}" style="display: none;">
-                        <span class="item-type">${item.mediaType}</span>
-                    </div>
-                    <div class="item-actions">
-                        <button class="btn-play-item btn-item-action" title="Reproduzir">${this.icons.play}</button>
-                        <div class="item-more-actions" data-id="${item.id}">
-                            ⋮
-                            <div class="item-dropdown" id="dropdown-${item.id}">
-                                <div class="item-dropdown-item btn-edit-item">${this.icons.edit} Renomear</div>
-                                <div class="item-dropdown-item btn-delete-item">${this.icons.trash} Excluir</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            li.addEventListener('click', (e) => {
-                if (!e.target.closest('button') && !e.target.closest('.item-more-actions') && !e.target.closest('input')) {
-                    this.onItemSelect(item);
-                }
-            });
-            
-            const btnPlay = DomUtils.query('.btn-play-item', li);
-            btnPlay.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.onItemPlay(item);
-            });
-
-            const moreActions = DomUtils.query('.item-more-actions', li);
-            const dropdown = DomUtils.query('.item-dropdown', li);
-            moreActions.addEventListener('click', (e) => {
-                e.stopPropagation();
-                DomUtils.queryAll('.item-dropdown.show', this.itemsList).forEach(d => {
-                    if (d !== dropdown) d.classList.remove('show');
-                });
-                dropdown.classList.toggle('show');
-            });
-
-            const btnEdit = DomUtils.query('.btn-edit-item', li);
-            btnEdit.addEventListener('click', (e) => {
-                e.stopPropagation();
-                dropdown.classList.remove('show');
-                this.toggleItemEdit(item.id);
-            });
-            
-            const btnDelete = DomUtils.query('.btn-delete-item', li);
-            btnDelete.addEventListener('click', (e) => {
-                e.stopPropagation();
-                dropdown.classList.remove('show');
-                this.onItemRemove(id, item.id);
-            });
-
-            const input = DomUtils.query('.edit-item-input', li);
-            input.addEventListener('click', (e) => e.stopPropagation());
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    this.onItemRename(item.id, input.value);
-                    this.toggleItemEdit(item.id, false);
-                }
-            });
-            input.addEventListener('blur', () => {
-                this.toggleItemEdit(id, false);
-            });
-            
-            this.itemsList.appendChild(li);
-        });
-    }
-
-    /**
-     * Toggles the edit mode for a playlist item.
-     */
-    togglePlaylistEdit(id, show = true) {
-        const nameSpan = DomUtils.get(`name-${id}`);
-        const input = DomUtils.get(`input-${id}`);
-        if (nameSpan && input) {
-            nameSpan.style.display = show ? 'none' : 'block';
-            input.style.display = show ? 'block' : 'none';
-            if (show) {
-                requestAnimationFrame(() => {
-                    input.focus();
-                    input.select();
-                });
-            }
-        }
-    }
-
-    /**
-     * Toggles the edit mode for a specific playlist item.
-     */
-    toggleItemEdit(id, show = true) {
-        const nameSpan = DomUtils.get(`item-name-${id}`);
-        const input = DomUtils.get(`item-input-${id}`);
-        if (nameSpan && input) {
-            nameSpan.style.display = show ? 'none' : 'block';
-            input.style.display = show ? 'block' : 'none';
-            if (show) input.focus();
-        }
-    }
-
-    /**
-     * Renders a download item in the list.
-     */
-    renderDownloadItem(itemId, filename) {
-        const li = DomUtils.create('li', { className: 'playlist-item-li downloading' });
-        li.dataset.id = itemId;
-        li.dataset.progress = 0;
-        
-        li.innerHTML = `
-            <div class="item-content">
-                <div class="item-thumbnail loading" style="--progress: 0;"></div>
-                <div class="item-info">
-                    <span class="item-title">${filename}</span>
-                    <span class="item-type">Baixando...</span>
-                </div>
-            </div>
-        `;
-        this.itemsList.appendChild(li);
-    }
-
-    /**
-     * Updates the download progress indicator.
-     */
-    updateDownloadProgress(itemId, percentage, filename) {
-        const li = DomUtils.query(`li[data-id="${itemId}"]`, this.itemsList);
-        if (li) {
-            li.dataset.progress = percentage;
-            const thumbnail = DomUtils.query('.item-thumbnail', li);
-            if (thumbnail) {
-                thumbnail.style.setProperty('--progress', percentage);
-                if (percentage >= 100) {
-                    thumbnail.classList.remove('loading');
-                }
-            }
-        }
-    }
-
-    /**
      * Updates the playback state UI.
      */
     updatePlaybackStateUI(config) {
@@ -649,27 +498,8 @@ class UIManager {
             this.stateLabel.className = "state-label " + (statusClass || "");
         }
 
-        const liElements = DomUtils.queryAll(".playlist-item-li", this.itemsList);
-        liElements.forEach(li => {
-            const itemId = li.dataset.id;
-            const itemConfig = items[itemId];
-            const btnPlay = DomUtils.query(".btn-play-item", li);
-
-            li.classList.remove("playing", "standby");
-            
-            if (itemConfig) {
-                if (itemConfig.class) li.classList.add(itemConfig.class);
-                if (btnPlay) {
-                    btnPlay.innerHTML = itemConfig.icon;
-                    btnPlay.title = itemConfig.title;
-                }
-            } else {
-                if (btnPlay) {
-                    btnPlay.innerHTML = this.icons.play;
-                    btnPlay.title = "Reproduzir";
-                }
-            }
-        });
+        // Delegate playlist item rendering update to PlaylistListRenderer
+        this.playlistRenderer.updatePlaybackStateUI(config, this.itemsList);
     }
 
     /**
@@ -695,10 +525,12 @@ class UIManager {
      * Updates the display status indicator.
      */
     updateDisplayStatus(status) {
-        if (status === 'waiting') {
-            this.currentItemInfo.classList.add('status-warning');
-        } else {
-            this.currentItemInfo.classList.remove('status-warning');
+        if (this.currentItemInfo) {
+            if (status === 'waiting') {
+                this.currentItemInfo.classList.add('status-warning');
+            } else {
+                this.currentItemInfo.classList.remove('status-warning');
+            }
         }
     }
 

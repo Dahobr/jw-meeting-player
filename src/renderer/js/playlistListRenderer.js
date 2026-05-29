@@ -1,6 +1,6 @@
 /**
  * @fileoverview PlaylistListRenderer
- * Handles rendering of playlist lists and playlist items, 
+ * Handles rendering of playlist lists, playlist items, and download status, 
  * offloading playlist-related DOM logic from UIManager.
  */
 class PlaylistListRenderer {
@@ -142,6 +142,67 @@ class PlaylistListRenderer {
             input.addEventListener('blur', () => this.toggleItemEdit(id, false));
             
             itemsList.appendChild(li);
+        });
+    }
+
+    renderDownloadItem(itemId, filename, itemsList) {
+        const li = DomUtils.create('li', { className: 'playlist-item-li downloading' });
+        li.dataset.id = itemId;
+        li.dataset.progress = 0;
+        
+        li.innerHTML = `
+            <div class="item-content">
+                <div class="item-thumbnail loading" style="--progress: 0;"></div>
+                <div class="item-info">
+                    <span class="item-title">${filename}</span>
+                    <span class="item-type">Baixando...</span>
+                </div>
+            </div>
+        `;
+        itemsList.appendChild(li);
+    }
+
+    updateDownloadProgress(itemId, percentage, itemsList) {
+        const li = DomUtils.query(`li[data-id="${itemId}"]`, itemsList);
+        if (li) {
+            li.dataset.progress = percentage;
+            const thumbnail = DomUtils.query('.item-thumbnail', li);
+            if (thumbnail) {
+                thumbnail.style.setProperty('--progress', percentage);
+                if (percentage >= 100) {
+                    thumbnail.classList.remove('loading');
+                }
+            }
+        }
+    }
+
+    updatePlaybackStateUI(config, itemsList) {
+        const { statusLabel, statusClass, items } = config;
+
+        // Note: statusLabel and statusClass handling would likely need to be handled by UIManager
+        // or passed as parameters if they affect elements outside the playlist list container.
+        // Assuming they are updated in UIManager.
+
+        const liElements = DomUtils.queryAll(".playlist-item-li", itemsList);
+        liElements.forEach(li => {
+            const itemId = li.dataset.id;
+            const itemConfig = items[itemId];
+            const btnPlay = DomUtils.query(".btn-play-item", li);
+
+            li.classList.remove("playing", "standby");
+            
+            if (itemConfig) {
+                if (itemConfig.class) li.classList.add(itemConfig.class);
+                if (btnPlay) {
+                    btnPlay.innerHTML = itemConfig.icon;
+                    btnPlay.title = itemConfig.title;
+                }
+            } else {
+                if (btnPlay) {
+                    btnPlay.innerHTML = this.icons.play;
+                    btnPlay.title = "Reproduzir";
+                }
+            }
         });
     }
 

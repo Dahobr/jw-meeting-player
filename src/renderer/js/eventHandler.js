@@ -40,11 +40,11 @@ class EventHandler {
 
         this.ipc.onDownloadStarted((data) => {
             this.ui.showNotification(`Download iniciado: ${data.filename}`);
-            this.ui.renderDownloadItem(data.id, data.filename);
+            this.ui.playlistRenderer.renderDownloadItem(data.id, data.filename, this.ui.itemsList);
         });
 
         this.ipc.onDownloadProgress((data) => {
-            this.ui.updateDownloadProgress(data.id, data.progress, data.filename);
+            this.ui.playlistRenderer.updateDownloadProgress(data.id, data.progress, this.ui.itemsList);
         });
 
         this.ipc.onDownloadComplete((data) => {
@@ -178,60 +178,62 @@ class EventHandler {
             this.app.updatePlaybackUI();
         };
 
-        this.ui.onPlaylistSelect = (id) => {
-            this.store.setCurrentPlaylistId(id);
-            this.ui.switchView('items');
+        this.ui.setPlaylistCallbacks({
+            onPlaylistSelect: (id) => {
+                this.store.setCurrentPlaylistId(id);
+                this.ui.switchView('items');
 
-            // Auto-standby previous item if available
-            const state = this.store.getState();
-            const playlist = state.playlists[id];
-            if (playlist && playlist.items.length > 0 && this.app.status === 'stopped') {
-                const lastItemId = this.app.lastStagedItemPerPlaylist[id];
-                const itemToStandby = playlist.items.find(i => i.id === lastItemId) || playlist.items[0];
-                this.app.playbackManager.prepareStagingMedia(itemToStandby);
-            }
-            this.app.updatePlaybackUI();
-        };
-
-        this.ui.onPlaylistDelete = async (id) => {
-            if (await this.app.showCustomConfirm('Deseja realmente excluir esta playlist?')) {
-                const itemsToDelete = this.store.deletePlaylist(id);
-                for (const item of itemsToDelete) {
-                    if (item.filePath) await this.ipc.deleteFile(item.filePath);
+                // Auto-standby previous item if available
+                const state = this.store.getState();
+                const playlist = state.playlists[id];
+                if (playlist && playlist.items.length > 0 && this.app.status === 'stopped') {
+                    const lastItemId = this.app.lastStagedItemPerPlaylist[id];
+                    const itemToStandby = playlist.items.find(i => i.id === lastItemId) || playlist.items[0];
+                    this.app.playbackManager.prepareStagingMedia(itemToStandby);
                 }
+                this.app.updatePlaybackUI();
+            },
+
+            onPlaylistDelete: async (id) => {
+                if (await this.app.showCustomConfirm('Deseja realmente excluir esta playlist?')) {
+                    const itemsToDelete = this.store.deletePlaylist(id);
+                    for (const item of itemsToDelete) {
+                        if (item.filePath) await this.ipc.deleteFile(item.filePath);
+                    }
+                }
+            },
+
+            onPlaylistRename: (id, newName) => this.store.renamePlaylist(id, newName),
+
+            // Item List Interactions
+            onItemSelect: (item) => {
+                console.log('[EventHandler] Staging item in preview area.');
+                this.app.playbackManager.prepareStagingMedia(item);
+            },
+
+            onItemPlay: (item) => {
+                console.log(`[EventHandler] onItemPlay triggered for: ${item.title || item.filename}`);
+                if (this.app.currentMedia && this.app.currentMedia.id === item.id) {
+                    // Toggle playback if it's the same item
+                    this.app.togglePlayback();
+                } else {
+                    // Otherwise play it
+                    this.app.playbackManager.playMedia(item);
+                }
+            },
+
+            onItemRemove: async (playlistId, itemId) => {
+                if (await this.app.showCustomConfirm('Deseja realmente excluir este arquivo?')) {
+                    const item = this.store.getItem(playlistId, itemId);
+                    if (item && item.filePath) await this.ipc.deleteFile(item.filePath);
+                    this.store.removeItem(playlistId, itemId);
+                }
+            },
+
+            onItemRename: (itemId, newName) => {
+                this.store.updateItem(itemId, { title: newName });
             }
-        };
-
-        this.ui.onPlaylistRename = (id, newName) => this.store.renamePlaylist(id, newName);
-
-        // Item List Interactions
-        this.ui.onItemSelect = (item) => {
-            console.log('[EventHandler] Staging item in preview area.');
-            this.app.playbackManager.prepareStagingMedia(item);
-        };
-
-        this.ui.onItemPlay = (item) => {
-            console.log(`[EventHandler] onItemPlay triggered for: ${item.title || item.filename}`);
-            if (this.app.currentMedia && this.app.currentMedia.id === item.id) {
-                // Toggle playback if it's the same item
-                this.app.togglePlayback();
-            } else {
-                // Otherwise play it
-                this.app.playbackManager.playMedia(item);
-            }
-        };
-
-        this.ui.onItemRemove = async (playlistId, itemId) => {
-            if (await this.app.showCustomConfirm('Deseja realmente excluir este arquivo?')) {
-                const item = this.store.getItem(playlistId, itemId);
-                if (item && item.filePath) await this.ipc.deleteFile(item.filePath);
-                this.store.removeItem(playlistId, itemId);
-            }
-        };
-
-        this.ui.onItemRename = (itemId, newName) => {
-            this.store.updateItem(itemId, { title: newName });
-        };
+        });
 
         this.ui.btnFooterPlayPause.onclick = () => this.app.togglePlayback();
 
