@@ -147,15 +147,6 @@ class EventHandler {
         this.ui.btnMenuYear.onclick = () => window.electronAPI.openYearVerseFolder();
         this.ui.btnMenuDownloads.onclick = () => this.ipc.openDownloadFolder();
         
-        this.ui.btnMenuHelp.onclick = async () => {
-            try {
-                const html = await this.ipc.getHelpContent();
-                this.ui.showHelp(html);
-            } catch (err) {
-                console.error('[EventHandler] Failed to load help content:', err);
-            }
-        };
-
         this.ui.btnMenuAbout.onclick = async () => {
             try {
                 const html = await this.ipc.getAboutContent();

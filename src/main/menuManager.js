@@ -1,10 +1,11 @@
-const { ipcMain, Menu, MenuItem, BrowserWindow } = require('electron');
+const { ipcMain, Menu, MenuItem, BrowserWindow, globalShortcut } = require('electron');
 
 class MenuManager {
     init(mainWindow) {
         this.mainWindow = mainWindow;
         this.setupMenu();
         this.setupIpcHandlers();
+        this.setupShortcuts();
     }
 
     setupMenu() {
@@ -12,6 +13,14 @@ class MenuManager {
         // We set application menu to null to avoid the default Electron menu if needed,
         // or just don't set it at all.
         Menu.setApplicationMenu(null);
+    }
+
+    setupShortcuts() {
+        globalShortcut.register('F12', () => {
+            if (this.mainWindow) {
+                this.mainWindow.webContents.toggleDevTools();
+            }
+        });
     }
 
     setupIpcHandlers() {
