@@ -106,8 +106,11 @@ class PlaybackManager {
                     this.app.isPlayingOnSlave = true;
                 }
             }
-            // Trigger Alt+S via C#
-            this.app.triggerZoomSharing(zoomMode);
+            // Trigger Alt+S via C# only if not already sharing
+            if (!this.app.isZoomSharingActive) {
+                this.app.triggerZoomSharing(zoomMode);
+                this.app.isZoomSharingActive = true;
+            }
         } else {
             // Normal behavior without Zoom
             this.app.status = 'playing';
@@ -192,6 +195,7 @@ class PlaybackManager {
             
             this.ipc.playbackControl({ action: 'stop' });
             this.app.triggerZoomSharing(false);
+            this.app.isZoomSharingActive = false;
             this.app.status = 'stopped';
 
             this.app.currentMedia = null;
