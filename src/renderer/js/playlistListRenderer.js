@@ -169,5 +169,42 @@ class PlaylistListRenderer {
             if (show) input.focus();
         }
     }
+
+    /**
+     * Renders a download item in the list.
+     */
+    renderDownloadItem(itemId, filename, itemsList) {
+        const li = DomUtils.create('li', { className: 'playlist-item-li downloading' });
+        li.dataset.id = itemId;
+        li.dataset.progress = 0;
+        
+        li.innerHTML = `
+            <div class="item-content">
+                <div class="item-thumbnail loading" style="--progress: 0;"></div>
+                <div class="item-info">
+                    <span class="item-title">${filename}</span>
+                    <span class="item-type">Baixando...</span>
+                </div>
+            </div>
+        `;
+        itemsList.appendChild(li);
+    }
+
+    /**
+     * Updates the download progress indicator.
+     */
+    updateDownloadProgress(itemId, percentage, itemsList) {
+        const li = DomUtils.query(`li[data-id="${itemId}"]`, itemsList);
+        if (li) {
+            li.dataset.progress = percentage;
+            const thumbnail = DomUtils.query('.item-thumbnail', li);
+            if (thumbnail) {
+                thumbnail.style.setProperty('--progress', percentage);
+                if (percentage >= 100) {
+                    thumbnail.classList.remove('loading');
+                }
+            }
+        }
+    }
 }
 window.PlaylistListRenderer = PlaylistListRenderer;
