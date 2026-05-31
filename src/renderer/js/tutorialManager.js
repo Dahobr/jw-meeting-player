@@ -109,14 +109,17 @@ const tutorialManager = {
             steps: [
                 { 
                     title: "Dicas de Uso", 
-                    content: `<p><b>Segurança:</b> O modo Standby é ideal para conferir se o conteúdo está correto antes de exibir para a audiência.</p>
-                              <p><b>Navegação:</b> O navegador integrado permite acesso a outros sites além do JW.ORG, funcionando como um navegador comum.</p>`, 
+                    content: `<p><b>Navegação:</b> O navegador integrado permite acesso a outros sites além do JW.ORG, funcionando como um navegador comum.</p>
+                              <p><b>Atenção com áudio no navegador integrado:</b> Ao reproduzir áudios no navegador integrado, o som será transmitido. Certifique-se de parar o áudio antes de iniciar a playlist, para evitar a sobreposição de sons.</p>
+                              <p><b>Reprodução direta:</b> Ao pressionar o botão de reprodução em um item, o vídeo ou imagem é exibido imediatamente, sem passar pelo modo de espera (standby).</p>
+                              <p><b>Modo Manual:</b> O modo manual permite operar sem o Zoom, ou compartilhar apenas partes específicas conforme necessário.</p>
+                              <p><b>Uso sem tela secundária:</b> É possível utilizar o player integrado ao Zoom sem a necessidade de conectar uma tela secundária.</p>`, 
                     action: null 
                 },
                 { 
                     title: "Solução de Problemas", 
-                    content: `<p><b>Problemas com o Zoom?</b> Verifique se o Zoom está aberto e se o atalho Alt+S está configurado como 'Atalho Global'.</p>
-                              <p><b>Item não aparece?</b> Verifique se o download foi concluído ou se há uma playlist selecionada.</p>`, 
+                    content: `<p><b>Problemas com o Zoom?</b> Verifique se o Zoom está aberto e se o atalho Alt+S está configurado como <a href="#" class="step-link" data-step="1">Atalho Global</a>.</p>
+                              <p><b>O conteúdo não aparece na tela?</b> Se o <b>JW Library</b> estiver aberto com a função de <b>segunda tela</b> ativada, ele pode estar sobrepondo e escondendo o conteúdo deste aplicativo. Certifique-se de desativar a segunda tela no JW Library ou fechar o programa antes de exibir a mídia.</p>`, 
                     action: null 
                 }
             ]
