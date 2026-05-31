@@ -859,6 +859,7 @@ body {
     cursor: pointer;
     margin-bottom: 0;
     height: 8px;
+    appearance: none;
     -webkit-appearance: none;
     background: rgba(255,255,255,0.1);
     border-radius: 4px;
