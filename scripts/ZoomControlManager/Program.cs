@@ -164,7 +164,7 @@ namespace ZoomControlManager
                     mouse_event(MOUSEEVENTF_LEFTDOWN, x, y, 0, 0);
                     mouse_event(MOUSEEVENTF_LEFTUP, x, y, 0, 0);
                     
-                    Thread.Sleep(200);
+                    Thread.Sleep(100);
                     SetCursorPos(originalPos.X, originalPos.Y);
 
                     Console.WriteLine("[C#] STARTED");
@@ -173,7 +173,7 @@ namespace ZoomControlManager
 
                 for (int i = 0; i < 200; i++) 
                 {
-                    Thread.Sleep(500);
+                    Thread.Sleep(200);
                     if (ColorsAreClose(GetColorAt(x, y), initialColor, 20))
                     {
                         if (mode == "semi")

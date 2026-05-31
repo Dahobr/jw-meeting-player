@@ -169,7 +169,6 @@ hr {
   --light-text: #ecf0f1;
   --border-color: #bdc3c7;
 
-  /* Z-index 定義 */
   --z-webview: 5;
   --z-sidebar: 20;
   --z-header: 30;
@@ -836,7 +835,7 @@ body {
 }
 
 .preview-controls {
-    position: relative; /* オーバ�Eレイの基準点 */
+    position: relative;
     display: flex;
     align-items: center;
     gap: 15px;
@@ -938,7 +937,7 @@ body {
   display: flex;
   justify-content: center;
   gap: 20px;
-  align-items: center; /* 垂直中央揃え */
+  align-items: center;
 }
 
 .app-version-info {

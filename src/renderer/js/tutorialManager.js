@@ -118,7 +118,7 @@ const tutorialManager = {
                 },
                 { 
                     title: "Solução de Problemas", 
-                    content: `<p><b>Problemas com o Zoom?</b> Verifique se o Zoom está aberto e se o atalho Alt+S está configurado como <a href="#" class="step-link" data-step="1">Atalho Global</a>.</p>
+                    content: `<p><b>Problemas com o Zoom?</b> Verifique se o Zoom está aberto e se o atalho Alt+S está configurado como Atalho Global.</p>
                               <p><b>O conteúdo não aparece na tela?</b> Se o <b>JW Library</b> estiver aberto com a função de <b>segunda tela</b> ativada, ele pode estar sobrepondo e escondendo o conteúdo deste aplicativo. Certifique-se de desativar a segunda tela no JW Library ou fechar o programa antes de exibir a mídia.</p>`, 
                     action: null 
                 }
