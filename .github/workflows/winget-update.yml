@@ -12,11 +12,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Submit PR to WinGet
+        env:
+          RELEASE_ASSETS_JSON: ${{ toJSON(github.event.release.assets) }}
         run: |
           $version = "${{ github.event.release.tag_name }}".TrimStart('v')
           
+          # 環境変数からJSONを読み込み、PowerShellオブジェクトに変換
+          $assets = $env:RELEASE_ASSETS_JSON | ConvertFrom-Json
+          
           # インストール版アセット（Setupを含む）のみを選択
-          $assets = ${{ toJSON(github.event.release.assets) }}
           $setupAsset = $assets | Where-Object { $_.name -like "*Setup*" } | Select-Object -First 1
           
           if (-not $setupAsset) {
