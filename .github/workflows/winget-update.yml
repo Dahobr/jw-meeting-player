@@ -14,14 +14,22 @@ jobs:
 
       - name: Submit PR to WinGet
         env:
-          RELEASE_ASSETS_JSON: ${{ toJSON(github.event.release.assets) }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WINGET_GITHUB_TOKEN: ${{ secrets.WINGET_GITHUB_TOKEN }}
         run: |
-          $version = "${{ github.event.release.tag_name }}".TrimStart('v')
-          
-          # 環境変数からJSONを読み込み、PowerShellオブジェクトに変換
-          $assets = $env:RELEASE_ASSETS_JSON | ConvertFrom-Json
+          # リリース情報がない場合(手動実行時)、最新リリースを取得
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+              Write-Host "Manual trigger detected. Fetching latest release info..."
+              $latestRelease = gh release view --json tagName,assets
+              $assetsJson = $latestRelease | ConvertFrom-Json | Select-Object -ExpandProperty assets | ConvertTo-Json -Compress
+              $version = (gh release view --json tagName --jq .tagName).TrimStart('v')
+          } else {
+              $assetsJson = '${{ toJSON(github.event.release.assets) }}'
+              $version = "${{ github.event.release.tag_name }}".TrimStart('v')
+          }
           
           # インストール版アセット（Setupを含む）のみを選択
+          $assets = $assetsJson | ConvertFrom-Json
           $setupAsset = $assets | Where-Object { $_.name -like "*Setup*" } | Select-Object -First 1
           
           if (-not $setupAsset) {
@@ -29,6 +37,7 @@ jobs:
               exit 1
           }
           
+          Write-Host "Using version: $version"
           Write-Host "Using asset: $($setupAsset.name)"
           
           # WinGetCreateのインストール
@@ -38,5 +47,5 @@ jobs:
           wingetcreate update Dahobr.JWMeetingPlayer `
             --version $version `
             --urls "$($setupAsset.browser_download_url)" `
-            --token "${{ secrets.WINGET_GITHUB_TOKEN }}" `
+            --token "$env:WINGET_GITHUB_TOKEN" `
             --submit
