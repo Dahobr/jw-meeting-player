@@ -181,7 +181,14 @@ app.whenReady().then(() => {
 
     ipcMain.handle('open-zoom-settings', () => {
         const { spawnSync } = require('child_process');
-        const scriptPath = path.join(__dirname, 'scripts', 'ZoomSettingsOpener', 'ZoomSettingsOpener.exe');
+        
+        // パッケージングされているかどうかでパスを切り替える
+        const scriptPath = app.isPackaged
+            ? path.join(process.resourcesPath, 'bin', 'ZoomSettingsOpener.exe')
+            : path.join(__dirname, 'scripts', 'ZoomSettingsOpener', 'ZoomSettingsOpener.exe');
+            
+        console.log(`[Main] ZoomSettingsOpener path: ${scriptPath}`);
+
         if (fs.existsSync(scriptPath)) {
             const result = spawnSync(scriptPath);
             const output = result.stdout.toString();
@@ -192,7 +199,7 @@ app.whenReady().then(() => {
                 return { success: false, message: 'Settings button not found.' };
             }
         } else {
-            return { success: false, message: 'Opener executable not found.' };
+            return { success: false, message: `Opener executable not found at: ${scriptPath}` };
         }
     });
 });
