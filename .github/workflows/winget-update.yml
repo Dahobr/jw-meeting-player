@@ -1,0 +1,37 @@
+name: Submit Update to WinGet
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  winget:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Submit PR to WinGet
+        run: |
+          $version = "${{ github.event.release.tag_name }}".TrimStart('v')
+          
+          # インストール版アセット（Setupを含む）のみを選択
+          $assets = ${{ toJSON(github.event.release.assets) }}
+          $setupAsset = $assets | Where-Object { $_.name -like "*Setup*" } | Select-Object -First 1
+          
+          if (-not $setupAsset) {
+              Write-Error "Setup asset not found!"
+              exit 1
+          }
+          
+          Write-Host "Using asset: $($setupAsset.name)"
+          
+          # WinGetCreateのインストール
+          winget install --id Microsoft.WingetCreate --accept-source-agreements --accept-package-agreements
+          
+          # 更新とPR送信
+          wingetcreate update Dahobr.JWMeetingPlayer `
+            --version $version `
+            --urls "$($setupAsset.browser_download_url)" `
+            --token "${{ secrets.WINGET_GITHUB_TOKEN }}" `
+            --submit

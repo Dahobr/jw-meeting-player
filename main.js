@@ -74,7 +74,7 @@ function createMainWindow() {
     initializeGlobalManagers(mainWindow);
 
     mainWindow.loadFile('src/renderer/index.html');
-    mainWindow.webContents.openDevTools();
+    // mainWindow.webContents.openDevTools();
     mainWindow.setMenuBarVisibility(false); // Hide menu bar by default
 
     // Auto-open tutorial
