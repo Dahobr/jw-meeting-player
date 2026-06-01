@@ -3,6 +3,7 @@ name: Submit Update to WinGet
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   winget:
