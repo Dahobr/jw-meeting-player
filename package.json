@@ -28,6 +28,10 @@
       {
         "from": "scripts/ZoomControlManager/ZoomControlManager.exe",
         "to": "bin/ZoomControlManager.exe"
+      },
+      {
+        "from": "scripts/ZoomSettingsOpener/ZoomSettingsOpener.exe",
+        "to": "bin/ZoomSettingsOpener.exe"
       }
     ],
     "publish": {
