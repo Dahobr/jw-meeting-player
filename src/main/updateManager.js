@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Log file path in the user data directory
-const logFile = path.join(app.getPath('userData'), 'update.log');
+const logFile = path.join(app.getPath('userData'), 'update-manager.log');
 
 /**
  * Simple logger that writes to both console and a file.
@@ -56,12 +56,12 @@ function init() {
     autoUpdater.on('update-downloaded', (info) => {
         log(`Update downloaded: ${info.version}. Ready to install.`);
         
-        // Notify the user that the update is ready.
+        // Notify the user that the update is ready (Translated to Portuguese).
         dialog.showMessageBox({
             type: 'info',
-            title: 'Update Available',
-            message: `A new version (${info.version}) has been downloaded and is ready to be installed. Would you like to restart now?`,
-            buttons: ['Later', 'Restart Now'],
+            title: 'Atualização Disponível',
+            message: `Uma nova versão (${info.version}) foi baixada e está pronta para ser instalada. Deseja reiniciar agora?`,
+            buttons: ['Mais tarde', 'Reiniciar Agora'],
             defaultId: 1
         }).then((result) => {
             if (result.response === 1) {
