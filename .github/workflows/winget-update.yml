@@ -58,5 +58,6 @@ jobs:
           wingetcreate update Dahobr.JWMeetingPlayer `
             --version $version `
             --urls "$assetUrl" `
+            --architecture x64 `
             --token "$env:WINGET_GITHUB_TOKEN" `
             --submit
