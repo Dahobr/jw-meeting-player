@@ -21,14 +21,20 @@ jobs:
           if ("${{ github.event_name }}" -eq "workflow_dispatch") {
               Write-Host "Manual trigger detected. Fetching latest release info..."
               $latestRelease = gh release view --json tagName,assets
+              Write-Host "Raw latestRelease JSON: $latestRelease"
               $assetsJson = $latestRelease | ConvertFrom-Json | Select-Object -ExpandProperty assets | ConvertTo-Json -Compress
+              Write-Host "Parsed assetsJson: $assetsJson"
               $version = (gh release view --json tagName --jq .tagName).TrimStart('v')
           } else {
               $assetsJson = '${{ toJSON(github.event.release.assets) }}'
               $version = "${{ github.event.release.tag_name }}".TrimStart('v')
           }
           
-          # インストール版アセット（Setupを含む）のみを選択
+          # JSONをPowerShellオブジェクトに変換
+          $assets = $assetsJson | ConvertFrom-Json
+          Write-Host "Assets found count: $($assets.Count)"
+          $assets | ForEach-Object { Write-Host "Asset name: $($_.name)" }
+          
           # インストール版アセット（Setupを含む）のみを選択
           $setupAsset = $assets | Where-Object { $_.name -like "*Setup*" } | Select-Object -First 1
 
