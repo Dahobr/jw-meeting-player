@@ -16,7 +16,7 @@
         "nsis",
         "portable"
       ],
-      "artifactName": "${name}-Setup-${version}.${ext}"
+      "artifactName": "${name}-${target}-${version}.${ext}"
     },
     "extraResources": [
       {
