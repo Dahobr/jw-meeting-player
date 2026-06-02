@@ -44,11 +44,8 @@ jobs:
           }
 
           # URLプロパティの確認と取得
-          # GitHub CLIのJSON出力では通常 browserDownloadUrl が使われます
-          $assetUrl = $setupAsset.browserDownloadUrl
-          if (-not $assetUrl) {
-              $assetUrl = $setupAsset.browser_download_url
-          }
+          # GitHub CLIのJSON出力で見えているのは "url" プロパティです
+          $assetUrl = $setupAsset.url
 
           Write-Host "Using version: $version"
           Write-Host "Using asset: $($setupAsset.name)"
