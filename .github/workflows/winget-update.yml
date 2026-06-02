@@ -29,23 +29,31 @@ jobs:
           }
           
           # インストール版アセット（Setupを含む）のみを選択
-          $assets = $assetsJson | ConvertFrom-Json
+          # インストール版アセット（Setupを含む）のみを選択
           $setupAsset = $assets | Where-Object { $_.name -like "*Setup*" } | Select-Object -First 1
-          
+
           if (-not $setupAsset) {
               Write-Error "Setup asset not found!"
               exit 1
           }
-          
+
+          # URLプロパティの確認と取得
+          # GitHub CLIのJSON出力では通常 browserDownloadUrl が使われます
+          $assetUrl = $setupAsset.browserDownloadUrl
+          if (-not $assetUrl) {
+              $assetUrl = $setupAsset.browser_download_url
+          }
+
           Write-Host "Using version: $version"
           Write-Host "Using asset: $($setupAsset.name)"
-          
+          Write-Host "Using URL: $assetUrl"
+
           # WinGetCreateのインストール
           winget install --id Microsoft.WingetCreate --accept-source-agreements --accept-package-agreements
-          
+
           # 更新とPR送信
           wingetcreate update Dahobr.JWMeetingPlayer `
             --version $version `
-            --urls "$($setupAsset.browser_download_url)" `
+            --urls "$assetUrl" `
             --token "$env:WINGET_GITHUB_TOKEN" `
             --submit
