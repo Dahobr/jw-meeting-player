@@ -13,10 +13,9 @@
     "icon": "jwmp-icon.png",
     "win": {
       "target": [
-        "nsis",
-        "portable"
+        "nsis"
       ],
-      "artifactName": "${name}-${target}-${version}.${ext}"
+      "artifactName": "${name}-Setup-${version}.${ext}"
     },
     "extraResources": [
       {
