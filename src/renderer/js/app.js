@@ -65,6 +65,38 @@ class App {
     }
 
     /**
+     * Handles the application close confirmation logic.
+     * Displays a reminder to create a new playlist if conditions are met.
+     */
+    async handleConfirmClose() {
+        const { playlists, currentPlaylistId } = this.store.getState();
+        const playlistIds = Object.keys(playlists);
+        
+        // Sort IDs by timestamp to ensure we get the latest one
+        const sortedIds = playlistIds.sort((a, b) => {
+            const timeA = parseInt(a.replace('playlist-', ''));
+            const timeB = parseInt(b.replace('playlist-', ''));
+            return timeA - timeB;
+        });
+        const lastPlaylistId = sortedIds[sortedIds.length - 1];
+        
+        // Reminder condition: No playlists, or currently viewing the latest playlist
+        const shouldRemind = (playlistIds.length === 0) || (currentPlaylistId === lastPlaylistId);
+
+        if (shouldRemind) {
+            const confirmed = await this.showCustomConfirm('Deseja criar uma nova playlist para a próxima reunião antes de sair?');
+            if (confirmed) {
+                this.ui.switchView('playlists');
+                if (this.ui.newPlaylistInput) this.ui.newPlaylistInput.focus();
+            } else {
+                this.ipc.readyToClose();
+            }
+        } else {
+            this.ipc.readyToClose();
+        }
+    }
+
+    /**
      * Initializes the application, setting up managers, listeners, and loading initial data.
      * @returns {Promise<void>}
      */
@@ -86,6 +118,11 @@ class App {
         this.status = 'stopped';
         this.updatePlaybackUI();
         this.startBoundsMonitoring();
+
+        this.ipc.onConfirmClose(() => {
+            this.handleConfirmClose();
+        });
+
 
         uiManager.onPrevious = () => {
             const { playlists, currentPlaylistId } = app.store.getState();

@@ -63,24 +63,27 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // --- Displays ---
   getDisplays: () => ipcRenderer.invoke('get-displays'),
-  setTargetDisplay: (displayId) => ipcRenderer.send('set-target-display', displayId),
   requestDisplayStatus: () => ipcRenderer.invoke('request-display-status'),
+  setTargetDisplay: (displayId) => ipcRenderer.send('set-target-display', displayId),
   onDisplaysChanged: (callback) => ipcRenderer.on('displays-changed', () => callback()),
   onDisplayStatus: (callback) => ipcRenderer.on('display-status', (_event, status) => callback(status)),
   saveBrowserImage: (data, url) => ipcRenderer.send('save-browser-image', data, url),
   onRequestSaveImage: (callback) => ipcRenderer.on('request-save-browser-image', (_event, url) => callback(url)),
 
+  // --- App Closure & Reminders ---
+  onConfirmClose: (callback) => ipcRenderer.on('confirm-close', () => callback()),
+  readyToClose: () => ipcRenderer.send('ready-to-close'),
+  log: (message) => ipcRenderer.send('renderer-log', message),
+
   // --- Config Management ---
   getConfig: () => ipcRenderer.invoke('get-config'),
-  updateConfig: (config) => ipcRenderer.invoke('update-config', config),
+  updateConfig: (config) => ipcRenderer.invoke('update-config', config)
 });
 
 // Set default zoom factor to ensure consistency
 webFrame.setZoomFactor(1.0);
 
 window.addEventListener('click', (e) => {
-    console.log('[Preload Debug] Click detected! target:', e.target);        
-
     // Attempt to find an anchor tag in the path or parent chain
     let target = e.target.closest('a');
 
@@ -90,13 +93,11 @@ window.addEventListener('click', (e) => {
     }
 
     if (target) {
-        console.log(`[Preload Debug] Link found: "${target.href}", text: "${target.textContent}"`);
         if (target.href && target.href.includes('/r5/lp-')) {
             const text = target.textContent;
             // Match "Cântico" or "Cantico"
             const match = text.match(/C[âã]ntico\s*(\d+)/i);
             if (match) {
-                console.log(`[Preload] Song match found: ${match[1]}`);      
                 ipcRenderer.send('wol-song-link-clicked', match[1]);
 
                 // Stop the default site navigation

@@ -164,6 +164,19 @@ class IPCClient {
         window.electronAPI.onDisplayStatus(callback);
     }
 
+    // --- App Closure & Reminders ---
+    onConfirmClose(callback) {
+        window.electronAPI.onConfirmClose(callback);
+    }
+
+    readyToClose() {
+        window.electronAPI.readyToClose();
+    }
+
+    log(message) {
+        window.electronAPI.log(message);
+    }
+
     // --- Config Management ---
     async getConfig() {
         return await window.electronAPI.getConfig();

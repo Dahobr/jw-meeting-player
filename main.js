@@ -108,6 +108,20 @@ function createMainWindow() {
     // Initialize SiteView and ContextMenu
     siteViewManager.init(mainWindow);
 
+    // --- App Closure & Reminders (Main Process Interception) ---
+    let forceClose = false;
+    mainWindow.on('close', (e) => {
+        if (forceClose) return;
+        e.preventDefault();
+        mainWindow.webContents.send('confirm-close');
+    });
+
+    ipcMain.on('ready-to-close', () => {
+        forceClose = true;
+        if (mainWindow) mainWindow.close();
+    });
+    // -----------------------------------------------------------
+
     // Update references for managers
     displayManager.setMainWindow(mainWindow);
     downloadManager.init(mainWindow);
