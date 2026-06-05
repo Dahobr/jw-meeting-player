@@ -615,18 +615,28 @@ class UIManager {
         msgEl.textContent = message;
         modal.style.display = 'flex';
 
+        const handleConfirm = () => { console.log('[UI] Sim button clicked'); close(true); };
+        const handleCancel = () => { console.log('[UI] Não button clicked'); close(false); };
+        const handleOverlayClick = (e) => { 
+            if (e.target === modal) {
+                console.log('[UI] Overlay clicked');
+                close(false); 
+            }
+        };
+
+        btnConfirm.addEventListener('click', handleConfirm);
+        btnCancel.addEventListener('click', handleCancel);
+        modal.addEventListener('click', handleOverlayClick);
+
         const close = (result) => {
             modal.style.display = 'none';
-            btnConfirm.onclick = null;
-            btnCancel.onclick = null;
-            modal.onclick = null;
+            btnConfirm.removeEventListener('click', handleConfirm);
+            btnCancel.removeEventListener('click', handleCancel);
+            modal.removeEventListener('click', handleOverlayClick);
+            
             if (result) onConfirm();
             else onCancel();
         };
-
-        btnConfirm.onclick = () => close(true);
-        btnCancel.onclick = () => close(false);
-        modal.onclick = (e) => { if (e.target === modal) close(false); };
         return true;
     }
 

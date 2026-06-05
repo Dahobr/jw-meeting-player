@@ -77,9 +77,14 @@ class EventHandler {
         });
 
         this.ipc.onLoadMedia((data) => {
+            console.log('[EventHandler] onLoadMedia received');
             this.app.currentMedia = data;
             const isAuto = (this.ui.zoomModeSelect && this.ui.zoomModeSelect.value === 'auto');
             
+            const { currentPlaylistId } = this.store.getState();
+            this.app.lastPlaylistIdPlayed = currentPlaylistId;
+            console.log(`[EventHandler] Recorded lastPlaylistIdPlayed: ${this.app.lastPlaylistIdPlayed}`);
+
             // Only force playing status if NOT waiting for Zoom (Auto-mode wait)
             if (!isAuto) {
                 this.app.status = 'playing';

@@ -65,6 +65,52 @@ class App {
     }
 
     /**
+     * Handles the application close confirmation logic.
+     * Displays a reminder to create a new playlist if conditions are met.
+     */
+    async handleConfirmClose() {
+        const log = (msg) => {
+            console.log(msg);
+            this.ipc.log(msg); // IPC経由で保存依頼
+        };
+
+        log('[App] handleConfirmClose called (Simplified Logic)');
+        const { playlists, currentPlaylistId } = this.store.getState();
+        const playlistIds = Object.keys(playlists);
+        
+        // Sort IDs by timestamp to ensure we get the latest one
+        const sortedIds = playlistIds.sort((a, b) => {
+            const timeA = parseInt(a.replace('playlist-', ''));
+            const timeB = parseInt(b.replace('playlist-', ''));
+            return timeA - timeB;
+        });
+        const lastPlaylistId = sortedIds[sortedIds.length - 1];
+        
+        log(`[App] [DEBUG] Last created playlist ID: ${lastPlaylistId}`);
+        log(`[App] [DEBUG] Currently active playlist ID: ${currentPlaylistId}`);
+
+        // Reminder condition: No playlists, or currently viewing the latest playlist
+        const shouldRemind = (playlistIds.length === 0) || (currentPlaylistId === lastPlaylistId);
+        log(`[App] [DEBUG] Final shouldRemind: ${shouldRemind}`);
+
+        if (shouldRemind) {
+            log('[App] Should remind, calling showCustomConfirm');
+            const confirmed = await this.showCustomConfirm('Deseja criar uma nova playlist para a próxima reunião antes de sair?');
+            log(`[App] Reminder modal result: ${confirmed}`);
+            if (confirmed) {
+                this.ui.switchView('playlists');
+                if (this.ui.newPlaylistInput) this.ui.newPlaylistInput.focus();
+            } else {
+                log('[App] User declined reminder, sending ready-to-close');
+                this.ipc.readyToClose();
+            }
+        } else {
+            log('[App] No reminder needed, sending ready-to-close');
+            this.ipc.readyToClose();
+        }
+    }
+
+    /**
      * Initializes the application, setting up managers, listeners, and loading initial data.
      * @returns {Promise<void>}
      */
@@ -86,6 +132,13 @@ class App {
         this.status = 'stopped';
         this.updatePlaybackUI();
         this.startBoundsMonitoring();
+
+        console.log('[App] Setting up onConfirmClose listener');
+        this.ipc.onConfirmClose(() => {
+            console.log('[App] Received confirm-close event from Main');
+            this.handleConfirmClose();
+        });
+
 
         uiManager.onPrevious = () => {
             const { playlists, currentPlaylistId } = app.store.getState();
