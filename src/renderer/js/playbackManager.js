@@ -71,6 +71,7 @@ class PlaybackManager {
      */
     playMedia(item) {
         console.log(`[PlaybackManager] playMedia called for: ${item.title || item.filename}`);
+        this.app.hasPlayedAnything = true;
         this.app.currentMedia = item;
         this.app.standbyItemId = null;
         
