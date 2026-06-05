@@ -725,9 +725,12 @@ body {
 
 .webview-container {
   flex: 1;
-  background-color: transparent; /* Changed from #000 to see SiteView */
+  background-color: transparent;
   z-index: var(--z-webview);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
 }
 
 .menu-blur-overlay {
