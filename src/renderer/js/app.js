@@ -29,6 +29,7 @@ class App {
         this.pendingCanPlayListener = null; 
         this.zoomCoords = null;
         this.lastStagedItemPerPlaylist = {};
+        this.hasPlayedAnything = false;
     }
 
     /**
@@ -80,8 +81,12 @@ class App {
         });
         const lastPlaylistId = sortedIds[sortedIds.length - 1];
         
-        // Reminder condition: No playlists, or currently viewing the latest playlist
-        const shouldRemind = (playlistIds.length === 0) || (currentPlaylistId === lastPlaylistId);
+        // Reminder condition:
+        // - If played anything: Remind only if viewing the latest playlist.
+        // - If NOT played anything: Remind if there is 1 or fewer playlists.
+        const shouldRemind = this.hasPlayedAnything 
+            ? (currentPlaylistId === lastPlaylistId)
+            : (playlistIds.length <= 1);
 
         if (shouldRemind) {
             const confirmed = await this.showCustomConfirm('Deseja criar uma nova playlist para a próxima reunião antes de sair?');
