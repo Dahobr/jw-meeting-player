@@ -74,7 +74,7 @@ function createMainWindow() {
     initializeGlobalManagers(mainWindow);
 
     mainWindow.loadFile('src/renderer/index.html');
-    mainWindow.webContents.openDevTools();
+    // mainWindow.webContents.openDevTools();
     mainWindow.setMenuBarVisibility(false); // Hide menu bar by default
 
     // Auto-open tutorial
@@ -109,26 +109,14 @@ function createMainWindow() {
     siteViewManager.init(mainWindow);
 
     // --- App Closure & Reminders (Main Process Interception) ---
-    ipcMain.on('renderer-log', (event, message) => {
-        const logPath = path.join(app.getPath('userData'), 'app-debug.log');
-        console.log(`[Main] Writing log to: ${logPath}`);
-        fs.appendFileSync(logPath, `[Renderer] ${new Date().toISOString()} ${message}\n`);
-    });
-
     let forceClose = false;
     mainWindow.on('close', (e) => {
-        console.log(`[Main] Window close event triggered. forceClose: ${forceClose}`);
-        if (forceClose) {
-            console.log('[Main] forceClose is true, allowing close');
-            return;
-        }
-        console.log('[Main] Preventing default close, asking renderer');
+        if (forceClose) return;
         e.preventDefault();
         mainWindow.webContents.send('confirm-close');
     });
 
     ipcMain.on('ready-to-close', () => {
-        console.log('[Main] Received ready-to-close from renderer');
         forceClose = true;
         if (mainWindow) mainWindow.close();
     });
