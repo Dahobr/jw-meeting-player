@@ -186,6 +186,14 @@ class EventHandler {
                 this.app.updatePlaybackUI();
             },
 
+            onPlaylistShare: (id) => {
+                const { playlists } = this.store.getState();
+                const playlist = playlists[id];
+                if (playlist) {
+                    this.ipc.showPlaylistContextMenu({ playlist });
+                }
+            },
+
             onPlaylistDelete: async (id) => {
                 if (await this.app.showCustomConfirm('Deseja realmente excluir esta playlist?')) {
                     const itemsToDelete = this.store.deletePlaylist(id);
