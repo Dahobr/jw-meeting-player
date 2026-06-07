@@ -157,19 +157,28 @@ class PlaylistStore {
    * @param {Object} item - The item object to add.
    */
   addItem(playlistId, item) {
+    console.trace('[PlaylistStore] addItem called from:');
     const targetId = playlistId || this.currentPlaylistId;
+    console.log(`[PlaylistStore] addItem ID: ${item ? item.id : 'undefined'}, Status: ${item ? item.status : 'undefined'}`);
     if (this.playlists[targetId]) {
+      // Duplicate check: skip if item ID already exists
+      const existing = this.playlists[targetId].items.find(i => i && i.id === (item ? item.id : null));
+      if (existing) {
+        console.warn(`[PlaylistStore] Item already exists: ${item.id}. Skipping.`);
+        return;
+      }
+      
       // Ensure the item has a unique ID for tracking
-      if (!item.id) {
+      if (item && !item.id) {
         item.id = `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       }
-      if (!item.playlistId) {
+      if (item && !item.playlistId) {
         item.playlistId = targetId;
       }
-      if (!item.status) {
+      if (item && !item.status) {
         item.status = 'completed';
       }
-      if (item.status === 'downloading' && item.progress === undefined) {
+      if (item && item.status === 'downloading' && item.progress === undefined) {
         item.progress = 0;
       }
       this.playlists[targetId].items.push(item);
@@ -238,10 +247,13 @@ class PlaylistStore {
    * @param {Object} updates 
    */
   updateItem(itemId, updates) {
+    console.log(`[PlaylistStore] updateItem ID: ${itemId}, Updates:`, updates);
     const result = this._findItem(itemId);
     if (result) {
       Object.assign(result.item, updates);
       this._notify();
+    } else {
+      console.error(`[PlaylistStore] updateItem FAILED: Item ID ${itemId} not found.`);
     }
   }
 

@@ -14,6 +14,10 @@ class IPCClient {
     }
 
     // --- Downloads ---
+    downloadURL(url) {
+        window.electronAPI.downloadURL(url);
+    }
+
     onDownloadStarted(callback) {
         window.electronAPI.onDownloadStarted(callback);
     }
@@ -90,6 +94,10 @@ class IPCClient {
 
     onShareResult(callback) {
         window.electronAPI.onShareResult(callback);
+    }
+
+    onPlaylistImported(callback) {
+        window.electronAPI.onPlaylistImported(callback);
     }
 
     // --- Storage ---

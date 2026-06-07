@@ -43,25 +43,33 @@ class PlaylistListRenderer {
                 }
             });
             
-            DomUtils.query('.btn-edit-playlist', div).addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.togglePlaylistEdit(id);
-            });
+            const btnEdit = DomUtils.query('.btn-edit-playlist', div);
+            if (btnEdit) {
+                btnEdit.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.togglePlaylistEdit(id);
+                });
+            }
 
-            DomUtils.query('.btn-delete-playlist', div).addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.callbacks.onPlaylistDelete(id);
-            });
+            const btnDelete = DomUtils.query('.btn-delete-playlist', div);
+            if (btnDelete) {
+                btnDelete.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.callbacks.onPlaylistDelete(id);
+                });
+            }
             
             const input = DomUtils.query('.edit-playlist-input', div);
-            input.addEventListener('click', (e) => e.stopPropagation());
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    this.callbacks.onPlaylistRename(id, input.value);
-                    this.togglePlaylistEdit(id, false);
-                }
-            });
-            input.addEventListener('blur', () => this.togglePlaylistEdit(id, false));
+            if (input) {
+                input.addEventListener('click', (e) => e.stopPropagation());
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.callbacks.onPlaylistRename(id, input.value);
+                        this.togglePlaylistEdit(id, false);
+                    }
+                });
+                input.addEventListener('blur', () => this.togglePlaylistEdit(id, false));
+            }
             
             this.container.appendChild(div);
         });
@@ -93,30 +101,32 @@ class PlaylistListRenderer {
                         </div>
                     </div>
                 `;
-            } else {
-                li.innerHTML = `
-                    <div class="item-content">
-                        <div class="item-thumbnail">
-                            ${item.thumbnailData ? `<img src="${item.thumbnailData}" alt="thumb">` : `<div class="placeholder">${item.mediaType === 'video' ? '🎬' : '🖼️'}</div>`}
-                        </div>
-                        <div class="item-info">
-                            <span class="item-title" id="item-name-${item.id}" title="${item.title || item.filename}">${item.title || item.filename}</span>
-                            <input type="text" class="edit-item-input" id="item-input-${item.id}" value="${item.title || item.filename}" style="display: none;">
-                            <span class="item-type">${item.mediaType}</span>
-                        </div>
-                        <div class="item-actions">
-                            <button class="btn-play-item btn-item-action" title="Reproduzir">${this.icons.play}</button>
-                            <div class="item-more-actions" data-id="${item.id}">
-                                ⋮
-                                <div class="item-dropdown" id="dropdown-${item.id}">
-                                    <div class="item-dropdown-item btn-edit-item">${this.icons.edit} Renomear</div>
-                                    <div class="item-dropdown-item btn-delete-item">${this.icons.trash} Excluir</div>
-                                </div>
+                itemsList.appendChild(li);
+                return;
+            }
+
+            li.innerHTML = `
+                <div class="item-content">
+                    <div class="item-thumbnail">
+                        ${item.thumbnailData ? `<img src="${item.thumbnailData}" alt="thumb">` : `<div class="placeholder">${item.mediaType === 'video' ? '🎬' : '🖼️'}</div>`}
+                    </div>
+                    <div class="item-info">
+                        <span class="item-title" id="item-name-${item.id}" title="${item.title || item.filename}">${item.title || item.filename}</span>
+                        <input type="text" class="edit-item-input" id="item-input-${item.id}" value="${item.title || item.filename}" style="display: none;">
+                        <span class="item-type">${item.mediaType}</span>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-play-item btn-item-action" title="Reproduzir">${this.icons.play}</button>
+                        <div class="item-more-actions" data-id="${item.id}">
+                            ⋮
+                            <div class="item-dropdown" id="dropdown-${item.id}">
+                                <div class="item-dropdown-item btn-edit-item">${this.icons.edit} Renomear</div>
+                                <div class="item-dropdown-item btn-delete-item">${this.icons.trash} Excluir</div>
                             </div>
                         </div>
                     </div>
-                `;
-            }
+                </div>
+            `;
             
             li.addEventListener('click', (e) => {
                 if (!e.target.closest('button') && !e.target.closest('.item-more-actions') && !e.target.closest('input')) {

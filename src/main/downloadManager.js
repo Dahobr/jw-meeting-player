@@ -113,6 +113,7 @@ class DownloadManager {
         const filename = item.getFilename();
         const url = item.getURL();
         const downloadId = `${url}-${filename}`;
+        console.log(`[DownloadManager] Generating Download ID: ${downloadId}`);
 
         if (this.activeDownloads.has(downloadId)) {
             console.log(`[DownloadManager] Skipping duplicate download request: ${filename}`);
@@ -173,6 +174,7 @@ class DownloadManager {
 
             this.mainWindow.webContents.send('download-started', { filename: finalFilename, id: downloadId });
             item.setSavePath(finalFilePath);
+            item.downloadId = downloadId;
             this.startTimeout(downloadId, item, finalFilename);
             
             item.on('updated', (event, state) => {
@@ -180,24 +182,25 @@ class DownloadManager {
                     const received = item.getReceivedBytes();
                     const total = item.getTotalBytes();
                     const progress = total > 0 ? Math.round((received / total) * 100) : 0;
-                    this.mainWindow.webContents.send('download-progress', { id: downloadId, progress, filename });
+                    this.mainWindow.webContents.send('download-progress', { id: item.downloadId, progress, filename });
                     
-                    const previousReceived = this.lastReceivedBytes.get(downloadId) || 0;
+                    const previousReceived = this.lastReceivedBytes.get(item.downloadId) || 0;
                     if (received > previousReceived) {
-                        this.startTimeout(downloadId, item, finalFilename);
-                        this.lastReceivedBytes.set(downloadId, received);
+                        this.startTimeout(item.downloadId, item, finalFilename);
+                        this.lastReceivedBytes.set(item.downloadId, received);
                     }
                 }
             });
 
             item.on('done', async (event, state) => {
-                this.activeDownloads.delete(downloadId);
-                this.clearTimeout(downloadId);
-                this.lastReceivedBytes.delete(downloadId);
+                this.activeDownloads.delete(item.downloadId);
+                this.clearTimeout(item.downloadId);
+                this.lastReceivedBytes.delete(item.downloadId);
                 if (state === 'completed') {
                     console.log(`[DownloadManager] Download complete: ${finalFilePath}`);
                     const result = await this.extractMediaInfo(finalFilePath);
                     this.mainWindow.webContents.send('download-complete', { 
+                        id: item.downloadId,
                         filename: finalFilename, 
                         filePath: finalFilePath, 
                         type: fileExt,
@@ -207,7 +210,7 @@ class DownloadManager {
                     });
                 } else {
                     console.error(`[DownloadManager] Download failed: ${state}`);
-                    this.mainWindow.webContents.send('download-error', { id: downloadId, message: `Download failed: ${state}`, filename: finalFilename });
+                    this.mainWindow.webContents.send('download-error', { id: item.downloadId, message: `Download failed: ${state}`, filename: finalFilename });
                 }
             });
         } else {

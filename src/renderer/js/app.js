@@ -288,41 +288,33 @@ class App {
 
         this.ipc.onDownloadStarted((data) => {
             this.ui.showNotification(`Download iniciado: ${data.filename}`);
-            this.ui.playlistRenderer.renderDownloadItem(data.id, data.filename, this.ui.itemsList);
+            const { currentPlaylistId } = this.store.getState();
+            this.store.addItem(currentPlaylistId, {
+                id: data.id, // Use the unique ID from download
+                filename: data.filename,
+                title: data.filename,
+                status: 'downloading',
+                progress: 0
+            });
         });
 
         this.ipc.onDownloadProgress((data) => {
-            this.ui.playlistRenderer.updateDownloadProgress(data.id, data.progress, this.ui.itemsList);
+            this.store.updateItem(data.id, { progress: data.progress });
         });
 
         this.ipc.onDownloadComplete((data) => {
             // Remove the download item UI
             this.ui.playlistRenderer.removeDownloadItem(data.id, this.ui.itemsList);
 
-            const { currentPlaylistId, playlists } = this.store.getState();
-            const playlist = playlists[currentPlaylistId];
-            
-            // Check if item already exists in the current playlist (e.g. from import)
-            const existingItem = playlist ? playlist.items.find(item => item.sourceUrl === data.sourceUrl) : null;
-            
-            if (existingItem) {
-                console.log(`[App] Updating existing item with downloaded file: ${data.filename}`);
-                this.store.updateItem(existingItem.id, {
-                    filename: data.filename,
-                    filePath: data.filePath,
-                    thumbnailData: data.thumbnailData,
-                    title: data.title || existingItem.title || data.filename
-                });
-            } else {
-                this.store.addItem(currentPlaylistId, {
-                    filename: data.filename,
-                    filePath: data.filePath,
-                    mediaType: data.type === '.mp4' ? 'video' : 'image',
-                    title: data.title || data.filename,
-                    thumbnailData: data.thumbnailData,
-                    sourceUrl: data.sourceUrl
-                });
-            }
+            // Update the item status to completed
+            this.store.updateItem(data.id, {
+                status: 'completed',
+                filePath: data.filePath,
+                mediaType: data.type === '.mp4' ? 'video' : 'image',
+                title: data.title || data.filename,
+                thumbnailData: data.thumbnailData,
+                sourceUrl: data.sourceUrl
+            });
         });
 
         this.ipc.onDownloadError((data) => {
