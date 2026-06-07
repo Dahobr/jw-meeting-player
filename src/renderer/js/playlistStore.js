@@ -148,6 +148,9 @@ class PlaylistStore {
       if (!item.id) {
         item.id = `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       }
+      if (!item.playlistId) {
+        item.playlistId = targetId;
+      }
       this.playlists[targetId].items.push(item);
       this._notify();
     }
