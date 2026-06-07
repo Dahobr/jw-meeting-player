@@ -116,6 +116,7 @@ class App {
         this.store.subscribe((state) => this.handleStoreChange(state));
         this.eventHandler.init();
         this.setupPreviewListeners();
+        this.setupIPCListeners();
 
         const data = await this.ipc.loadPlaylists();
         this.store.init(data);
@@ -295,21 +296,50 @@ class App {
         });
 
         this.ipc.onDownloadComplete((data) => {
-            const { currentPlaylistId } = this.store.getState();
-            this.store.addItem(currentPlaylistId, {
-                filename: data.filename,
-                filePath: data.filePath,
-                mediaType: data.type === '.mp4' ? 'video' : 'image',
-                title: data.title || data.filename,
-                thumbnailData: data.thumbnailData,
-                sourceUrl: data.sourceUrl
-            });
+            const { currentPlaylistId, playlists } = this.store.getState();
+            const playlist = playlists[currentPlaylistId];
+            
+            // Check if item already exists in the current playlist (e.g. from import)
+            const existingItem = playlist ? playlist.items.find(item => item.sourceUrl === data.sourceUrl) : null;
+            
+            if (existingItem) {
+                console.log(`[App] Updating existing item with downloaded file: ${data.filename}`);
+                this.store.updateItem(existingItem.id, {
+                    filename: data.filename,
+                    filePath: data.filePath,
+                    thumbnailData: data.thumbnailData,
+                    title: data.title || existingItem.title || data.filename
+                });
+            } else {
+                this.store.addItem(currentPlaylistId, {
+                    filename: data.filename,
+                    filePath: data.filePath,
+                    mediaType: data.type === '.mp4' ? 'video' : 'image',
+                    title: data.title || data.filename,
+                    thumbnailData: data.thumbnailData,
+                    sourceUrl: data.sourceUrl
+                });
+            }
         });
 
         this.ipc.onDownloadError((data) => {
             if (this.ui && typeof this.ui.showError === 'function') {
                 this.ui.showError(data.id, data.message, data.filename);
             }
+        });
+
+        this.ipc.onPlaylistImported((playlist) => {
+            this.ui.showNotification(`Playlist "${playlist.name}" importada.`);
+            this.store.addPlaylistFromData(playlist);
+            this.ui.onPlaylistSelect(playlist.id);
+
+            // Trigger background download for videos missing local filePath
+            playlist.items.forEach(item => {
+                if (item.mediaType === 'video' && !item.filePath && item.sourceUrl) {
+                    console.log(`[App] Triggering background download for: ${item.title}`);
+                    this.ipc.downloadURL(item.sourceUrl);
+                }
+            });
         });
 
         this.ipc.onShareResult((result) => {

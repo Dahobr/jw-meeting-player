@@ -10,6 +10,7 @@ const path = require('path');
 const mm = require('music-metadata');
 const AdmZip = require('adm-zip');
 const storageManager = require('./storageManager');
+const shareManager = require('./shareManager');
 
 class DownloadManager {
     constructor() {
@@ -39,6 +40,14 @@ class DownloadManager {
         ipcMain.on('set-active-playlist', (event, playlistId) => {
             this.activePlaylistId = playlistId;
             console.log(`[DownloadManager] Active playlist set to: ${playlistId}`);
+        });
+
+        ipcMain.removeAllListeners('download-url');
+        ipcMain.on('download-url', (event, url) => {
+            if (this.mainWindow) {
+                console.log(`[DownloadManager] Triggering download for URL: ${url}`);
+                this.mainWindow.webContents.downloadURL(url);
+            }
         });
 
         if (mainWindow && mainWindow.webContents && mainWindow.webContents.session) {
@@ -123,11 +132,45 @@ class DownloadManager {
         }
 
         const finalFilename = path.basename(finalFilePath);
-        const allowedFileTypes = ['.mp4', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
+        const allowedFileTypes = ['.mp4', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.jwmp'];
 
         console.log(`[DownloadManager] Download requested: ${filename} -> ${finalFilename}`);
 
         if (allowedFileTypes.includes(path.extname(finalFilename).toLowerCase())) {
+            const isPlaylist = path.extname(finalFilename).toLowerCase() === '.jwmp';
+            
+            if (isPlaylist) {
+                // Download to a temporary location for importing
+                const tempPath = path.join(app.getPath('temp'), `import_${Date.now()}.jwmp`);
+                item.setSavePath(tempPath);
+                
+                item.on('done', async (event, state) => {
+                    this.activeDownloads.delete(downloadId);
+                    this.clearTimeout(downloadId);
+                    this.lastReceivedBytes.delete(downloadId);
+                    
+                    if (state === 'completed') {
+                        console.log(`[DownloadManager] Playlist download complete: ${tempPath}`);
+                        const result = await shareManager.importPlaylist(tempPath);
+                        if (result.success) {
+                            this.mainWindow.webContents.send('playlist-imported', result.playlist);
+                        } else {
+                            this.mainWindow.webContents.send('download-error', { 
+                                id: downloadId, 
+                                message: `Falha ao importar playlist: ${result.error}`, 
+                                filename: finalFilename 
+                            });
+                        }
+                        // Cleanup temp file
+                        try { if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath); } catch(e) {}
+                    } else {
+                        console.error(`[DownloadManager] Playlist download failed: ${state}`);
+                        this.mainWindow.webContents.send('download-error', { id: downloadId, message: `Download failed: ${state}`, filename: finalFilename });
+                    }
+                });
+                return;
+            }
+
             this.mainWindow.webContents.send('download-started', { filename: finalFilename, id: downloadId });
             item.setSavePath(finalFilePath);
             this.startTimeout(downloadId, item, finalFilename);
