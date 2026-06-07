@@ -47,17 +47,6 @@ class EventHandler {
             this.ui.playlistRenderer.updateDownloadProgress(data.id, data.progress, this.ui.itemsList);
         });
 
-        this.ipc.onDownloadComplete((data) => {
-            const { currentPlaylistId } = this.store.getState();
-            this.store.addItem(currentPlaylistId, {
-                filename: data.filename,
-                filePath: data.filePath,
-                mediaType: data.type === '.mp4' ? 'video' : 'image',
-                title: data.title || data.filename,
-                thumbnailData: data.thumbnailData
-            });
-        });
-
         this.ipc.onDownloadError((data) => {
             console.log('[EventHandler] Download error received:', data);
             if (this.ui && typeof this.ui.showError === 'function') {
