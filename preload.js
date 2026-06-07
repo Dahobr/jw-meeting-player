@@ -55,6 +55,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getHelpContent: () => ipcRenderer.invoke('get-help-content'),
   getAboutContent: () => ipcRenderer.invoke('get-about-content'),
   deleteFile: (filePath) => ipcRenderer.invoke('delete-file', filePath),
+  deletePlaylistFolder: (playlistId) => ipcRenderer.invoke('delete-playlist-folder', playlistId),
 
   // --- File System Dialogs ---
   openDownloadFolder: () => ipcRenderer.invoke('open-download-folder'),

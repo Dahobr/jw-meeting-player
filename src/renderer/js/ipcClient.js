@@ -121,6 +121,10 @@ class IPCClient {
         return await window.electronAPI.deleteFile(filePath);
     }
 
+    async deletePlaylistFolder(playlistId) {
+        return await window.electronAPI.deletePlaylistFolder(playlistId);
+    }
+
     // --- File System Dialogs ---
     async openDownloadFolder() {
         return await window.electronAPI.openDownloadFolder();
