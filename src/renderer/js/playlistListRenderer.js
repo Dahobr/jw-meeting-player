@@ -10,7 +10,8 @@ class PlaylistListRenderer {
         this.icons = {
             play: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
             edit: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>',
-            trash: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>'
+            trash: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>',
+            share: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>'
         };
     }
 
@@ -25,39 +26,51 @@ class PlaylistListRenderer {
                     <span class="playlist-meta">${playlist.items.length} items</span>
                 </div>
                 <div class="playlist-item-actions">
-                  <button class="btn-edit-playlist" data-id="${id}" title="Renomear">${this.icons.edit}</button>
-                  <button class="btn-delete-playlist" data-id="${id}" title="Excluir">${this.icons.trash}</button>
+                    <div class="item-more-actions" data-id="${id}">
+                        ⋮
+                        <div class="item-dropdown" id="dropdown-${id}">
+                            <div class="item-dropdown-item btn-edit-playlist">${this.icons.edit} Renomear</div>
+                            <div class="item-dropdown-item btn-share-playlist">${this.icons.share} Compartilhar</div>
+                            <div class="item-dropdown-item btn-delete-playlist">${this.icons.trash} Excluir</div>
+                        </div>
+
+                    </div>
                 </div>
             `;
             
             div.addEventListener('click', (e) => {
-                if (!e.target.closest('button') && !e.target.closest('input')) {
+                if (!e.target.closest('.item-more-actions') && !e.target.closest('input')) {
                     this.callbacks.onPlaylistSelect(id);
                 }
             });
-
-            div.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                if (this.callbacks.onPlaylistContextMenu) {
-                    this.callbacks.onPlaylistContextMenu(id, playlist);
-                }
-            });
             
-            const btnEdit = DomUtils.query('.btn-edit-playlist', div);
-            if (btnEdit) {
-                btnEdit.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.togglePlaylistEdit(id);
+            const moreActions = DomUtils.query('.item-more-actions', div);
+            const dropdown = DomUtils.query('.item-dropdown', div);
+            moreActions.addEventListener('click', (e) => {
+                e.stopPropagation();
+                DomUtils.queryAll('.item-dropdown.show', this.container).forEach(d => {
+                    if (d !== dropdown) d.classList.remove('show');
                 });
-            }
+                dropdown.classList.toggle('show');
+            });
 
-            const btnDelete = DomUtils.query('.btn-delete-playlist', div);
-            if (btnDelete) {
-                btnDelete.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.callbacks.onPlaylistDelete(id);
-                });
-            }
+            DomUtils.query('.btn-share-playlist', div).addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.remove('show');
+                this.callbacks.onPlaylistShare(id);
+            });
+
+            DomUtils.query('.btn-edit-playlist', div).addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.remove('show');
+                this.togglePlaylistEdit(id);
+            });
+
+            DomUtils.query('.btn-delete-playlist', div).addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.remove('show');
+                this.callbacks.onPlaylistDelete(id);
+            });
             
             const input = DomUtils.query('.edit-playlist-input', div);
             if (input) {
