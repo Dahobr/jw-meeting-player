@@ -237,6 +237,16 @@ class StorageManager {
     getDownloadsDir() {
         return this.downloadsDir;
     }
+
+    getPlaylistDownloadsDir(playlistId) {
+        if (!playlistId) return this.downloadsDir;
+        const dir = path.join(this.downloadsDir, playlistId);
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+            console.log(`[StorageManager] Created playlist directory: ${dir}`);
+        }
+        return dir;
+    }
 }
 
 module.exports = new StorageManager();
