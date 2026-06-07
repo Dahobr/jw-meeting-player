@@ -189,9 +189,12 @@ class EventHandler {
             onPlaylistDelete: async (id) => {
                 if (await this.app.showCustomConfirm('Deseja realmente excluir esta playlist?')) {
                     const itemsToDelete = this.store.deletePlaylist(id);
+                    // Delete associated files
                     for (const item of itemsToDelete) {
                         if (item.filePath) await this.ipc.deleteFile(item.filePath);
                     }
+                    // Delete associated playlist folder
+                    await this.ipc.deletePlaylistFolder(id);
                 }
             },
 
