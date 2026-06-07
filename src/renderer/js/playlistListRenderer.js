@@ -183,6 +183,13 @@ class PlaylistListRenderer {
         }
     }
 
+    removeDownloadItem(itemId, itemsList) {
+        const li = DomUtils.query(`li[data-id="${itemId}"]`, itemsList);
+        if (li) {
+            li.remove();
+        }
+    }
+
     updatePlaybackStateUI(config, itemsList) {
         const { statusLabel, statusClass, items } = config;
 

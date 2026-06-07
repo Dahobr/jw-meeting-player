@@ -296,6 +296,9 @@ class App {
         });
 
         this.ipc.onDownloadComplete((data) => {
+            // Remove the download item UI
+            this.ui.playlistRenderer.removeDownloadItem(data.id, this.ui.itemsList);
+
             const { currentPlaylistId, playlists } = this.store.getState();
             const playlist = playlists[currentPlaylistId];
             
