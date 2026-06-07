@@ -35,6 +35,13 @@ class PlaylistListRenderer {
                     this.callbacks.onPlaylistSelect(id);
                 }
             });
+
+            div.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                if (this.callbacks.onPlaylistContextMenu) {
+                    this.callbacks.onPlaylistContextMenu(id, playlist);
+                }
+            });
             
             DomUtils.query('.btn-edit-playlist', div).addEventListener('click', (e) => {
                 e.stopPropagation();

@@ -80,8 +80,16 @@ class IPCClient {
         window.electronAPI.showItemContextMenu(data);
     }
 
+    showPlaylistContextMenu(data) {
+        window.electronAPI.showPlaylistContextMenu(data);
+    }
+
     onMoveItem(callback) {
         window.electronAPI.onMoveItem(callback);
+    }
+
+    onShareResult(callback) {
+        window.electronAPI.onShareResult(callback);
     }
 
     // --- Storage ---

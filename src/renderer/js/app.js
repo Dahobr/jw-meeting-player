@@ -312,6 +312,16 @@ class App {
             }
         });
 
+        this.ipc.onShareResult((result) => {
+            if (result.success) {
+                this.ui.showNotification("Playlist copiada! No WhatsApp, escolha o contato e pressione Ctrl+V para enviar.");
+                // Also show a standard alert for better visibility if needed, but the task says notification/alert
+                alert("Playlist copiada! No WhatsApp, escolha o contato e pressione Ctrl+V para enviar.");
+            } else {
+                this.ui.showNotification("Erro ao compartilhar playlist: " + result.error);
+            }
+        });
+
         this.ipc.onMediaPlaybackStateChange((isPlaying) => {
             this.isPlaying = isPlaying;
             if (this.status === 'playing' || this.status === 'paused') {

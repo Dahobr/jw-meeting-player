@@ -43,7 +43,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   updateViewBounds: (bounds) => ipcRenderer.send('update-view-bounds', bounds),
   toggleWebView: (visible) => ipcRenderer.send('toggle-webview', visible),
   showItemContextMenu: (data) => ipcRenderer.send('show-item-context-menu', data),
+  showPlaylistContextMenu: (data) => ipcRenderer.send('show-playlist-context-menu', data),
   onMoveItem: (callback) => ipcRenderer.on('move-item', (_event, data) => callback(data)),
+  onShareResult: (callback) => ipcRenderer.on('share-result', (_event, data) => callback(data)),
 
   // --- Storage ---
   savePlaylists: (data) => ipcRenderer.send('save-playlists', data),

@@ -5,6 +5,7 @@
  */
 
 const { ipcMain, Menu, MenuItem, BrowserWindow, globalShortcut } = require('electron');
+const shareManager = require('./shareManager');
 
 class MenuManager {
     init(mainWindow) {
@@ -30,6 +31,18 @@ class MenuManager {
     }
 
     setupIpcHandlers() {
+        ipcMain.on('show-playlist-context-menu', (event, { playlist }) => {
+            const menu = new Menu();
+            menu.append(new MenuItem({
+                label: 'Compartilhar (WhatsApp)',
+                click: async () => {
+                    const result = await shareManager.exportPlaylist(playlist);
+                    event.sender.send('share-result', result);
+                }
+            }));
+            menu.popup({ window: BrowserWindow.fromWebContents(event.sender) });
+        });
+
         ipcMain.on('show-item-context-menu', (event, { itemId, playlists }) => {
             const menu = new Menu();
             const moveSubmenu = new Menu();

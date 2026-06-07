@@ -208,6 +208,10 @@ class EventHandler {
 
             onPlaylistRename: (id, newName) => this.store.renamePlaylist(id, newName),
 
+            onPlaylistContextMenu: (id, playlist) => {
+                this.ipc.showPlaylistContextMenu({ playlist });
+            },
+
             // Item List Interactions
             onItemSelect: (item) => {
                 console.log('[EventHandler] Staging item in preview area.');
