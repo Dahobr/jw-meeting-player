@@ -111,7 +111,8 @@ class SiteViewManager {
                 cantico: 'https://www.jw.org/pt/biblioteca/videos/#pt/categories/VODSJJMeetings',
                 reunioes: 'https://wol.jw.org/pt/wol/meetings/r5/lp-t/',
                 videos: 'https://www.jw.org/pt/biblioteca/videos/#pt/home',
-                esbocos: 'https://docs.jw.org/pt/-/pub-s-34mp'
+                esbocos: 'https://docs.jw.org/pt/-/pub-s-34mp',
+                whatsapp: 'https://web.whatsapp.com'
             };
             const url = navUrls[key];
             if (url) {

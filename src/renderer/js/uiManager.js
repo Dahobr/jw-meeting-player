@@ -14,12 +14,19 @@ class UIManager {
         this.btnReunioes = DomUtils.get('btn-reunioes');
         this.btnVideos = DomUtils.get('btn-videos');
         this.btnEsbocos = DomUtils.get('btn-esbocos');
+        this.btnWhatsapp = DomUtils.get('btn-whatsapp');
         this.btnOpenFolder = DomUtils.get('btn-open-folder');
         this.btnOpenYearVerseFolder = DomUtils.get('btn-open-year-verse-folder');
         this.btnCreatePlaylist = DomUtils.get('btn-create-playlist');
         this.btnBackToPlaylists = DomUtils.get('btn-back-to-playlists');
         this.btnImportFile = DomUtils.get('btn-import-file');
         this.zoomModeSelect = DomUtils.get('zoom-mode-select');
+
+        this.btnCantico.onclick = () => window.electronAPI.navigateSite('cantico');
+        this.btnReunioes.onclick = () => window.electronAPI.navigateSite('reunioes');
+        this.btnVideos.onclick = () => window.electronAPI.navigateSite('videos');
+        this.btnEsbocos.onclick = () => window.electronAPI.navigateSite('esbocos');
+        this.btnWhatsapp.onclick = () => window.electronAPI.navigateSite('whatsapp');
         
         this.btnFooterPlayPause = DomUtils.get('btn-footer-play-pause');
         this.btnFooterPrev = DomUtils.get('btn-footer-prev');
