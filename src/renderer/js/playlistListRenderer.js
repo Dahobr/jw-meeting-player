@@ -82,28 +82,41 @@ class PlaylistListRenderer {
             li.dataset.id = item.id;
             li.dataset.index = index;
             
-            li.innerHTML = `
-                <div class="item-content">
-                    <div class="item-thumbnail">
-                        ${item.thumbnailData ? `<img src="${item.thumbnailData}" alt="thumb">` : `<div class="placeholder">${item.mediaType === 'video' ? '🎬' : '🖼️'}</div>`}
+            if (item.status === 'downloading') {
+                li.classList.add('downloading');
+                li.innerHTML = `
+                    <div class="item-content">
+                        <div class="item-thumbnail loading" style="--progress: ${item.progress || 0}%;"></div>
+                        <div class="item-info">
+                            <span class="item-title">${item.title || item.filename}</span>
+                            <span class="item-type">Baixando... (${item.progress || 0}%)</span>
+                        </div>
                     </div>
-                    <div class="item-info">
-                        <span class="item-title" id="item-name-${item.id}" title="${item.title || item.filename}">${item.title || item.filename}</span>
-                        <input type="text" class="edit-item-input" id="item-input-${item.id}" value="${item.title || item.filename}" style="display: none;">
-                        <span class="item-type">${item.mediaType}</span>
-                    </div>
-                    <div class="item-actions">
-                        <button class="btn-play-item btn-item-action" title="Reproduzir">${this.icons.play}</button>
-                        <div class="item-more-actions" data-id="${item.id}">
-                            ⋮
-                            <div class="item-dropdown" id="dropdown-${item.id}">
-                                <div class="item-dropdown-item btn-edit-item">${this.icons.edit} Renomear</div>
-                                <div class="item-dropdown-item btn-delete-item">${this.icons.trash} Excluir</div>
+                `;
+            } else {
+                li.innerHTML = `
+                    <div class="item-content">
+                        <div class="item-thumbnail">
+                            ${item.thumbnailData ? `<img src="${item.thumbnailData}" alt="thumb">` : `<div class="placeholder">${item.mediaType === 'video' ? '🎬' : '🖼️'}</div>`}
+                        </div>
+                        <div class="item-info">
+                            <span class="item-title" id="item-name-${item.id}" title="${item.title || item.filename}">${item.title || item.filename}</span>
+                            <input type="text" class="edit-item-input" id="item-input-${item.id}" value="${item.title || item.filename}" style="display: none;">
+                            <span class="item-type">${item.mediaType}</span>
+                        </div>
+                        <div class="item-actions">
+                            <button class="btn-play-item btn-item-action" title="Reproduzir">${this.icons.play}</button>
+                            <div class="item-more-actions" data-id="${item.id}">
+                                ⋮
+                                <div class="item-dropdown" id="dropdown-${item.id}">
+                                    <div class="item-dropdown-item btn-edit-item">${this.icons.edit} Renomear</div>
+                                    <div class="item-dropdown-item btn-delete-item">${this.icons.trash} Excluir</div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
+            }
             
             li.addEventListener('click', (e) => {
                 if (!e.target.closest('button') && !e.target.closest('.item-more-actions') && !e.target.closest('input')) {

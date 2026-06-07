@@ -81,6 +81,21 @@ class PlaylistStore {
   }
 
   /**
+   * Adds a playlist with pre-existing data.
+   * @param {Object} data - The playlist data object.
+   */
+  addPlaylistFromData(data) {
+    if (data && data.id) {
+      this.playlists[data.id] = {
+        name: data.name || 'Importada',
+        items: data.items || []
+      };
+      this.currentPlaylistId = data.id;
+      this._notify();
+    }
+  }
+
+  /**
    * Delete a playlist by ID.
    * @param {string} id 
    * @returns {Array} List of items that were in the deleted playlist.
@@ -150,6 +165,12 @@ class PlaylistStore {
       }
       if (!item.playlistId) {
         item.playlistId = targetId;
+      }
+      if (!item.status) {
+        item.status = 'completed';
+      }
+      if (item.status === 'downloading' && item.progress === undefined) {
+        item.progress = 0;
       }
       this.playlists[targetId].items.push(item);
       this._notify();
