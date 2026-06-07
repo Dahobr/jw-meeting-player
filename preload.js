@@ -68,6 +68,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onDisplaysChanged: (callback) => ipcRenderer.on('displays-changed', () => callback()),
   onDisplayStatus: (callback) => ipcRenderer.on('display-status', (_event, status) => callback(status)),
   saveBrowserImage: (data, url) => ipcRenderer.send('save-browser-image', data, url),
+  setActivePlaylist: (playlistId) => ipcRenderer.send('set-active-playlist', playlistId),
   onRequestSaveImage: (callback) => ipcRenderer.on('request-save-browser-image', (_event, url) => callback(url)),
 
   // --- App Closure & Reminders ---

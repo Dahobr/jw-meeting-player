@@ -156,6 +156,10 @@ class IPCClient {
         window.electronAPI.saveBrowserImage(base64Data, originalUrl);
     }
 
+    setActivePlaylist(playlistId) {
+        window.electronAPI.setActivePlaylist(playlistId);
+    }
+
     onDisplaysChanged(callback) {
         window.electronAPI.onDisplaysChanged(callback);
     }

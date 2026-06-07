@@ -30,6 +30,7 @@ class App {
         this.zoomCoords = null;
         this.lastStagedItemPerPlaylist = {};
         this.hasPlayedAnything = false;
+        this.lastPlaylistId = null;
     }
 
     /**
@@ -118,6 +119,10 @@ class App {
 
         const data = await this.ipc.loadPlaylists();
         this.store.init(data);
+
+        const initialState = this.store.getState();
+        this.lastPlaylistId = initialState.currentPlaylistId;
+        this.ipc.setActivePlaylist(this.lastPlaylistId);
 
         this.ui.switchView('playlists');
         this.status = 'stopped';
@@ -296,7 +301,8 @@ class App {
                 filePath: data.filePath,
                 mediaType: data.type === '.mp4' ? 'video' : 'image',
                 title: data.title || data.filename,
-                thumbnailData: data.thumbnailData
+                thumbnailData: data.thumbnailData,
+                sourceUrl: data.sourceUrl
             });
         });
 
@@ -386,6 +392,10 @@ class App {
      * @param {Object} state - The new store state.
      */
     handleStoreChange(state) {
+        if (this.lastPlaylistId !== state.currentPlaylistId) {
+            this.lastPlaylistId = state.currentPlaylistId;
+            this.ipc.setActivePlaylist(state.currentPlaylistId);
+        }
         this.ipc.savePlaylists(state);
         this.ui.playlistRenderer.render(state.playlists, state.currentPlaylistId, this.ui.playlistList, {
             onPlaylistSelect: (id) => this.ui.onPlaylistSelect(id),

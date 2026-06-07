@@ -18,6 +18,7 @@ class DownloadManager {
         this.timeoutMap = new Map();
         this.DOWNLOAD_TIMEOUT_MS = 60000;
         this.lastReceivedBytes = new Map();
+        this.activePlaylistId = null;
     }
 
     init(mainWindow) {
@@ -34,6 +35,12 @@ class DownloadManager {
         ipcMain.removeAllListeners('save-browser-image');
         ipcMain.on('save-browser-image', (event, base64Data, originalUrl) => this.saveBrowserImage(base64Data, originalUrl));
 
+        ipcMain.removeAllListeners('set-active-playlist');
+        ipcMain.on('set-active-playlist', (event, playlistId) => {
+            this.activePlaylistId = playlistId;
+            console.log(`[DownloadManager] Active playlist set to: ${playlistId}`);
+        });
+
         if (mainWindow && mainWindow.webContents && mainWindow.webContents.session) {
             this.setupWillDownload(mainWindow.webContents.session);
         }
@@ -47,7 +54,8 @@ class DownloadManager {
     async saveBrowserImage(base64Data, originalUrl) {
         const ext = '.jpg';
         const filename = `img_${Date.now()}${ext}`;
-        const filePath = path.join(this.downloadDir, filename);
+        const targetDir = storageManager.getPlaylistDownloadsDir(this.activePlaylistId);
+        const filePath = path.join(targetDir, filename);
 
         const base64Image = base64Data.split(';base64,').pop();
         fs.writeFile(filePath, base64Image, { encoding: 'base64' }, async (err) => {
@@ -62,7 +70,8 @@ class DownloadManager {
                 filePath,
                 type: ext,
                 title,
-                thumbnailData
+                thumbnailData,
+                sourceUrl: originalUrl
             });
         });
     }
@@ -102,13 +111,14 @@ class DownloadManager {
         }
         this.activeDownloads.add(downloadId);
 
-        let finalFilePath = path.join(this.downloadDir, filename);
+        const targetDir = storageManager.getPlaylistDownloadsDir(this.activePlaylistId);
+        let finalFilePath = path.join(targetDir, filename);
         const fileExt = path.extname(filename);
         const fileBase = path.basename(filename, fileExt);
         let counter = 1;
 
         while (fs.existsSync(finalFilePath)) {
-            finalFilePath = path.join(this.downloadDir, `${fileBase}(${counter})${fileExt}`);
+            finalFilePath = path.join(targetDir, `${fileBase}(${counter})${fileExt}`);
             counter++;
         }
 
@@ -149,7 +159,8 @@ class DownloadManager {
                         filePath: finalFilePath, 
                         type: fileExt,
                         title: result.title,
-                        thumbnailData: result.thumbnailData
+                        thumbnailData: result.thumbnailData,
+                        sourceUrl: url
                     });
                 } else {
                     console.error(`[DownloadManager] Download failed: ${state}`);

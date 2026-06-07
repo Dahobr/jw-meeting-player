@@ -242,4 +242,10 @@ class PlaylistStore {
 }
 
 // Attach to window for global access in the renderer process
-window.PlaylistStore = new PlaylistStore();
+if (typeof window !== 'undefined') {
+  window.PlaylistStore = new PlaylistStore();
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = PlaylistStore;
+}
