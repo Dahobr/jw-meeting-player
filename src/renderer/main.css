@@ -1120,3 +1120,22 @@ body {
 #btn-whatsapp {
     color: #ffffff;
 }
+
+.share-btn {
+    background: none;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    margin-bottom: 5px;
+}
+
+.share-btn:hover {
+    color: var(--danger-color);
+    transform: scale(1.1);
+}
