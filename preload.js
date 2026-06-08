@@ -10,7 +10,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onTriggerNavigation: (callback) => ipcRenderer.on('trigger-navigation', (_event, url) => callback(url)),
 
   // --- Downloads ---
-  downloadURL: (url) => ipcRenderer.send('download-url', url),
+  downloadURL: (url, id) => ipcRenderer.send('download-url', { url, id }),
   onDownloadStarted: (callback) => ipcRenderer.on('download-started', (_event, data) => callback(data)),
   onDownloadProgress: (callback) => ipcRenderer.on('download-progress', (_event, data) => callback(data)),
   onDownloadComplete: (callback) => ipcRenderer.on('download-complete', (_event, data) => callback(data)),
@@ -45,6 +45,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   toggleWebView: (visible) => ipcRenderer.send('toggle-webview', visible),
   showItemContextMenu: (data) => ipcRenderer.send('show-item-context-menu', data),
   showPlaylistContextMenu: (data) => ipcRenderer.send('show-playlist-context-menu', data),
+  exportPlaylist: (playlist) => ipcRenderer.invoke('export-playlist', playlist),
   onMoveItem: (callback) => ipcRenderer.on('move-item', (_event, data) => callback(data)),
   onShareResult: (callback) => ipcRenderer.on('share-result', (_event, data) => callback(data)),
   onPlaylistImported: (callback) => ipcRenderer.on('playlist-imported', (_event, data) => callback(data)),

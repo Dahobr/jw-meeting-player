@@ -14,8 +14,8 @@ class IPCClient {
     }
 
     // --- Downloads ---
-    downloadURL(url) {
-        window.electronAPI.downloadURL(url);
+    downloadURL(url, id) {
+        window.electronAPI.downloadURL(url, id);
     }
 
     onDownloadStarted(callback) {
@@ -119,6 +119,10 @@ class IPCClient {
 
     async deleteFile(filePath) {
         return await window.electronAPI.deleteFile(filePath);
+    }
+
+    async exportPlaylist(playlist) {
+        return await window.electronAPI.exportPlaylist(playlist);
     }
 
     async deletePlaylistFolder(playlistId) {

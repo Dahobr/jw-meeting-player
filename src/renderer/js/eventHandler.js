@@ -186,11 +186,21 @@ class EventHandler {
                 this.app.updatePlaybackUI();
             },
 
-            onPlaylistShare: (id) => {
+            onPlaylistExport: async (id) => {
                 const { playlists } = this.store.getState();
                 const playlist = playlists[id];
                 if (playlist) {
-                    this.ipc.showPlaylistContextMenu({ playlist });
+                    const result = await this.ipc.exportPlaylist(playlist);
+                    if (result.success) {
+                        this.ui.showConfirmModal(
+                            `Playlist salva em: ${result.filePath}.\nCompartilhe pelo WhatsApp via anexo.`,
+                            () => {},
+                            null,
+                            'ok'
+                        );
+                    } else {
+                        this.ui.showNotification(`Erro ao exportar: ${result.error}`, 'error');
+                    }
                 }
             },
 

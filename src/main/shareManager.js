@@ -1,4 +1,4 @@
-const { app, clipboard } = require('electron');
+const { app } = require('electron');
 const AdmZip = require('adm-zip');
 const fs = require('fs');
 const path = require('path');
@@ -6,14 +6,10 @@ const storageManager = require('./storageManager');
 
 class ShareManager {
     constructor() {
-        this.tempDir = path.join(app.getPath('temp'), 'jw-meeting-player-export');
-        if (!fs.existsSync(this.tempDir)) {
-            fs.mkdirSync(this.tempDir, { recursive: true });
-        }
     }
 
     /**
-     * Exports a playlist to a .jwmp (ZIP) file and copies it to the clipboard.
+     * Exports a playlist to a .jwmp (ZIP) file.
      * @param {Object} playlist - The playlist object containing name and items.
      * @returns {Object} result - Success status and the export file path.
      */
@@ -42,28 +38,27 @@ class ShareManager {
             // Add playlist.json to ZIP
             zip.addFile('playlist.json', Buffer.from(JSON.stringify(exportData, null, 2), 'utf-8'));
 
-            // Add image files to ZIP
+            // Add image and video files to ZIP
             for (const item of playlist.items) {
-                if (item.mediaType === 'image' && item.filePath && fs.existsSync(item.filePath)) {
+                // 画像は常に添付、動画は sourceUrl がない場合のみ添付（ある場合はインポート後に自動ダウンロード）
+                const shouldIncludeFile = 
+                    (item.mediaType === 'image') || 
+                    (item.mediaType === 'video' && !item.sourceUrl);
+
+                if (shouldIncludeFile && item.filePath && fs.existsSync(item.filePath)) {
                     // Use the filename from the path to avoid directory structure in ZIP
                     const fileName = path.basename(item.filePath);
                     zip.addLocalFile(item.filePath);
-                    console.log(`[ShareManager] Added image to ZIP: ${fileName}`);
+                    console.log(`[ShareManager] Added ${item.mediaType} to ZIP: ${fileName}`);
                 }
             }
 
             const exportFileName = `${playlist.name.replace(/[/\\?%*:|"<>]/g, '-')}.jwmp`;
-            const exportFilePath = path.join(this.tempDir, exportFileName);
+            const exportFilePath = path.join(app.getPath('downloads'), exportFileName);
 
             // Write ZIP file
             zip.writeZip(exportFilePath);
             console.log(`[ShareManager] Exported to: ${exportFilePath}`);
-
-            // Copy file to clipboard
-            // On Windows and macOS, Electron supports copying files via 'filenames'
-            clipboard.write({
-                filenames: [exportFilePath]
-            });
 
             return { success: true, filePath: exportFilePath };
         } catch (error) {
@@ -109,10 +104,22 @@ class ShareManager {
             // Update items with their new local filePaths and unique IDs
             playlistData.items = playlistData.items.map((item, index) => {
                 const newItem = { ...item };
+                
                 if (newItem.mediaType === 'image' && newItem.filePath) {
                     const fileName = path.basename(newItem.filePath);
                     newItem.filePath = path.join(targetDir, fileName);
+                } else if (newItem.mediaType === 'video') {
+                    // Check if the video file was actually extracted
+                    const fileName = newItem.filePath ? path.basename(newItem.filePath) : null;
+                    const extractedPath = fileName ? path.join(targetDir, fileName) : null;
+                    
+                    if (extractedPath && fs.existsSync(extractedPath)) {
+                        newItem.filePath = extractedPath;
+                    } else {
+                        newItem.filePath = null; // Mark as missing so App can trigger download
+                    }
                 }
+                
                 // Generate a unique ID for each item
                 newItem.id = `item-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 5)}`;
                 return newItem;

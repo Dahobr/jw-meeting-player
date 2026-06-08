@@ -288,33 +288,81 @@ class App {
 
         this.ipc.onDownloadStarted((data) => {
             this.ui.showNotification(`Download iniciado: ${data.filename}`);
-            const { currentPlaylistId } = this.store.getState();
-            this.store.addItem(currentPlaylistId, {
-                id: data.id, // Use the unique ID from download
-                filename: data.filename,
-                title: data.filename,
-                status: 'downloading',
-                progress: 0
-            });
+            this.ui.playlistRenderer.renderDownloadItem(data.id, data.filename, this.ui.itemsList);
+
+            // Check if the item already exists in the current playlist
+            const state = this.store.getState();
+            const playlist = state.playlists[state.currentPlaylistId];
+            const existingItem = playlist ? playlist.items.find(i => i.id === data.id) : null;
+
+            if (existingItem) {
+                // Update existing item status
+                this.store.updateItem(data.id, {
+                    status: 'downloading',
+                    progress: 0
+                });
+            } else {
+                // Add as new item
+                this.store.addItem(state.currentPlaylistId, {
+                    id: data.id,
+                    filename: data.filename,
+                    title: data.filename,
+                    status: 'downloading',
+                    progress: 0
+                });
+            }
         });
 
         this.ipc.onDownloadProgress((data) => {
-            this.store.updateItem(data.id, { progress: data.progress });
+            // Check if the item already exists
+            const state = this.store.getState();
+            const playlist = state.playlists[state.currentPlaylistId];
+            const existingItem = playlist ? playlist.items.find(i => i.id === data.id) : null;
+
+            if (existingItem) {
+                this.store.updateItem(data.id, { progress: data.progress });
+            }
         });
 
         this.ipc.onDownloadComplete((data) => {
+            console.log("[DEBUG] Download Complete, ID:", data.id);
+            const state = this.store.getState();
+            const playlist = state.playlists[state.currentPlaylistId];
+            if (playlist) {
+                console.log("[DEBUG] Playlist items IDs:", playlist.items.map(i => i.id));
+            }
+
             // Remove the download item UI
             this.ui.playlistRenderer.removeDownloadItem(data.id, this.ui.itemsList);
 
-            // Update the item status to completed
-            this.store.updateItem(data.id, {
-                status: 'completed',
-                filePath: data.filePath,
-                mediaType: data.type === '.mp4' ? 'video' : 'image',
-                title: data.title || data.filename,
-                thumbnailData: data.thumbnailData,
-                sourceUrl: data.sourceUrl
-            });
+            // Check if the item already exists in the current playlist
+            const existingItem = playlist ? playlist.items.find(i => i.id === data.id) : null;
+
+            if (existingItem) {
+                console.log("[DEBUG] Updating existing item:", data.id);
+                // Update existing item
+                this.store.updateItem(data.id, {
+                    status: 'completed',
+                    filePath: data.filePath,
+                    mediaType: data.type === '.mp4' ? 'video' : 'image',
+                    title: data.title || data.filename,
+                    thumbnailData: data.thumbnailData,
+                    sourceUrl: data.sourceUrl
+                });
+            } else {
+                console.log("[DEBUG] Item not found, adding as new:", data.id);
+                // Add as new item
+                this.store.addItem(state.currentPlaylistId, {
+                    id: data.id,
+                    filename: data.filename,
+                    filePath: data.filePath,
+                    mediaType: data.type === '.mp4' ? 'video' : 'image',
+                    title: data.title || data.filename,
+                    status: 'completed',
+                    progress: 100,
+                    sourceUrl: data.sourceUrl
+                });
+            }
         });
 
         this.ipc.onDownloadError((data) => {
@@ -326,13 +374,17 @@ class App {
         this.ipc.onPlaylistImported((playlist) => {
             this.ui.showNotification(`Playlist "${playlist.name}" importada.`);
             this.store.addPlaylistFromData(playlist);
-            this.ui.onPlaylistSelect(playlist.id);
+            
+            // Set current playlist and switch view
+            this.store.setCurrentPlaylistId(playlist.id);
+            this.ui.switchView('items');
+            this.updatePlaybackUI();
 
             // Trigger background download for videos missing local filePath
             playlist.items.forEach(item => {
                 if (item.mediaType === 'video' && !item.filePath && item.sourceUrl) {
                     console.log(`[App] Triggering background download for: ${item.title}`);
-                    this.ipc.downloadURL(item.sourceUrl);
+                    this.ipc.downloadURL(item.sourceUrl, item.id);
                 }
             });
         });

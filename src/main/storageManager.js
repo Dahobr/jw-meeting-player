@@ -261,6 +261,7 @@ class StorageManager {
 
     getPlaylistDownloadsDir(playlistId) {
         if (!playlistId) return this.downloadsDir;
+        
         const dir = path.join(this.downloadsDir, playlistId);
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });

@@ -42,10 +42,13 @@ class DownloadManager {
             console.log(`[DownloadManager] Active playlist set to: ${playlistId}`);
         });
 
+        this.pendingDownloadIds = new Map();
+
         ipcMain.removeAllListeners('download-url');
-        ipcMain.on('download-url', (event, url) => {
+        ipcMain.on('download-url', (event, { url, id }) => {
             if (this.mainWindow) {
-                console.log(`[DownloadManager] Triggering download for URL: ${url}`);
+                console.log(`[DownloadManager] Triggering download for URL: ${url} (ID: ${id})`);
+                this.pendingDownloadIds.set(url, id);
                 this.mainWindow.webContents.downloadURL(url);
             }
         });
@@ -63,8 +66,12 @@ class DownloadManager {
     async saveBrowserImage(base64Data, originalUrl) {
         const ext = '.jpg';
         const filename = `img_${Date.now()}${ext}`;
-        const targetDir = storageManager.getPlaylistDownloadsDir(this.activePlaylistId);
+        const downloadId = `img_${Date.now()}`; // Generate a unique ID
+        const targetDir = storageManager.getDownloadsDir();
         const filePath = path.join(targetDir, filename);
+
+        // Notify download started
+        this.mainWindow.webContents.send('download-started', { filename, id: downloadId });
 
         const base64Image = base64Data.split(';base64,').pop();
         fs.writeFile(filePath, base64Image, { encoding: 'base64' }, async (err) => {
@@ -75,6 +82,7 @@ class DownloadManager {
             console.log(`[DownloadManager] Image saved: ${filePath}`);
             const { title, thumbnailData } = await this.extractMediaInfo(filePath);
             this.mainWindow.webContents.send('download-complete', {
+                id: downloadId,
                 filename,
                 filePath,
                 type: ext,
@@ -108,11 +116,16 @@ class DownloadManager {
             this.lastReceivedBytes.delete(downloadId);
         }
     }
-
     async handleDownload(event, item, webContents) {
         const filename = item.getFilename();
         const url = item.getURL();
-        const downloadId = `${url}-${filename}`;
+
+        // Get item ID from map if available
+        const itemId = this.pendingDownloadIds.get(url);
+        this.pendingDownloadIds.delete(url);
+
+        const downloadId = itemId || `${url}-${filename}`;
+        item.downloadId = downloadId; // Set ID on the item object
         console.log(`[DownloadManager] Generating Download ID: ${downloadId}`);
 
         if (this.activeDownloads.has(downloadId)) {
@@ -133,12 +146,13 @@ class DownloadManager {
         }
 
         const finalFilename = path.basename(finalFilePath);
-        const allowedFileTypes = ['.mp4', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.jwmp'];
+        const allowedFileTypes = ['.mp4', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.jwmp', '.zip'];
 
         console.log(`[DownloadManager] Download requested: ${filename} -> ${finalFilename}`);
 
         if (allowedFileTypes.includes(path.extname(finalFilename).toLowerCase())) {
-            const isPlaylist = path.extname(finalFilename).toLowerCase() === '.jwmp';
+            const ext = path.extname(finalFilename).toLowerCase();
+            const isPlaylist = ext === '.jwmp' || ext === '.zip';
             
             if (isPlaylist) {
                 // Download to a temporary location for importing
@@ -172,10 +186,9 @@ class DownloadManager {
                 return;
             }
 
-            this.mainWindow.webContents.send('download-started', { filename: finalFilename, id: downloadId });
+            this.mainWindow.webContents.send('download-started', { filename: finalFilename, id: item.downloadId });
             item.setSavePath(finalFilePath);
-            item.downloadId = downloadId;
-            this.startTimeout(downloadId, item, finalFilename);
+            this.startTimeout(item.downloadId, item, finalFilename);
             
             item.on('updated', (event, state) => {
                 if (state === 'progressing') {

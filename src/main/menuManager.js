@@ -40,7 +40,8 @@ class MenuManager {
                     event.sender.send('share-result', result);
                 }
             }));
-            // ... (rest of menu items)
+            menu.popup({ window: BrowserWindow.fromWebContents(event.sender) });
+        });
 
 
         ipcMain.on('show-item-context-menu', (event, { itemId, playlists }) => {
