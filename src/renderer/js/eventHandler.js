@@ -131,6 +131,7 @@ class EventHandler {
         this.ui.btnReunioes.onclick = () => handleNav('reunioes');
         this.ui.btnVideos.onclick = () => handleNav('videos');
         this.ui.btnEsbocos.onclick = () => handleNav('esbocos');
+        this.ui.btnWhatsapp.onclick = () => handleNav('whatsapp');
 
         this.ui.btnMenuTutorial.onclick = () => {
             window.electronAPI.showTutorial();
