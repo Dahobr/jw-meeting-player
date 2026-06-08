@@ -169,6 +169,7 @@ hr {
   --light-text: #ecf0f1;
   --border-color: #bdc3c7;
 
+  --primary-blue: #0070c9;
   --z-webview: 5;
   --z-sidebar: 20;
   --z-header: 30;
@@ -1082,4 +1083,54 @@ body {
 .nav-btn:hover {
     background-color: rgba(255, 255, 255, 0.2);
     transform: scale(1.05);
+}
+
+/* Header Button Redesign */
+.navigation-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.nav-icon-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 8px;
+    transition: background-color 0.2s, transform 0.1s;
+    color: var(--primary-blue);
+    min-width: 70px;
+}
+
+.nav-icon-btn:hover {
+    background-color: rgba(0, 112, 201, 0.1);
+}
+
+.nav-icon-btn:active {
+    transform: scale(0.95);
+}
+
+.nav-icon-btn svg {
+    margin-bottom: 4px;
+}
+
+.nav-icon-btn span {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* WhatsApp specific color */
+#btn-whatsapp {
+    color: #25D366;
+}
+
+#btn-whatsapp:hover {
+    background-color: rgba(37, 211, 102, 0.1);
 }
