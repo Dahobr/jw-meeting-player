@@ -1082,19 +1082,18 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: var(--primary-color);
-    opacity: 0.6;
+    background-color: rgba(52, 152, 219, 0.6); /* 60% opacity blue */
     border: none;
     cursor: pointer;
     padding: 4px 8px;
     border-radius: 8px;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease;
     color: #ffffff;
     min-width: 60px;
 }
 
 .nav-icon-btn:hover {
-    opacity: 0.8;
+    background-color: rgba(52, 152, 219, 0.8); /* 80% opacity blue */
 }
 
 .nav-icon-btn:active {
@@ -1103,7 +1102,7 @@ body {
 }
 
 .nav-icon-btn.active {
-    opacity: 1.0;
+    background-color: rgba(52, 152, 219, 1.0); /* 100% opacity blue */
 }
 
 .nav-icon-btn svg {
