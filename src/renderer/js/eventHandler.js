@@ -125,12 +125,22 @@ class EventHandler {
 
         const handleNav = (key) => {
             this.ipc.navigateSite(key);
+
+            // Remove active class from all navigation buttons
+            document.querySelectorAll('.nav-icon-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // Add active class to the selected button
+            const activeBtn = document.getElementById(`btn-${key}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
         };
 
         this.ui.btnCantico.onclick = () => handleNav('cantico');
         this.ui.btnReunioes.onclick = () => handleNav('reunioes');
         this.ui.btnVideos.onclick = () => handleNav('videos');
         this.ui.btnEsbocos.onclick = () => handleNav('esbocos');
+        this.ui.btnWhatsapp.onclick = () => handleNav('whatsapp');
 
         this.ui.btnMenuTutorial.onclick = () => {
             window.electronAPI.showTutorial();
@@ -142,6 +152,8 @@ class EventHandler {
         this.ui.btnMenuAbout.onclick = async () => {
             try {
                 const html = await this.ipc.getAboutContent();
+                // Ensure all nav buttons are deactivated before showing help
+                document.querySelectorAll('.nav-icon-btn').forEach(btn => btn.classList.remove('active'));
                 this.ui.showHelp(html);
             } catch (err) {
                 console.error('[EventHandler] Failed to load about content:', err);
@@ -156,6 +168,9 @@ class EventHandler {
         });
 
         this.ui.btnBackToPlaylists.onclick = async () => {
+            // Remove active class from all navigation buttons
+            document.querySelectorAll('.nav-icon-btn').forEach(btn => btn.classList.remove('active'));
+
             if (this.app.status === 'playing' || this.app.status === 'paused') {
                 if (await this.app.showCustomConfirm('Deseja parar a reprodução e voltar às playlists?')) {
                     this.app.playbackManager.stopMedia('navigation to playlists');

@@ -82,6 +82,9 @@ class ViewRouter {
      * Switches the UI view between 'playlists' and 'items'.
      */
     switchView(viewName) {
+        // Reset active class from all nav buttons on view switch
+        document.querySelectorAll('.nav-icon-btn').forEach(btn => btn.classList.remove('active'));
+
         if (viewName === 'playlists') {
             this.viewPlaylists.style.display = 'block';
             this.viewItems.style.display = 'none';
@@ -104,6 +107,9 @@ class ViewRouter {
      * Displays help content in the UI.
      */
     showHelp(html) {
+        // Reset active class from all nav buttons when showing help/about
+        document.querySelectorAll('.nav-icon-btn').forEach(btn => btn.classList.remove('active'));
+
         this.helpContainer.innerHTML = html;
         this.updateMainOverlay('help');
     }

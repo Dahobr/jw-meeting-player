@@ -169,6 +169,7 @@ hr {
   --light-text: #ecf0f1;
   --border-color: #bdc3c7;
 
+  --primary-blue: #0070c9;
   --z-webview: 5;
   --z-sidebar: 20;
   --z-header: 30;
@@ -208,21 +209,6 @@ body {
   align-items: center;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   z-index: var(--z-header);
-}
-
-.navigation-buttons button {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  margin-right: 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.navigation-buttons button:hover {
-  background-color: #2980b9;
 }
 
 .window-controls {
@@ -1082,4 +1068,55 @@ body {
 .nav-btn:hover {
     background-color: rgba(255, 255, 255, 0.2);
     transform: scale(1.05);
+}
+
+/* Header Button Redesign */
+.navigation-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.nav-icon-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(52, 152, 219, 0.4); /* 60% opacity blue */
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+    color: #ffffff;
+    min-width: 60px;
+}
+
+.nav-icon-btn:hover {
+    background-color: rgba(52, 152, 219, 0.8); /* 80% opacity blue */
+}
+
+.nav-icon-btn:active {
+    filter: brightness(0.9);
+    transform: scale(0.95);
+}
+
+.nav-icon-btn.active {
+    background-color: rgba(52, 152, 219, 1.0); /* 100% opacity blue */
+}
+
+.nav-icon-btn svg {
+    margin-bottom: 2px;
+}
+
+.nav-icon-btn span {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* WhatsApp button shares the same style */
+#btn-whatsapp {
+    color: #ffffff;
 }
