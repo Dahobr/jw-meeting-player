@@ -147,7 +147,6 @@ class EventHandler {
             this.ui.headerMenu.classList.remove('show');
         };
         this.ui.btnMenuYear.onclick = () => window.electronAPI.openYearVerseFolder();
-        this.ui.btnMenuDownloads.onclick = () => this.ipc.openDownloadFolder();
         
         this.ui.btnMenuAbout.onclick = async () => {
             try {
