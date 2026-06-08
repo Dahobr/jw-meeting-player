@@ -211,21 +211,6 @@ body {
   z-index: var(--z-header);
 }
 
-.navigation-buttons button {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  margin-right: 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.navigation-buttons button:hover {
-  background-color: #2980b9;
-}
-
 .window-controls {
     display: flex;
     align-items: center;
