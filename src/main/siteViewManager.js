@@ -117,6 +117,15 @@ class SiteViewManager {
             const url = navUrls[key];
             if (url) {
                 view.webContents.loadURL(url);
+                
+                // Set zoom factor via CSS zoom after page load
+                view.webContents.once('did-finish-load', () => {
+                    if (key === 'whatsapp') {
+                        view.webContents.executeJavaScript("document.body.style.zoom = '80%';");
+                    } else {
+                        view.webContents.executeJavaScript("document.body.style.zoom = '100%';");
+                    }
+                });
             }
         });
 

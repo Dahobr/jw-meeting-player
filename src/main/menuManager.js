@@ -6,6 +6,7 @@
 
 const { ipcMain, Menu, MenuItem, BrowserWindow, globalShortcut } = require('electron');
 const shareManager = require('./shareManager');
+const siteViewManager = require('./siteViewManager');
 
 class MenuManager {
     init(mainWindow) {
@@ -16,18 +17,44 @@ class MenuManager {
     }
 
     setupMenu() {
-        // Menu bar is hidden by default in main.js. 
-        // We set application menu to null to avoid the default Electron menu if needed,
-        // or just don't set it at all.
         Menu.setApplicationMenu(null);
     }
 
     setupShortcuts() {
+        // Zoom In
+        globalShortcut.register('CommandOrControl+=', () => {
+            this.adjustZoom(0.1);
+        });
+        // Zoom Out
+        globalShortcut.register('CommandOrControl+-', () => {
+            this.adjustZoom(-0.1);
+        });
+        // Reset Zoom
+        globalShortcut.register('CommandOrControl+0', () => {
+            this.resetZoom();
+        });
+        
         globalShortcut.register('F12', () => {
             if (this.mainWindow) {
                 this.mainWindow.webContents.toggleDevTools();
             }
         });
+    }
+
+    adjustZoom(delta) {
+        const view = siteViewManager.getOrInitSiteView();
+        // In Electron 31+, getVisible() is used for WebContentsView
+        if (view && view.getVisible()) {
+            const currentZoom = view.webContents.getZoomFactor();
+            view.webContents.setZoomFactor(currentZoom + delta);
+        }
+    }
+
+    resetZoom() {
+        const view = siteViewManager.getOrInitSiteView();
+        if (view && view.getVisible()) {
+            view.webContents.setZoomFactor(1.0);
+        }
     }
 
     setupIpcHandlers() {
