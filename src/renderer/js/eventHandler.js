@@ -276,6 +276,18 @@ class EventHandler {
             };
         }
 
+        this.ui.btnShareApp = document.getElementById('btn-share-app');
+        if (this.ui.btnShareApp) {
+            this.ui.btnShareApp.onclick = async () => {
+                try {
+                    await navigator.clipboard.writeText('https://dahobr.github.io/jw-meeting-player/');
+                    this.ui.showNotification('Endereço de download copiado!');
+                } catch (err) {
+                    this.ui.showNotification('Erro ao copiar endereço', 'error');
+                }
+            };
+        }
+
         this.ui.btnStop = document.getElementById('btn-stop');
         if (this.ui.btnStop) {
             this.ui.btnStop.onclick = () => this.app.playbackManager.stopMedia('manual click');
