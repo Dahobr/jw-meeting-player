@@ -125,6 +125,15 @@ class EventHandler {
 
         const handleNav = (key) => {
             this.ipc.navigateSite(key);
+
+            // Remove active class from all navigation buttons
+            document.querySelectorAll('.nav-icon-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // Add active class to the selected button
+            const activeBtn = document.getElementById(`btn-${key}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
         };
 
         this.ui.btnCantico.onclick = () => handleNav('cantico');
@@ -157,6 +166,9 @@ class EventHandler {
         });
 
         this.ui.btnBackToPlaylists.onclick = async () => {
+            // Remove active class from all navigation buttons
+            document.querySelectorAll('.nav-icon-btn').forEach(btn => btn.classList.remove('active'));
+
             if (this.app.status === 'playing' || this.app.status === 'paused') {
                 if (await this.app.showCustomConfirm('Deseja parar a reprodução e voltar às playlists?')) {
                     this.app.playbackManager.stopMedia('navigation to playlists');

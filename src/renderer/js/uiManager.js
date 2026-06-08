@@ -207,6 +207,9 @@ class UIManager {
      * Displays help content in the UI.
      */
     showHelp(html) {
+        // Reset active class from all nav buttons when showing help/about
+        document.querySelectorAll('.nav-icon-btn').forEach(btn => btn.classList.remove('active'));
+        
         this.router.showHelp(html);
     }
 
@@ -601,6 +604,18 @@ class UIManager {
             li.classList.add('fade-out');
             setTimeout(() => li.remove(), 4000);
         }, 4000);
+    }
+
+    /**
+     * Updates the active state of navigation buttons.
+     */
+    updateNavActiveState(activeKey) {
+        document.querySelectorAll('.nav-icon-btn').forEach(btn => btn.classList.remove('active'));
+        
+        const activeBtn = document.getElementById(`btn-${activeKey}`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
     }
 
     /**
