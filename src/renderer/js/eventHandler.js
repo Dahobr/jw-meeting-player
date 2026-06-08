@@ -152,6 +152,8 @@ class EventHandler {
         this.ui.btnMenuAbout.onclick = async () => {
             try {
                 const html = await this.ipc.getAboutContent();
+                // Ensure all nav buttons are deactivated before showing help
+                document.querySelectorAll('.nav-icon-btn').forEach(btn => btn.classList.remove('active'));
                 this.ui.showHelp(html);
             } catch (err) {
                 console.error('[EventHandler] Failed to load about content:', err);
