@@ -10,6 +10,7 @@ const path = require('path');
 const mm = require('music-metadata');
 const AdmZip = require('adm-zip');
 const storageManager = require('./storageManager');
+const shareManager = require('./shareManager');
 
 class DownloadManager {
     constructor() {
@@ -18,6 +19,7 @@ class DownloadManager {
         this.timeoutMap = new Map();
         this.DOWNLOAD_TIMEOUT_MS = 60000;
         this.lastReceivedBytes = new Map();
+        this.activePlaylistId = null;
     }
 
     init(mainWindow) {
@@ -34,6 +36,23 @@ class DownloadManager {
         ipcMain.removeAllListeners('save-browser-image');
         ipcMain.on('save-browser-image', (event, base64Data, originalUrl) => this.saveBrowserImage(base64Data, originalUrl));
 
+        ipcMain.removeAllListeners('set-active-playlist');
+        ipcMain.on('set-active-playlist', (event, playlistId) => {
+            this.activePlaylistId = playlistId;
+            console.log(`[DownloadManager] Active playlist set to: ${playlistId}`);
+        });
+
+        this.pendingDownloadIds = new Map();
+
+        ipcMain.removeAllListeners('download-url');
+        ipcMain.on('download-url', (event, { url, id }) => {
+            if (this.mainWindow) {
+                console.log(`[DownloadManager] Triggering download for URL: ${url} (ID: ${id})`);
+                this.pendingDownloadIds.set(url, id);
+                this.mainWindow.webContents.downloadURL(url);
+            }
+        });
+
         if (mainWindow && mainWindow.webContents && mainWindow.webContents.session) {
             this.setupWillDownload(mainWindow.webContents.session);
         }
@@ -47,7 +66,12 @@ class DownloadManager {
     async saveBrowserImage(base64Data, originalUrl) {
         const ext = '.jpg';
         const filename = `img_${Date.now()}${ext}`;
-        const filePath = path.join(this.downloadDir, filename);
+        const downloadId = `img_${Date.now()}`; // Generate a unique ID
+        const targetDir = storageManager.getDownloadsDir();
+        const filePath = path.join(targetDir, filename);
+
+        // Notify download started
+        this.mainWindow.webContents.send('download-started', { filename, id: downloadId });
 
         const base64Image = base64Data.split(';base64,').pop();
         fs.writeFile(filePath, base64Image, { encoding: 'base64' }, async (err) => {
@@ -58,11 +82,13 @@ class DownloadManager {
             console.log(`[DownloadManager] Image saved: ${filePath}`);
             const { title, thumbnailData } = await this.extractMediaInfo(filePath);
             this.mainWindow.webContents.send('download-complete', {
+                id: downloadId,
                 filename,
                 filePath,
                 type: ext,
                 title,
-                thumbnailData
+                thumbnailData,
+                sourceUrl: originalUrl
             });
         });
     }
@@ -90,11 +116,17 @@ class DownloadManager {
             this.lastReceivedBytes.delete(downloadId);
         }
     }
-
     async handleDownload(event, item, webContents) {
         const filename = item.getFilename();
         const url = item.getURL();
-        const downloadId = `${url}-${filename}`;
+
+        // Get item ID from map if available
+        const itemId = this.pendingDownloadIds.get(url);
+        this.pendingDownloadIds.delete(url);
+
+        const downloadId = itemId || `${url}-${filename}`;
+        item.downloadId = downloadId; // Set ID on the item object
+        console.log(`[DownloadManager] Generating Download ID: ${downloadId}`);
 
         if (this.activeDownloads.has(downloadId)) {
             console.log(`[DownloadManager] Skipping duplicate download request: ${filename}`);
@@ -102,58 +134,96 @@ class DownloadManager {
         }
         this.activeDownloads.add(downloadId);
 
-        let finalFilePath = path.join(this.downloadDir, filename);
+        const targetDir = storageManager.getPlaylistDownloadsDir(this.activePlaylistId);
+        let finalFilePath = path.join(targetDir, filename);
         const fileExt = path.extname(filename);
         const fileBase = path.basename(filename, fileExt);
         let counter = 1;
 
         while (fs.existsSync(finalFilePath)) {
-            finalFilePath = path.join(this.downloadDir, `${fileBase}(${counter})${fileExt}`);
+            finalFilePath = path.join(targetDir, `${fileBase}(${counter})${fileExt}`);
             counter++;
         }
 
         const finalFilename = path.basename(finalFilePath);
-        const allowedFileTypes = ['.mp4', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
+        const allowedFileTypes = ['.mp4', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.jwmp', '.zip'];
 
         console.log(`[DownloadManager] Download requested: ${filename} -> ${finalFilename}`);
 
         if (allowedFileTypes.includes(path.extname(finalFilename).toLowerCase())) {
-            this.mainWindow.webContents.send('download-started', { filename: finalFilename, id: downloadId });
+            const ext = path.extname(finalFilename).toLowerCase();
+            const isPlaylist = ext === '.jwmp' || ext === '.zip';
+            
+            if (isPlaylist) {
+                // Download to a temporary location for importing
+                const tempPath = path.join(app.getPath('temp'), `import_${Date.now()}.jwmp`);
+                item.setSavePath(tempPath);
+                
+                item.on('done', async (event, state) => {
+                    this.activeDownloads.delete(downloadId);
+                    this.clearTimeout(downloadId);
+                    this.lastReceivedBytes.delete(downloadId);
+                    
+                    if (state === 'completed') {
+                        console.log(`[DownloadManager] Playlist download complete: ${tempPath}`);
+                        const result = await shareManager.importPlaylist(tempPath);
+                        if (result.success) {
+                            this.mainWindow.webContents.send('playlist-imported', result.playlist);
+                        } else {
+                            this.mainWindow.webContents.send('download-error', { 
+                                id: downloadId, 
+                                message: `Falha ao importar playlist: ${result.error}`, 
+                                filename: finalFilename 
+                            });
+                        }
+                        // Cleanup temp file
+                        try { if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath); } catch(e) {}
+                    } else {
+                        console.error(`[DownloadManager] Playlist download failed: ${state}`);
+                        this.mainWindow.webContents.send('download-error', { id: downloadId, message: `Download failed: ${state}`, filename: finalFilename });
+                    }
+                });
+                return;
+            }
+
+            this.mainWindow.webContents.send('download-started', { filename: finalFilename, id: item.downloadId });
             item.setSavePath(finalFilePath);
-            this.startTimeout(downloadId, item, finalFilename);
+            this.startTimeout(item.downloadId, item, finalFilename);
             
             item.on('updated', (event, state) => {
                 if (state === 'progressing') {
                     const received = item.getReceivedBytes();
                     const total = item.getTotalBytes();
                     const progress = total > 0 ? Math.round((received / total) * 100) : 0;
-                    this.mainWindow.webContents.send('download-progress', { id: downloadId, progress, filename });
+                    this.mainWindow.webContents.send('download-progress', { id: item.downloadId, progress, filename });
                     
-                    const previousReceived = this.lastReceivedBytes.get(downloadId) || 0;
+                    const previousReceived = this.lastReceivedBytes.get(item.downloadId) || 0;
                     if (received > previousReceived) {
-                        this.startTimeout(downloadId, item, finalFilename);
-                        this.lastReceivedBytes.set(downloadId, received);
+                        this.startTimeout(item.downloadId, item, finalFilename);
+                        this.lastReceivedBytes.set(item.downloadId, received);
                     }
                 }
             });
 
             item.on('done', async (event, state) => {
-                this.activeDownloads.delete(downloadId);
-                this.clearTimeout(downloadId);
-                this.lastReceivedBytes.delete(downloadId);
+                this.activeDownloads.delete(item.downloadId);
+                this.clearTimeout(item.downloadId);
+                this.lastReceivedBytes.delete(item.downloadId);
                 if (state === 'completed') {
                     console.log(`[DownloadManager] Download complete: ${finalFilePath}`);
                     const result = await this.extractMediaInfo(finalFilePath);
                     this.mainWindow.webContents.send('download-complete', { 
+                        id: item.downloadId,
                         filename: finalFilename, 
                         filePath: finalFilePath, 
                         type: fileExt,
                         title: result.title,
-                        thumbnailData: result.thumbnailData
+                        thumbnailData: result.thumbnailData,
+                        sourceUrl: url
                     });
                 } else {
                     console.error(`[DownloadManager] Download failed: ${state}`);
-                    this.mainWindow.webContents.send('download-error', { id: downloadId, message: `Download failed: ${state}`, filename: finalFilename });
+                    this.mainWindow.webContents.send('download-error', { id: item.downloadId, message: `Download failed: ${state}`, filename: finalFilename });
                 }
             });
         } else {

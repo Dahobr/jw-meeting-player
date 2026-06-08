@@ -14,12 +14,19 @@ class UIManager {
         this.btnReunioes = DomUtils.get('btn-reunioes');
         this.btnVideos = DomUtils.get('btn-videos');
         this.btnEsbocos = DomUtils.get('btn-esbocos');
+        this.btnWhatsapp = DomUtils.get('btn-whatsapp');
         this.btnOpenFolder = DomUtils.get('btn-open-folder');
         this.btnOpenYearVerseFolder = DomUtils.get('btn-open-year-verse-folder');
         this.btnCreatePlaylist = DomUtils.get('btn-create-playlist');
         this.btnBackToPlaylists = DomUtils.get('btn-back-to-playlists');
         this.btnImportFile = DomUtils.get('btn-import-file');
         this.zoomModeSelect = DomUtils.get('zoom-mode-select');
+
+        this.btnCantico.onclick = () => window.electronAPI.navigateSite('cantico');
+        this.btnReunioes.onclick = () => window.electronAPI.navigateSite('reunioes');
+        this.btnVideos.onclick = () => window.electronAPI.navigateSite('videos');
+        this.btnEsbocos.onclick = () => window.electronAPI.navigateSite('esbocos');
+        this.btnWhatsapp.onclick = () => window.electronAPI.navigateSite('whatsapp');
         
         this.btnFooterPlayPause = DomUtils.get('btn-footer-play-pause');
         this.btnFooterPrev = DomUtils.get('btn-footer-prev');
@@ -604,7 +611,7 @@ class UIManager {
     }
 
     // --- Modal Helpers ---
-    showConfirmModal(message, onConfirm, onCancel) {
+    showConfirmModal(message, onConfirm, onCancel, type = 'confirm') {
         const modal = DomUtils.get('custom-modal');
         const msgEl = DomUtils.get('modal-message');
         const btnConfirm = DomUtils.get('modal-confirm');
@@ -612,8 +619,18 @@ class UIManager {
 
         if (!modal || !msgEl || !btnConfirm || !btnCancel) return false;
 
-        msgEl.textContent = message;
+        // 改行を反映させるために innerHTML を使用（セキュリティ考慮のためメッセージは信頼できるものと想定）
+        msgEl.innerHTML = message.replace(/\n/g, '<br>');
         modal.style.display = 'flex';
+
+        if (type === 'ok') {
+            btnConfirm.textContent = 'Ok';
+            btnCancel.style.display = 'none';
+        } else {
+            btnConfirm.textContent = 'Sim';
+            btnCancel.textContent = 'Não';
+            btnCancel.style.display = 'inline-block';
+        }
 
         const handleConfirm = () => close(true);
         const handleCancel = () => close(false);
@@ -627,7 +644,7 @@ class UIManager {
             btnCancel.removeEventListener('click', handleCancel);
             
             if (result) onConfirm();
-            else onCancel();
+            else if (onCancel) onCancel();
         };
         return true;
     }

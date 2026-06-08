@@ -47,17 +47,6 @@ class EventHandler {
             this.ui.playlistRenderer.updateDownloadProgress(data.id, data.progress, this.ui.itemsList);
         });
 
-        this.ipc.onDownloadComplete((data) => {
-            const { currentPlaylistId } = this.store.getState();
-            this.store.addItem(currentPlaylistId, {
-                filename: data.filename,
-                filePath: data.filePath,
-                mediaType: data.type === '.mp4' ? 'video' : 'image',
-                title: data.title || data.filename,
-                thumbnailData: data.thumbnailData
-            });
-        });
-
         this.ipc.onDownloadError((data) => {
             console.log('[EventHandler] Download error received:', data);
             if (this.ui && typeof this.ui.showError === 'function') {
@@ -197,16 +186,41 @@ class EventHandler {
                 this.app.updatePlaybackUI();
             },
 
-            onPlaylistDelete: async (id) => {
-                if (await this.app.showCustomConfirm('Deseja realmente excluir esta playlist?')) {
-                    const itemsToDelete = this.store.deletePlaylist(id);
-                    for (const item of itemsToDelete) {
-                        if (item.filePath) await this.ipc.deleteFile(item.filePath);
+            onPlaylistExport: async (id) => {
+                const { playlists } = this.store.getState();
+                const playlist = playlists[id];
+                if (playlist) {
+                    const result = await this.ipc.exportPlaylist(playlist);
+                    if (result.success) {
+                        this.ui.showConfirmModal(
+                            `Playlist salva em: ${result.filePath}.\nCompartilhe pelo WhatsApp via anexo.`,
+                            () => {},
+                            null,
+                            'ok'
+                        );
+                    } else {
+                        this.ui.showNotification(`Erro ao exportar: ${result.error}`, 'error');
                     }
                 }
             },
 
+            onPlaylistDelete: async (id) => {
+                if (await this.app.showCustomConfirm('Deseja realmente excluir esta playlist?')) {
+                    const itemsToDelete = this.store.deletePlaylist(id);
+                    // Delete associated files
+                    for (const item of itemsToDelete) {
+                        if (item.filePath) await this.ipc.deleteFile(item.filePath);
+                    }
+                    // Delete associated playlist folder
+                    await this.ipc.deletePlaylistFolder(id);
+                }
+            },
+
             onPlaylistRename: (id, newName) => this.store.renamePlaylist(id, newName),
+
+            onPlaylistContextMenu: (id, playlist) => {
+                this.ipc.showPlaylistContextMenu({ playlist });
+            },
 
             // Item List Interactions
             onItemSelect: (item) => {

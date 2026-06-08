@@ -14,6 +14,10 @@ class IPCClient {
     }
 
     // --- Downloads ---
+    downloadURL(url, id) {
+        window.electronAPI.downloadURL(url, id);
+    }
+
     onDownloadStarted(callback) {
         window.electronAPI.onDownloadStarted(callback);
     }
@@ -80,8 +84,20 @@ class IPCClient {
         window.electronAPI.showItemContextMenu(data);
     }
 
+    showPlaylistContextMenu(data) {
+        window.electronAPI.showPlaylistContextMenu(data);
+    }
+
     onMoveItem(callback) {
         window.electronAPI.onMoveItem(callback);
+    }
+
+    onShareResult(callback) {
+        window.electronAPI.onShareResult(callback);
+    }
+
+    onPlaylistImported(callback) {
+        window.electronAPI.onPlaylistImported(callback);
     }
 
     // --- Storage ---
@@ -103,6 +119,14 @@ class IPCClient {
 
     async deleteFile(filePath) {
         return await window.electronAPI.deleteFile(filePath);
+    }
+
+    async exportPlaylist(playlist) {
+        return await window.electronAPI.exportPlaylist(playlist);
+    }
+
+    async deletePlaylistFolder(playlistId) {
+        return await window.electronAPI.deletePlaylistFolder(playlistId);
     }
 
     // --- File System Dialogs ---
@@ -154,6 +178,10 @@ class IPCClient {
     saveBrowserImage(base64Data, originalUrl) {
 
         window.electronAPI.saveBrowserImage(base64Data, originalUrl);
+    }
+
+    setActivePlaylist(playlistId) {
+        window.electronAPI.setActivePlaylist(playlistId);
     }
 
     onDisplaysChanged(callback) {

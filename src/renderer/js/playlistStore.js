@@ -81,6 +81,21 @@ class PlaylistStore {
   }
 
   /**
+   * Adds a playlist with pre-existing data.
+   * @param {Object} data - The playlist data object.
+   */
+  addPlaylistFromData(data) {
+    if (data && data.id) {
+      this.playlists[data.id] = {
+        name: data.name || 'Importada',
+        items: data.items || []
+      };
+      this.currentPlaylistId = data.id;
+      this._notify();
+    }
+  }
+
+  /**
    * Delete a playlist by ID.
    * @param {string} id 
    * @returns {Array} List of items that were in the deleted playlist.
@@ -142,11 +157,29 @@ class PlaylistStore {
    * @param {Object} item - The item object to add.
    */
   addItem(playlistId, item) {
+    console.trace('[PlaylistStore] addItem called from:');
     const targetId = playlistId || this.currentPlaylistId;
+    console.log(`[PlaylistStore] addItem ID: ${item ? item.id : 'undefined'}, Status: ${item ? item.status : 'undefined'}`);
     if (this.playlists[targetId]) {
+      // Duplicate check: skip if item ID already exists
+      const existing = this.playlists[targetId].items.find(i => i && i.id === (item ? item.id : null));
+      if (existing) {
+        console.warn(`[PlaylistStore] Item already exists: ${item.id}. Skipping.`);
+        return;
+      }
+      
       // Ensure the item has a unique ID for tracking
-      if (!item.id) {
+      if (item && !item.id) {
         item.id = `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      }
+      if (item && !item.playlistId) {
+        item.playlistId = targetId;
+      }
+      if (item && !item.status) {
+        item.status = 'completed';
+      }
+      if (item && item.status === 'downloading' && item.progress === undefined) {
+        item.progress = 0;
       }
       this.playlists[targetId].items.push(item);
       this._notify();
@@ -214,10 +247,13 @@ class PlaylistStore {
    * @param {Object} updates 
    */
   updateItem(itemId, updates) {
+    console.log(`[PlaylistStore] updateItem ID: ${itemId}, Updates:`, updates);
     const result = this._findItem(itemId);
     if (result) {
       Object.assign(result.item, updates);
       this._notify();
+    } else {
+      console.error(`[PlaylistStore] updateItem FAILED: Item ID ${itemId} not found.`);
     }
   }
 
@@ -239,4 +275,10 @@ class PlaylistStore {
 }
 
 // Attach to window for global access in the renderer process
-window.PlaylistStore = new PlaylistStore();
+if (typeof window !== 'undefined') {
+  window.PlaylistStore = new PlaylistStore();
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = PlaylistStore;
+}

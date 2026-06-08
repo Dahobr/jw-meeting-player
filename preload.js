@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onTriggerNavigation: (callback) => ipcRenderer.on('trigger-navigation', (_event, url) => callback(url)),
 
   // --- Downloads ---
+  downloadURL: (url, id) => ipcRenderer.send('download-url', { url, id }),
   onDownloadStarted: (callback) => ipcRenderer.on('download-started', (_event, data) => callback(data)),
   onDownloadProgress: (callback) => ipcRenderer.on('download-progress', (_event, data) => callback(data)),
   onDownloadComplete: (callback) => ipcRenderer.on('download-complete', (_event, data) => callback(data)),
@@ -43,7 +44,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   updateViewBounds: (bounds) => ipcRenderer.send('update-view-bounds', bounds),
   toggleWebView: (visible) => ipcRenderer.send('toggle-webview', visible),
   showItemContextMenu: (data) => ipcRenderer.send('show-item-context-menu', data),
+  showPlaylistContextMenu: (data) => ipcRenderer.send('show-playlist-context-menu', data),
+  exportPlaylist: (playlist) => ipcRenderer.invoke('export-playlist', playlist),
   onMoveItem: (callback) => ipcRenderer.on('move-item', (_event, data) => callback(data)),
+  onShareResult: (callback) => ipcRenderer.on('share-result', (_event, data) => callback(data)),
+  onPlaylistImported: (callback) => ipcRenderer.on('playlist-imported', (_event, data) => callback(data)),
 
   // --- Storage ---
   savePlaylists: (data) => ipcRenderer.send('save-playlists', data),
@@ -51,6 +56,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getHelpContent: () => ipcRenderer.invoke('get-help-content'),
   getAboutContent: () => ipcRenderer.invoke('get-about-content'),
   deleteFile: (filePath) => ipcRenderer.invoke('delete-file', filePath),
+  deletePlaylistFolder: (playlistId) => ipcRenderer.invoke('delete-playlist-folder', playlistId),
 
   // --- File System Dialogs ---
   openDownloadFolder: () => ipcRenderer.invoke('open-download-folder'),
@@ -68,6 +74,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onDisplaysChanged: (callback) => ipcRenderer.on('displays-changed', () => callback()),
   onDisplayStatus: (callback) => ipcRenderer.on('display-status', (_event, status) => callback(status)),
   saveBrowserImage: (data, url) => ipcRenderer.send('save-browser-image', data, url),
+  setActivePlaylist: (playlistId) => ipcRenderer.send('set-active-playlist', playlistId),
   onRequestSaveImage: (callback) => ipcRenderer.on('request-save-browser-image', (_event, url) => callback(url)),
 
   // --- App Closure & Reminders ---

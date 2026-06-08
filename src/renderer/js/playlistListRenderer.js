@@ -10,7 +10,8 @@ class PlaylistListRenderer {
         this.icons = {
             play: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
             edit: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>',
-            trash: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>'
+            trash: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>',
+            export: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>'
         };
     }
 
@@ -25,36 +26,63 @@ class PlaylistListRenderer {
                     <span class="playlist-meta">${playlist.items.length} items</span>
                 </div>
                 <div class="playlist-item-actions">
-                  <button class="btn-edit-playlist" data-id="${id}" title="Renomear">${this.icons.edit}</button>
-                  <button class="btn-delete-playlist" data-id="${id}" title="Excluir">${this.icons.trash}</button>
+                    <div class="item-more-actions" data-id="${id}">
+                        ⋮
+                        <div class="item-dropdown" id="dropdown-${id}">
+                            <div class="item-dropdown-item btn-export-playlist">${this.icons.export} Exportar</div>
+                            <div class="item-dropdown-item btn-edit-playlist">${this.icons.edit} Renomear</div>
+                            <div class="item-dropdown-item btn-delete-playlist">${this.icons.trash} Excluir</div>
+                        </div>
+
+                    </div>
                 </div>
             `;
             
             div.addEventListener('click', (e) => {
-                if (!e.target.closest('button') && !e.target.closest('input')) {
+                if (!e.target.closest('.item-more-actions') && !e.target.closest('input')) {
                     this.callbacks.onPlaylistSelect(id);
                 }
             });
             
+            const moreActions = DomUtils.query('.item-more-actions', div);
+            const dropdown = DomUtils.query('.item-dropdown', div);
+            moreActions.addEventListener('click', (e) => {
+                e.stopPropagation();
+                DomUtils.queryAll('.item-dropdown.show', this.container).forEach(d => {
+                    if (d !== dropdown) d.classList.remove('show');
+                });
+                dropdown.classList.toggle('show');
+            });
+
+            DomUtils.query('.btn-export-playlist', div).addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.remove('show');
+                this.callbacks.onPlaylistExport(id);
+            });
+
             DomUtils.query('.btn-edit-playlist', div).addEventListener('click', (e) => {
                 e.stopPropagation();
+                dropdown.classList.remove('show');
                 this.togglePlaylistEdit(id);
             });
 
             DomUtils.query('.btn-delete-playlist', div).addEventListener('click', (e) => {
                 e.stopPropagation();
+                dropdown.classList.remove('show');
                 this.callbacks.onPlaylistDelete(id);
             });
             
             const input = DomUtils.query('.edit-playlist-input', div);
-            input.addEventListener('click', (e) => e.stopPropagation());
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    this.callbacks.onPlaylistRename(id, input.value);
-                    this.togglePlaylistEdit(id, false);
-                }
-            });
-            input.addEventListener('blur', () => this.togglePlaylistEdit(id, false));
+            if (input) {
+                input.addEventListener('click', (e) => e.stopPropagation());
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.callbacks.onPlaylistRename(id, input.value);
+                        this.togglePlaylistEdit(id, false);
+                    }
+                });
+                input.addEventListener('blur', () => this.togglePlaylistEdit(id, false));
+            }
             
             this.container.appendChild(div);
         });
@@ -75,6 +103,21 @@ class PlaylistListRenderer {
             li.dataset.id = item.id;
             li.dataset.index = index;
             
+            if (item.status === 'downloading') {
+                li.classList.add('downloading');
+                li.innerHTML = `
+                    <div class="item-content">
+                        <div class="item-thumbnail loading" style="--progress: ${item.progress || 0}%;"></div>
+                        <div class="item-info">
+                            <span class="item-title">${item.title || item.filename}</span>
+                            <span class="item-type">Baixando... (${item.progress || 0}%)</span>
+                        </div>
+                    </div>
+                `;
+                itemsList.appendChild(li);
+                return;
+            }
+
             li.innerHTML = `
                 <div class="item-content">
                     <div class="item-thumbnail">
@@ -173,6 +216,13 @@ class PlaylistListRenderer {
                     thumbnail.classList.remove('loading');
                 }
             }
+        }
+    }
+
+    removeDownloadItem(itemId, itemsList) {
+        const li = DomUtils.query(`li[data-id="${itemId}"]`, itemsList);
+        if (li) {
+            li.remove();
         }
     }
 

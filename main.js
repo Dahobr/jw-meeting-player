@@ -36,6 +36,7 @@ const downloadManager = require('./src/main/downloadManager');
 const contentManager = require('./src/main/contentManager');
 const updateManager = require('./src/main/updateManager');
 const siteViewManager = require('./src/main/siteViewManager');
+const shareManager = require('./src/main/shareManager');
 const menuManager = require('./src/main/menuManager');
 const { setupZoomIntegration } = require('./zoomIntegration');
 
@@ -74,6 +75,7 @@ function createMainWindow() {
     initializeGlobalManagers(mainWindow);
 
     mainWindow.loadFile('src/renderer/index.html');
+    mainWindow.webContents.openDevTools();
     // mainWindow.webContents.openDevTools();
     mainWindow.setMenuBarVisibility(false); // Hide menu bar by default
 
@@ -215,6 +217,10 @@ app.whenReady().then(() => {
         } else {
             return { success: false, message: `Opener executable not found at: ${scriptPath}` };
         }
+    });
+
+    ipcMain.handle('export-playlist', async (event, playlist) => {
+        return await shareManager.exportPlaylist(playlist);
     });
 });
 

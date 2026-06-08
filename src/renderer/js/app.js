@@ -30,6 +30,7 @@ class App {
         this.zoomCoords = null;
         this.lastStagedItemPerPlaylist = {};
         this.hasPlayedAnything = false;
+        this.lastPlaylistId = null;
     }
 
     /**
@@ -115,9 +116,14 @@ class App {
         this.store.subscribe((state) => this.handleStoreChange(state));
         this.eventHandler.init();
         this.setupPreviewListeners();
+        this.setupIPCListeners();
 
         const data = await this.ipc.loadPlaylists();
         this.store.init(data);
+
+        const initialState = this.store.getState();
+        this.lastPlaylistId = initialState.currentPlaylistId;
+        this.ipc.setActivePlaylist(this.lastPlaylistId);
 
         this.ui.switchView('playlists');
         this.status = 'stopped';
@@ -283,26 +289,113 @@ class App {
         this.ipc.onDownloadStarted((data) => {
             this.ui.showNotification(`Download iniciado: ${data.filename}`);
             this.ui.playlistRenderer.renderDownloadItem(data.id, data.filename, this.ui.itemsList);
+
+            // Check if the item already exists in the current playlist
+            const state = this.store.getState();
+            const playlist = state.playlists[state.currentPlaylistId];
+            const existingItem = playlist ? playlist.items.find(i => i.id === data.id) : null;
+
+            if (existingItem) {
+                // Update existing item status
+                this.store.updateItem(data.id, {
+                    status: 'downloading',
+                    progress: 0
+                });
+            } else {
+                // Add as new item
+                this.store.addItem(state.currentPlaylistId, {
+                    id: data.id,
+                    filename: data.filename,
+                    title: data.filename,
+                    status: 'downloading',
+                    progress: 0
+                });
+            }
         });
 
         this.ipc.onDownloadProgress((data) => {
-            this.ui.playlistRenderer.updateDownloadProgress(data.id, data.progress, this.ui.itemsList);
+            // Check if the item already exists
+            const state = this.store.getState();
+            const playlist = state.playlists[state.currentPlaylistId];
+            const existingItem = playlist ? playlist.items.find(i => i.id === data.id) : null;
+
+            if (existingItem) {
+                this.store.updateItem(data.id, { progress: data.progress });
+            }
         });
 
         this.ipc.onDownloadComplete((data) => {
-            const { currentPlaylistId } = this.store.getState();
-            this.store.addItem(currentPlaylistId, {
-                filename: data.filename,
-                filePath: data.filePath,
-                mediaType: data.type === '.mp4' ? 'video' : 'image',
-                title: data.title || data.filename,
-                thumbnailData: data.thumbnailData
-            });
+            console.log("[DEBUG] Download Complete, ID:", data.id);
+            const state = this.store.getState();
+            const playlist = state.playlists[state.currentPlaylistId];
+            if (playlist) {
+                console.log("[DEBUG] Playlist items IDs:", playlist.items.map(i => i.id));
+            }
+
+            // Remove the download item UI
+            this.ui.playlistRenderer.removeDownloadItem(data.id, this.ui.itemsList);
+
+            // Check if the item already exists in the current playlist
+            const existingItem = playlist ? playlist.items.find(i => i.id === data.id) : null;
+
+            if (existingItem) {
+                console.log("[DEBUG] Updating existing item:", data.id);
+                // Update existing item
+                this.store.updateItem(data.id, {
+                    status: 'completed',
+                    filePath: data.filePath,
+                    mediaType: data.type === '.mp4' ? 'video' : 'image',
+                    title: data.title || data.filename,
+                    thumbnailData: data.thumbnailData,
+                    sourceUrl: data.sourceUrl
+                });
+            } else {
+                console.log("[DEBUG] Item not found, adding as new:", data.id);
+                // Add as new item
+                this.store.addItem(state.currentPlaylistId, {
+                    id: data.id,
+                    filename: data.filename,
+                    filePath: data.filePath,
+                    mediaType: data.type === '.mp4' ? 'video' : 'image',
+                    title: data.title || data.filename,
+                    status: 'completed',
+                    progress: 100,
+                    sourceUrl: data.sourceUrl
+                });
+            }
         });
 
         this.ipc.onDownloadError((data) => {
             if (this.ui && typeof this.ui.showError === 'function') {
                 this.ui.showError(data.id, data.message, data.filename);
+            }
+        });
+
+        this.ipc.onPlaylistImported((playlist) => {
+            this.ui.showNotification(`Playlist "${playlist.name}" importada.`);
+            this.store.addPlaylistFromData(playlist);
+            
+            // Set current playlist and switch view
+            this.store.setCurrentPlaylistId(playlist.id);
+            this.ui.switchView('items');
+            this.updatePlaybackUI();
+
+            // Trigger background download for videos missing local filePath
+            playlist.items.forEach(item => {
+                if (item.mediaType === 'video' && !item.filePath && item.sourceUrl) {
+                    console.log(`[App] Triggering background download for: ${item.title}`);
+                    this.ipc.downloadURL(item.sourceUrl, item.id);
+                }
+            });
+        });
+
+        this.ipc.onShareResult((result) => {
+            if (result.success) {
+                this.ui.showNotification("Playlist copiada! No WhatsApp, escolha o contato e pressione Ctrl+V para enviar.");
+                // Also show a standard alert for better visibility if needed, but the task says notification/alert
+                alert("Playlist copiada! No WhatsApp, escolha o contato e pressione Ctrl+V para enviar.");
+            } else {
+                this.ui.showNotification("Erro ao compartilhar playlist: " + result.error);
             }
         });
 
@@ -386,6 +479,10 @@ class App {
      * @param {Object} state - The new store state.
      */
     handleStoreChange(state) {
+        if (this.lastPlaylistId !== state.currentPlaylistId) {
+            this.lastPlaylistId = state.currentPlaylistId;
+            this.ipc.setActivePlaylist(state.currentPlaylistId);
+        }
         this.ipc.savePlaylists(state);
         this.ui.playlistRenderer.render(state.playlists, state.currentPlaylistId, this.ui.playlistList, {
             onPlaylistSelect: (id) => this.ui.onPlaylistSelect(id),

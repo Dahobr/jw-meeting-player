@@ -86,6 +86,11 @@ class StorageManager {
             console.log(`[StorageManager] delete-file called for: ${filePath}`);
             return this.deleteFile(filePath);
         });
+
+        ipcMain.handle('delete-playlist-folder', (event, playlistId) => {
+            console.log(`[StorageManager] delete-playlist-folder called for: ${playlistId}`);
+            return this.deletePlaylistFolder(playlistId);
+        });
         
         ipcMain.handle('open-download-folder', () => {
             console.log('[StorageManager] Opening downloads folder');
@@ -236,6 +241,33 @@ class StorageManager {
 
     getDownloadsDir() {
         return this.downloadsDir;
+    }
+
+    deletePlaylistFolder(playlistId) {
+        try {
+            const dir = path.join(this.downloadsDir, playlistId);
+            if (fs.existsSync(dir)) {
+                // Recursively delete the directory
+                fs.rmSync(dir, { recursive: true, force: true });
+                console.log(`[StorageManager] Playlist directory deleted: ${dir}`);
+                return { success: true };
+            }
+            return { success: false, error: 'Directory not found' };
+        } catch (err) {
+            console.error(`[StorageManager] Delete Directory Error: ${err.message}`);
+            return { success: false, error: err.message };
+        }
+    }
+
+    getPlaylistDownloadsDir(playlistId) {
+        if (!playlistId) return this.downloadsDir;
+        
+        const dir = path.join(this.downloadsDir, playlistId);
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+            console.log(`[StorageManager] Created playlist directory: ${dir}`);
+        }
+        return dir;
     }
 }
 
