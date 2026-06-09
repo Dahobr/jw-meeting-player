@@ -291,6 +291,16 @@ class DownloadManager {
                     const result = await shareManager.importPlaylist(filePath);
                     if (result.success) {
                         this.mainWindow.webContents.send('playlist-imported', result.playlist);
+                        
+                        // Trigger background download for videos missing local filePath
+                        result.playlist.items.forEach(item => {
+                            if (item.mediaType === 'video' && !item.filePath && item.sourceUrl) {
+                                console.log(`[DownloadManager] Triggering background download for imported video: ${item.title}`);
+                                
+                                this.pendingDownloadIds.set(item.sourceUrl, item.id);
+                                this.mainWindow.webContents.downloadURL(item.sourceUrl);
+                            }
+                        });
                     } else {
                         console.error('[DownloadManager] JWMP Import Error:', result.error);
                     }
