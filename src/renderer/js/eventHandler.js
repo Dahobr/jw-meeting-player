@@ -279,9 +279,13 @@ class EventHandler {
         this.ui.btnShareApp = document.getElementById('btn-share-app');
         if (this.ui.btnShareApp) {
             this.ui.btnShareApp.onclick = async () => {
+                // Add click effect
+                this.ui.btnShareApp.classList.add('clicked');
+                setTimeout(() => this.ui.btnShareApp.classList.remove('clicked'), 500);
+
                 try {
                     await navigator.clipboard.writeText('https://dahobr.github.io/jw-meeting-player/');
-                    this.ui.showNotification('Endereço de download copiado!');
+                    this.ui.showNotification('O link do App copiado!');
                 } catch (err) {
                     this.ui.showNotification('Erro ao copiar endereço', 'error');
                 }

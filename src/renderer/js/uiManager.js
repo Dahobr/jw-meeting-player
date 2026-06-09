@@ -542,6 +542,27 @@ class UIManager {
      */
     showNotification(message, type = 'info') {
         console.log(`[UI] Notification (${type}): ${message}`);
+        
+        const toast = document.createElement('div');
+        toast.className = `notification-toast ${type}`;
+        toast.textContent = message;
+        
+        // Find the share button container to anchor the toast
+        const shareBtn = document.getElementById('btn-share-app');
+        if (shareBtn) {
+            shareBtn.parentNode.style.position = 'relative'; // Ensure parent has positioning
+            shareBtn.parentNode.appendChild(toast);
+            // Position it to the left of the button
+            toast.style.right = '40px'; 
+            toast.style.bottom = '10px'; // Changed from 5px to 20px
+        } else {
+            document.body.appendChild(toast);
+        }
+        
+        setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 500);
+        }, 3000);
     }
 
     /**
