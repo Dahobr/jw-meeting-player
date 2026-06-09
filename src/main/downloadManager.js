@@ -290,17 +290,8 @@ class DownloadManager {
                 try {
                     const result = await shareManager.importPlaylist(filePath);
                     if (result.success) {
-                        importedItems.push({ type: 'playlist', name: result.playlist.name, items: result.playlist.items });
-                        
-                        // Trigger background download for videos missing local filePath
-                        result.playlist.items.forEach(item => {
-                            if (item.mediaType === 'video' && !item.filePath && item.sourceUrl) {
-                                console.log(`[DownloadManager] Triggering background download for imported video: ${item.title}`);
-                                
-                                this.pendingDownloadIds.set(item.sourceUrl, item.id);
-                                this.mainWindow.webContents.downloadURL(item.sourceUrl);
-                            }
-                        });
+                        // Send the same event as WhatsApp import to unify logic
+                        this.mainWindow.webContents.send('playlist-imported', result.playlist);
                     } else {
                         console.error('[DownloadManager] JWMP Import Error:', result.error);
                     }

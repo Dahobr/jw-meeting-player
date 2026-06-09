@@ -521,7 +521,8 @@ class App {
         
         const { currentPlaylistId } = this.store.getState();
 
-        // Process playlist import
+        // Process playlist import (for legacy .jwlplaylist or manual results)
+        // Note: .jwmp is now handled via onPlaylistImported IPC event triggered from main
         if (result.newPlaylist) {
             const id = this.store.addPlaylist(result.newPlaylist.name);
             result.newPlaylist.items.forEach(item => {
@@ -531,7 +532,7 @@ class App {
         }
 
         // Process individual item import
-        if (result.newItems) {
+        if (result.newItems && result.newItems.length > 0) {
             result.newItems.forEach(item => {
                 this._addOrUpdateItem(currentPlaylistId, item);
             });
