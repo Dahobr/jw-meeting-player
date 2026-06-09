@@ -384,6 +384,10 @@ class App {
             playlist.items.forEach(item => {
                 if (item.mediaType === 'video' && !item.filePath && item.sourceUrl) {
                     console.log(`[App] Triggering background download for: ${item.title}`);
+                    
+                    // Set status to downloading so UI can show progress
+                    this.store.updateItem(item.id, { status: 'downloading', progress: 0 });
+                    
                     this.ipc.downloadURL(item.sourceUrl, item.id);
                 }
             });
