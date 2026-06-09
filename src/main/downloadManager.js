@@ -274,7 +274,7 @@ class DownloadManager {
         const result = await dialog.showOpenDialog(this.mainWindow, {
             properties: ['openFile', 'multiSelections'],
             filters: [
-                { name: 'Media/Playlist Files', extensions: ['mp4', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'jwlplaylist'] }
+                { name: 'Media/Playlist Files', extensions: ['mp4', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'jwlplaylist', 'jwmp'] }
             ]
         });
 
@@ -286,7 +286,18 @@ class DownloadManager {
         for (const filePath of result.filePaths) {
             const ext = path.extname(filePath).toLowerCase();
 
-            if (ext === '.jwlplaylist') {
+            if (ext === '.jwmp') {
+                try {
+                    const result = await shareManager.importPlaylist(filePath);
+                    if (result.success) {
+                        this.mainWindow.webContents.send('playlist-imported', result.playlist);
+                    } else {
+                        console.error('[DownloadManager] JWMP Import Error:', result.error);
+                    }
+                } catch (err) {
+                    console.error('[DownloadManager] JWMP Import Error:', err);
+                }
+            } else if (ext === '.jwlplaylist') {
                 try {
                     const zip = new AdmZip(filePath);
                     const zipEntries = zip.getEntries();
