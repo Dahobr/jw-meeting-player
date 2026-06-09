@@ -290,7 +290,7 @@ class DownloadManager {
                 try {
                     const result = await shareManager.importPlaylist(filePath);
                     if (result.success) {
-                        this.mainWindow.webContents.send('playlist-imported', result.playlist);
+                        importedItems.push({ type: 'playlist', name: result.playlist.name, items: result.playlist.items });
                         
                         // Trigger background download for videos missing local filePath
                         result.playlist.items.forEach(item => {
