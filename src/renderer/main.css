@@ -1,4 +1,48 @@
+/* --- Notification Toast (Tooltip) --- */
+.notification-toast {
+    position: absolute !important;
+    bottom: 15px !important;
+    right: 30px !important;
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 10000 !important;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.notification-toast::after {
+    content: '';
+    position: absolute;
+    right: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 5px solid var(--secondary-color);
+}
+
+.notification-toast.fade-out {
+    opacity: 0;
+}
+
+/* --- Click Effect --- */
+.share-btn.clicked {
+    animation: star-effect 0.5s ease-out;
+}
+
+@keyframes star-effect {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.5; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
 /* src/renderer/main.css */
+
 
 .menu-container {
     position: relative;
@@ -935,8 +979,11 @@ body {
   text-align: right;
   font-size: 0.75em;
   color: #7f8c8d;
-  align-self: flex-end;
-  padding-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding-bottom: 5px;
 }
 
 .main-transport-btn {
@@ -1119,4 +1166,23 @@ body {
 /* WhatsApp button shares the same style */
 #btn-whatsapp {
     color: #ffffff;
+}
+
+.share-btn {
+    background: none;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    margin-bottom: 0px;
+}
+
+.share-btn:hover {
+    color: var(--danger-color);
+    transform: scale(1.1);
 }
