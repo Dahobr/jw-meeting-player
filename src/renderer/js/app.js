@@ -518,22 +518,45 @@ class App {
     async handleImport() {
         const result = await this.ipc.openFileDialog();
         if (!result) return;
+        
+        const { currentPlaylistId } = this.store.getState();
+
+        // Process playlist import
         if (result.newPlaylist) {
             const id = this.store.addPlaylist(result.newPlaylist.name);
             result.newPlaylist.items.forEach(item => {
-                delete item.id;
-                this.store.addItem(id, item);
+                this._addOrUpdateItem(id, item);
             });
             this.ui.onPlaylistSelect(id);
         }
+
+        // Process individual item import
         if (result.newItems) {
-            const { currentPlaylistId } = this.store.getState();
             result.newItems.forEach(item => {
-                delete item.id;
-                this.store.addItem(currentPlaylistId, item);
+                this._addOrUpdateItem(currentPlaylistId, item);
             });
         }
         this.ui.ensurePreviewVisible();
+    }
+
+    // Helper method to handle deduplication
+    _addOrUpdateItem(playlistId, item) {
+        const state = this.store.getState();
+        const playlist = state.playlists[playlistId];
+        
+        // Find existing item by ID or sourceUrl
+        const existingItem = playlist ? playlist.items.find(i => 
+            (item.id && i.id === item.id) || (item.sourceUrl && i.sourceUrl === item.sourceUrl)
+        ) : null;
+
+        if (existingItem) {
+            this.store.updateItem(existingItem.id, item);
+        } else {
+            // Add as a new item if not found
+            const newItem = { ...item };
+            delete newItem.id; 
+            this.store.addItem(playlistId, newItem);
+        }
     }
 
     /**
