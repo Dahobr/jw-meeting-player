@@ -107,7 +107,7 @@ class PlaylistListRenderer {
                 li.classList.add('downloading');
                 li.innerHTML = `
                     <div class="item-content">
-                        <div class="item-thumbnail loading" style="--progress: ${item.progress || 0}%;"></div>
+                        <div class="item-thumbnail loading" style="--progress: ${item.progress || 0};"></div>
                         <div class="item-info">
                             <span class="item-title">${item.title || item.filename}</span>
                             <span class="item-type">Baixando... (${item.progress || 0}%)</span>
