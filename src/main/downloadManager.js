@@ -309,106 +309,34 @@ class DownloadManager {
 
         if (result.canceled || result.filePaths.length === 0) return null;
 
-        const importedItems = [];
-        const allowedImageTypes = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
-        
-        // Ensure we have a valid active playlist ID
+        const responseData = { newPlaylist: null, newItems: [] };
         const targetPlaylistId = this._getSafeActivePlaylistId();
-        const targetDir = storageManager.getPlaylistDownloadsDir(targetPlaylistId);
 
         for (const filePath of result.filePaths) {
             const ext = path.extname(filePath).toLowerCase();
 
-            if (ext === '.jwmp') {
+            if (ext === '.jwmp' || ext === '.jwlplaylist') {
                 try {
                     const result = await shareManager.importPlaylist(filePath);
                     if (result.success) {
-                        // Send the same event as WhatsApp import to unify logic
+                        // If it's the first playlist in this dialog session, or multiple are selected,
+                        // we'll send it back as a new playlist.
+                        // Note: Current renderer app.js handles 'playlist-imported' event independently.
                         this.mainWindow.webContents.send('playlist-imported', result.playlist);
                     } else {
-                        console.error('[DownloadManager] JWMP Import Error:', result.error);
+                        console.error(`[DownloadManager] ${ext} Import Error:`, result.error);
                     }
                 } catch (err) {
-                    console.error('[DownloadManager] JWMP Import Error:', err);
+                    console.error(`[DownloadManager] ${ext} Import Error:`, err);
                 }
-            } else if (ext === '.jwlplaylist') {
+            } else {
+                // Individual file import
                 try {
-                    const zip = new AdmZip(filePath);
-                    const zipEntries = zip.getEntries();
-                    const playlistName = path.basename(filePath, ext);
-                    const extractedImages = [];
-
-                    for (const entry of zipEntries) {
-                        const entryExt = path.extname(entry.entryName).toLowerCase();
-                        if (allowedImageTypes.includes(entryExt)) {
-                            let finalFileName = entry.entryName;
-                            let finalFilePath = path.join(targetDir, finalFileName);
-                            let counter = 1;
-                            const fileBase = path.basename(finalFileName, entryExt);
-
-                            while (fs.existsSync(finalFilePath)) {
-                                finalFileName = `${fileBase}(${counter})${entryExt}`;
-                                finalFilePath = path.join(targetDir, finalFileName);
-                                counter++;
-                            }
-
-                            fs.writeFileSync(finalFilePath, entry.getData());
-                            const { title, thumbnailData } = await this.extractMediaInfo(finalFilePath);
-
-                            extractedImages.push({
-                                filename: finalFileName,
-                                filePath: finalFilePath,
-                                type: entryExt,
-                                mediaType: 'image',
-                                thumbnailData,
-                                title: title || path.basename(finalFileName, entryExt)
-                            });
-                        }
-                    }
-                    importedItems.push({ type: 'playlist', name: playlistName, items: extractedImages });
+                    const newItem = await shareManager.importSingleFile(filePath, targetPlaylistId);
+                    responseData.newItems.push(newItem);
                 } catch (err) {
-                    console.error('[DownloadManager] JWPlaylist Error:', err);
+                    console.error('[DownloadManager] File Import Error:', err);
                 }
-            } else {
-                let finalFileName = path.basename(filePath);
-                const fileExt = path.extname(finalFileName);
-                const fileBase = path.basename(finalFileName, fileExt);
-                let finalFilePath = path.join(targetDir, finalFileName);
-                let counter = 1;
-
-                while (fs.existsSync(finalFilePath)) {
-                    finalFileName = `${fileBase}(${counter})${fileExt}`;
-                    finalFilePath = path.join(targetDir, finalFileName);
-                    counter++;
-                }
-
-                fs.copyFileSync(filePath, finalFilePath);
-                const { title, thumbnailData } = await this.extractMediaInfo(finalFilePath);
-
-                importedItems.push({
-                    type: 'file',
-                    filename: finalFileName,
-                    filePath: finalFilePath,
-                    mediaType: ext === '.mp4' ? 'video' : 'image',
-                    title,
-                    thumbnailData
-                });
-            }
-        }
-
-        const responseData = { newPlaylist: null, newItems: [] };
-        for (const item of importedItems) {
-            if (item.type === 'playlist') {
-                responseData.newPlaylist = { id: `playlist-${Date.now()}`, name: item.name, items: item.items };
-            } else {
-                responseData.newItems.push({
-                    id: `item-${Date.now()}`,
-                    filename: item.filename,
-                    filePath: item.filePath,
-                    mediaType: item.mediaType,
-                    title: item.title,
-                    thumbnailData: item.thumbnailData
-                });
             }
         }
 

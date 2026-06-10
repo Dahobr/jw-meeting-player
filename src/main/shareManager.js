@@ -68,8 +68,43 @@ class ShareManager {
     }
 
     /**
-     * Imports a playlist from a .jwmp file.
-     * @param {string} filePath - Path to the .jwmp file.
+     * Imports a single media file into a playlist folder.
+     * @param {string} sourcePath - Current path of the file.
+     * @param {string} playlistId - Target playlist ID.
+     * @returns {Object} item - The imported item data.
+     */
+    async importSingleFile(sourcePath, playlistId) {
+        const targetDir = storageManager.getPlaylistDownloadsDir(playlistId);
+        let fileName = path.basename(sourcePath);
+        const ext = path.extname(fileName).toLowerCase();
+        const fileBase = path.basename(fileName, ext);
+        
+        let finalPath = path.join(targetDir, fileName);
+        let counter = 1;
+        while (fs.existsSync(finalPath)) {
+            fileName = `${fileBase}(${counter})${ext}`;
+            finalPath = path.join(targetDir, fileName);
+            counter++;
+        }
+
+        fs.copyFileSync(sourcePath, finalPath);
+        
+        const downloadManager = require('./downloadManager');
+        const { title, thumbnailData } = await downloadManager.extractMediaInfo(finalPath);
+
+        return {
+            id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            filename: fileName,
+            filePath: finalPath,
+            mediaType: ext === '.mp4' ? 'video' : 'image',
+            title: title || fileBase,
+            thumbnailData
+        };
+    }
+
+    /**
+     * Imports a playlist from a .jwmp or .jwlplaylist file.
+     * @param {string} filePath - Path to the file.
      * @returns {Object} result - Success status and the imported playlist data.
      */
     async importPlaylist(filePath) {
@@ -78,20 +113,54 @@ class ShareManager {
             const zip = new AdmZip(filePath);
             const zipEntries = zip.getEntries();
             
-            const playlistEntry = zipEntries.find(e => e.entryName === 'playlist.json');
-            if (!playlistEntry) {
-                throw new Error('Invalid .jwmp file: playlist.json not found');
+            const jwmpEntry = zipEntries.find(e => e.entryName === 'playlist.json');
+            const jwlEntry = zipEntries.find(e => e.entryName === 'manifest.json');
+
+            if (!jwmpEntry && !jwlEntry) {
+                throw new Error('Invalid file: Neither playlist.json nor manifest.json found');
             }
 
-            const playlistData = JSON.parse(playlistEntry.getData().toString('utf8'));
             const playlistId = `playlist-${Date.now()}`;
             const targetDir = storageManager.getPlaylistDownloadsDir(playlistId);
+            let playlistData = {};
 
-            // Extract images to the playlist folder
+            if (jwmpEntry) {
+                // Handle .jwmp (our custom format)
+                playlistData = JSON.parse(jwmpEntry.getData().toString('utf8'));
+            } else if (jwlEntry) {
+                // Handle .jwlplaylist (JW Library format)
+                const manifest = JSON.parse(jwlEntry.getData().toString('utf8'));
+                // Use manifest name (usually ends with .jwlplaylist) as playlist name, or fallback to file name
+                let name = manifest.name || path.basename(filePath, path.extname(filePath));
+                name = name.replace('.jwlplaylist', '').trim();
+                
+                playlistData = {
+                    name: name,
+                    items: []
+                };
+
+                // Add all images found in the ZIP
+                const allowedImageTypes = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
+                for (const entry of zipEntries) {
+                    const ext = path.extname(entry.entryName).toLowerCase();
+                    if (allowedImageTypes.includes(ext)) {
+                        playlistData.items.push({
+                            title: path.basename(entry.entryName, ext),
+                            mediaType: 'image',
+                            filePath: entry.entryName // Will be updated after extraction
+                        });
+                    }
+                }
+            }
+
+            // Extract media files to the playlist folder
+            const allowedImageTypes = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
             for (const entry of zipEntries) {
-                if (entry.entryName !== 'playlist.json') {
+                const ext = path.extname(entry.entryName).toLowerCase();
+                const isMediaFile = jwmpEntry ? (entry.entryName !== 'playlist.json') : allowedImageTypes.includes(ext);
+
+                if (isMediaFile) {
                     const destPath = path.join(targetDir, entry.entryName);
-                    // Ensure the target directory exists
                     const entryDir = path.dirname(destPath);
                     if (!fs.existsSync(entryDir)) {
                         fs.mkdirSync(entryDir, { recursive: true });
@@ -102,29 +171,35 @@ class ShareManager {
             }
 
             // Update items with their new local filePaths and unique IDs
-            playlistData.items = playlistData.items.map((item, index) => {
+            // Note: We use global require here or a shared utility if possible, 
+            // but for now we'll require downloadManager to get extractMediaInfo.
+            const downloadManager = require('./downloadManager');
+
+            const updatedItems = [];
+            for (let i = 0; i < playlistData.items.length; i++) {
+                const item = playlistData.items[i];
                 const newItem = { ...item };
                 
-                if (newItem.mediaType === 'image' && newItem.filePath) {
+                if (newItem.filePath) {
                     const fileName = path.basename(newItem.filePath);
-                    newItem.filePath = path.join(targetDir, fileName);
-                } else if (newItem.mediaType === 'video') {
-                    // Check if the video file was actually extracted
-                    const fileName = newItem.filePath ? path.basename(newItem.filePath) : null;
-                    const extractedPath = fileName ? path.join(targetDir, fileName) : null;
+                    const finalPath = path.join(targetDir, fileName);
                     
-                    if (extractedPath && fs.existsSync(extractedPath)) {
-                        newItem.filePath = extractedPath;
-                    } else {
+                    if (fs.existsSync(finalPath)) {
+                        newItem.filePath = finalPath;
+                        const { title, thumbnailData } = await downloadManager.extractMediaInfo(finalPath);
+                        newItem.thumbnailData = thumbnailData;
+                        // Use extracted title if not already present (especially for .jwlplaylist)
+                        if (!newItem.title) newItem.title = title || path.basename(fileName, path.extname(fileName));
+                    } else if (newItem.mediaType === 'video') {
                         newItem.filePath = null; // Mark as missing so App can trigger download
                     }
                 }
                 
-                // Generate a unique ID for each item
-                newItem.id = `item-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 5)}`;
-                return newItem;
-            });
+                newItem.id = `item-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 5)}`;
+                updatedItems.push(newItem);
+            }
 
+            playlistData.items = updatedItems;
             playlistData.id = playlistId;
 
             return { success: true, playlist: playlistData };
