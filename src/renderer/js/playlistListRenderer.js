@@ -38,6 +38,10 @@ class PlaylistListRenderer {
                 </div>
             `;
             
+            DomUtils.query('.playlist-name', div).addEventListener('dblclick', () => {
+                this.togglePlaylistEdit(id);
+            });
+            
             div.addEventListener('click', (e) => {
                 if (!e.target.closest('.item-more-actions') && !e.target.closest('input')) {
                     this.callbacks.onPlaylistSelect(id);
@@ -150,6 +154,10 @@ class PlaylistListRenderer {
             DomUtils.query('.btn-play-item', li).addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.callbacks.onItemPlay(item);
+            });
+            
+            DomUtils.query('.item-title', li).addEventListener('dblclick', () => {
+                this.toggleItemEdit(item.id);
             });
 
             const moreActions = DomUtils.query('.item-more-actions', li);
