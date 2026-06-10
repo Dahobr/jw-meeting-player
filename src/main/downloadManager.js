@@ -63,11 +63,37 @@ class DownloadManager {
         session.on('will-download', (event, item, webContents) => this.handleDownload(event, item, webContents));
     }
 
+    /**
+     * Ensures an active playlist ID exists, creating and synchronizing a fallback if necessary.
+     * @returns {string} The active playlist ID.
+     */
+    _getSafeActivePlaylistId() {
+        if (this.activePlaylistId) return this.activePlaylistId;
+        
+        const fallbackId = `playlist-${Date.now()}`;
+        this.activePlaylistId = fallbackId;
+        
+        // Notify Renderer to create this fallback playlist in the store
+        if (this.mainWindow) {
+            this.mainWindow.webContents.send('playlist-imported', {
+                id: fallbackId,
+                name: 'Minha Playlist',
+                items: []
+            });
+        }
+        
+        console.warn(`[DownloadManager] No active playlist ID found. Created fallback: ${fallbackId}`);
+        return fallbackId;
+    }
+
     async saveBrowserImage(base64Data, originalUrl) {
         const ext = '.jpg';
         const filename = `img_${Date.now()}${ext}`;
         const downloadId = `img_${Date.now()}`; // Generate a unique ID
-        const targetDir = storageManager.getDownloadsDir();
+        
+        // Use safe active playlist ID
+        const targetPlaylistId = this._getSafeActivePlaylistId();
+        const targetDir = storageManager.getPlaylistDownloadsDir(targetPlaylistId);
         const filePath = path.join(targetDir, filename);
 
         // Notify download started
@@ -134,7 +160,10 @@ class DownloadManager {
         }
         this.activeDownloads.add(downloadId);
 
-        const targetDir = storageManager.getPlaylistDownloadsDir(this.activePlaylistId);
+        // Ensure we use a specific directory, never the root
+        const targetPlaylistId = this._getSafeActivePlaylistId();
+        const targetDir = storageManager.getPlaylistDownloadsDir(targetPlaylistId);
+        
         let finalFilePath = path.join(targetDir, filename);
         const fileExt = path.extname(filename);
         const fileBase = path.basename(filename, fileExt);
@@ -282,6 +311,10 @@ class DownloadManager {
 
         const importedItems = [];
         const allowedImageTypes = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
+        
+        // Ensure we have a valid active playlist ID
+        const targetPlaylistId = this._getSafeActivePlaylistId();
+        const targetDir = storageManager.getPlaylistDownloadsDir(targetPlaylistId);
 
         for (const filePath of result.filePaths) {
             const ext = path.extname(filePath).toLowerCase();
@@ -309,13 +342,13 @@ class DownloadManager {
                         const entryExt = path.extname(entry.entryName).toLowerCase();
                         if (allowedImageTypes.includes(entryExt)) {
                             let finalFileName = entry.entryName;
-                            let finalFilePath = path.join(this.downloadDir, finalFileName);
+                            let finalFilePath = path.join(targetDir, finalFileName);
                             let counter = 1;
                             const fileBase = path.basename(finalFileName, entryExt);
 
                             while (fs.existsSync(finalFilePath)) {
                                 finalFileName = `${fileBase}(${counter})${entryExt}`;
-                                finalFilePath = path.join(this.downloadDir, finalFileName);
+                                finalFilePath = path.join(targetDir, finalFileName);
                                 counter++;
                             }
 
@@ -340,12 +373,12 @@ class DownloadManager {
                 let finalFileName = path.basename(filePath);
                 const fileExt = path.extname(finalFileName);
                 const fileBase = path.basename(finalFileName, fileExt);
-                let finalFilePath = path.join(this.downloadDir, finalFileName);
+                let finalFilePath = path.join(targetDir, finalFileName);
                 let counter = 1;
 
                 while (fs.existsSync(finalFilePath)) {
                     finalFileName = `${fileBase}(${counter})${fileExt}`;
-                    finalFilePath = path.join(this.downloadDir, finalFileName);
+                    finalFilePath = path.join(targetDir, finalFileName);
                     counter++;
                 }
 
