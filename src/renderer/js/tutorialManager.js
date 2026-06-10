@@ -64,9 +64,16 @@ const tutorialManager = {
                     content: `<p>Você pode importar seus próprios arquivos de imagem ou vídeo clicando no botão <b>Importar Arquivos</b>, localizado no canto inferior esquerdo.</p>
                               <p>Também é possível importar playlists do <b>JW Library</b>. Note que, no momento, o processo de importação permite apenas imagens e pode não manter a ordem original, sendo necessário reordená-las manualmente na lista.</p>`, 
                     action: null 
+                },
+                { 
+                    title: "Exportar Playlists", 
+                    content: `<p>Você pode preparar suas listas com antecedência para evitar correria antes da reunião. Para isso, clique no botão de <b>três pontos (⋮)</b> ao lado do nome da lista e selecione <b>Exportar</b>.</p>
+                              <p>O arquivo será salvo na sua pasta de Downloads. Você pode enviá-lo para outro computador ou para um colega através do <b>WhatsApp</b>.</p>
+                              <p>Ao baixar um desses arquivos pelo WhatsApp, o aplicativo o reconhecerá e carregará tudo automaticamente. Ele também cuidará do download dos vídeos para você, deixando tudo pronto para o uso.</p>`, 
+                    action: null 
                 }
-            ]
-        },
+                ]
+                },
         {
             id: 3,
             title: "Controle de Apresentação",
