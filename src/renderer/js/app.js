@@ -456,11 +456,38 @@ class App {
     }
 
     /**
+     * Ensures an active playlist exists, creating a default one if necessary.
+     * @returns {string} The active playlist ID.
+     */
+    _ensureActivePlaylist() {
+        const { currentPlaylistId, playlists } = this.store.getState();
+        if (currentPlaylistId && playlists[currentPlaylistId]) {
+            return currentPlaylistId;
+        }
+
+        // Check if any playlist exists
+        const playlistIds = Object.keys(playlists);
+        if (playlistIds.length > 0) {
+            const firstId = playlistIds[0];
+            this.store.setCurrentPlaylistId(firstId);
+            return firstId;
+        }
+
+        // Create a default playlist
+        const newId = this.store.addPlaylist('Minha Playlist');
+        this.store.setCurrentPlaylistId(newId);
+        return newId;
+    }
+
+    /**
      * Fetches an image from a URL and saves it via IPC.
      * @param {string} url - The URL of the image to save.
      */
     async saveBrowserImage(url) {
         try {
+            // Ensure we have a playlist to save to
+            this._ensureActivePlaylist();
+
             const response = await fetch(url);
             if (!response.ok) throw new Error(`Fetch failed with status: ${response.status}`);
             
@@ -516,11 +543,12 @@ class App {
      * Handles file/playlist import via a file dialog.
      */
     async handleImport() {
+        // Ensure we have an active playlist before importing individual items
+        const currentPlaylistId = this._ensureActivePlaylist();
+
         const result = await this.ipc.openFileDialog();
         if (!result) return;
         
-        const { currentPlaylistId } = this.store.getState();
-
         // Process playlist import (for legacy .jwlplaylist or manual results)
         // Note: .jwmp is now handled via onPlaylistImported IPC event triggered from main
         if (result.newPlaylist) {
