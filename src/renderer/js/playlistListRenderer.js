@@ -85,7 +85,10 @@ class PlaylistListRenderer {
                         this.togglePlaylistEdit(id, false);
                     }
                 });
-                input.addEventListener('blur', () => this.togglePlaylistEdit(id, false));
+                input.addEventListener('blur', () => {
+                    this.callbacks.onPlaylistRename(id, input.value);
+                    this.togglePlaylistEdit(id, false);
+                });
             }
             
             this.container.appendChild(div);
@@ -190,7 +193,10 @@ class PlaylistListRenderer {
                     this.toggleItemEdit(item.id, false);
                 }
             });
-            input.addEventListener('blur', () => this.toggleItemEdit(id, false));
+            input.addEventListener('blur', () => {
+                this.callbacks.onItemRename(item.id, input.value);
+                this.toggleItemEdit(item.id, false);
+            });
             
             itemsList.appendChild(li);
         });
