@@ -38,6 +38,10 @@ class PlaylistListRenderer {
                 </div>
             `;
             
+            DomUtils.query('.playlist-name', div).addEventListener('dblclick', () => {
+                this.togglePlaylistEdit(id);
+            });
+            
             div.addEventListener('click', (e) => {
                 if (!e.target.closest('.item-more-actions') && !e.target.closest('input')) {
                     this.callbacks.onPlaylistSelect(id);
@@ -81,7 +85,10 @@ class PlaylistListRenderer {
                         this.togglePlaylistEdit(id, false);
                     }
                 });
-                input.addEventListener('blur', () => this.togglePlaylistEdit(id, false));
+                input.addEventListener('blur', () => {
+                    this.callbacks.onPlaylistRename(id, input.value);
+                    this.togglePlaylistEdit(id, false);
+                });
             }
             
             this.container.appendChild(div);
@@ -151,6 +158,10 @@ class PlaylistListRenderer {
                 e.stopPropagation();
                 this.callbacks.onItemPlay(item);
             });
+            
+            DomUtils.query('.item-title', li).addEventListener('dblclick', () => {
+                this.toggleItemEdit(item.id);
+            });
 
             const moreActions = DomUtils.query('.item-more-actions', li);
             const dropdown = DomUtils.query('.item-dropdown', li);
@@ -182,7 +193,10 @@ class PlaylistListRenderer {
                     this.toggleItemEdit(item.id, false);
                 }
             });
-            input.addEventListener('blur', () => this.toggleItemEdit(id, false));
+            input.addEventListener('blur', () => {
+                this.callbacks.onItemRename(item.id, input.value);
+                this.toggleItemEdit(item.id, false);
+            });
             
             itemsList.appendChild(li);
         });
@@ -277,7 +291,12 @@ class PlaylistListRenderer {
         if (nameSpan && input) {
             nameSpan.style.display = show ? 'none' : 'block';
             input.style.display = show ? 'block' : 'none';
-            if (show) input.focus();
+            if (show) {
+                requestAnimationFrame(() => {
+                    input.focus();
+                    input.select();
+                });
+            }
         }
     }
 }
