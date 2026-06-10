@@ -27,7 +27,80 @@ class EventHandler {
                 e.preventDefault();
                 this.app.togglePlayback();
             }
+            if (e.key === 'Delete') {
+                this.handleDeleteAction();
+            }
         });
+    }
+
+    /**
+     * Handles the Delete key action to remove playlists or items.
+     */
+    handleDeleteAction() {
+        const isPlaylistView = this.ui.isPlaylistView();
+
+        if (isPlaylistView) {
+            // プレイリストビューの場合
+            const activePlaylist = document.querySelector('.playlist-item.active');
+            if (activePlaylist) {
+                const id = activePlaylist.querySelector('.item-more-actions')?.dataset.id;
+                if (id) {
+                    this.ui.showConfirmModal('Deseja realmente excluir esta playlist?', async () => {
+                        await this.executePlaylistDeletion(id);
+                    });
+                }
+            }
+        } else {
+            // アイテムビューの場合
+            // アイテムは 'playing' または 'standby' クラスが付いているものが「選択/表示対象」とみなす
+            const activeItem = document.querySelector('.playlist-item-li.playing, .playlist-item-li.standby');
+            if (activeItem) {
+                const id = activeItem.dataset.id;
+                const playlistId = this.store.currentPlaylistId; 
+                if (id && playlistId) {
+                    this.ui.showConfirmModal('Deseja realmente excluir este arquivo?', async () => {
+                        await this.executeItemDeletion(playlistId, id);
+                    });
+                }
+            }
+        }
+    }
+
+    /**
+     * Executes playlist deletion logic without additional confirmation.
+     */
+    async executePlaylistDeletion(id) {
+        const itemsToDelete = this.store.deletePlaylist(id);
+        // Delete associated files
+        for (const item of itemsToDelete) {
+            if (item.filePath) await this.ipc.deleteFile(item.filePath);
+        }
+        // Delete associated playlist folder
+        await this.ipc.deletePlaylistFolder(id);
+    }
+
+    /**
+     * Executes item removal logic without additional confirmation.
+     */
+    async executeItemDeletion(playlistId, itemId) {
+        const item = this.store.getItem(playlistId, itemId);
+        if (item && item.filePath) await this.ipc.deleteFile(item.filePath);
+        this.store.removeItem(playlistId, itemId);
+    }
+
+    /**
+     * Wrappers for callback methods to be used by keyboard listener
+     */
+    async onPlaylistDelete(id) {
+        if (await this.app.showCustomConfirm('Deseja realmente excluir esta playlist?')) {
+            await this.executePlaylistDeletion(id);
+        }
+    }
+
+    async onItemRemove(playlistId, itemId) {
+        if (await this.app.showCustomConfirm('Deseja realmente excluir este arquivo?')) {
+            await this.executeItemDeletion(playlistId, itemId);
+        }
     }
 
     /**
