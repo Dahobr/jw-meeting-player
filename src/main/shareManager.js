@@ -68,6 +68,41 @@ class ShareManager {
     }
 
     /**
+     * Imports a single media file into a playlist folder.
+     * @param {string} sourcePath - Current path of the file.
+     * @param {string} playlistId - Target playlist ID.
+     * @returns {Object} item - The imported item data.
+     */
+    async importSingleFile(sourcePath, playlistId) {
+        const targetDir = storageManager.getPlaylistDownloadsDir(playlistId);
+        let fileName = path.basename(sourcePath);
+        const ext = path.extname(fileName).toLowerCase();
+        const fileBase = path.basename(fileName, ext);
+        
+        let finalPath = path.join(targetDir, fileName);
+        let counter = 1;
+        while (fs.existsSync(finalPath)) {
+            fileName = `${fileBase}(${counter})${ext}`;
+            finalPath = path.join(targetDir, fileName);
+            counter++;
+        }
+
+        fs.copyFileSync(sourcePath, finalPath);
+        
+        const downloadManager = require('./downloadManager');
+        const { title, thumbnailData } = await downloadManager.extractMediaInfo(finalPath);
+
+        return {
+            id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            filename: fileName,
+            filePath: finalPath,
+            mediaType: ext === '.mp4' ? 'video' : 'image',
+            title: title || fileBase,
+            thumbnailData
+        };
+    }
+
+    /**
      * Imports a playlist from a .jwmp or .jwlplaylist file.
      * @param {string} filePath - Path to the file.
      * @returns {Object} result - Success status and the imported playlist data.
