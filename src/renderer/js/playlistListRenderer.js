@@ -277,7 +277,12 @@ class PlaylistListRenderer {
         if (nameSpan && input) {
             nameSpan.style.display = show ? 'none' : 'block';
             input.style.display = show ? 'block' : 'none';
-            if (show) input.focus();
+            if (show) {
+                requestAnimationFrame(() => {
+                    input.focus();
+                    input.select();
+                });
+            }
         }
     }
 }
