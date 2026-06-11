@@ -68,11 +68,14 @@ class DownloadManager {
 
     /**
      * Ensures an active playlist ID exists, creating and synchronizing a fallback if necessary.
-     * @returns {string} The active playlist ID.
+     * @param {boolean} createIfMissing - Whether to create a fallback playlist if none exist.
+     * @returns {string|null} The active playlist ID, or null if not found/created.
      */
-    _getSafeActivePlaylistId() {
+    _getSafeActivePlaylistId(createIfMissing = true) {
         if (this.activePlaylistId) return this.activePlaylistId;
         
+        if (!createIfMissing) return null;
+
         const fallbackId = `playlist-${Date.now()}`;
         this.activePlaylistId = fallbackId;
         
@@ -326,7 +329,10 @@ class DownloadManager {
         if (result.canceled || result.filePaths.length === 0) return null;
 
         const responseData = { newPlaylist: null, newItems: [] };
-        const targetPlaylistId = this._getSafeActivePlaylistId();
+        
+        // We don't ensure a playlist here anymore because some files might be .jwmp/.jwlplaylist
+        // which create their own playlists.
+        let targetPlaylistId = this._getSafeActivePlaylistId(false);
 
         for (const filePath of result.filePaths) {
             const ext = path.extname(filePath).toLowerCase();
@@ -335,9 +341,7 @@ class DownloadManager {
                 try {
                     const result = await shareManager.importPlaylist(filePath);
                     if (result.success) {
-                        // If it's the first playlist in this dialog session, or multiple are selected,
-                        // we'll send it back as a new playlist.
-                        // Note: Current renderer app.js handles 'playlist-imported' event independently.
+                        // Notify renderer about the new playlist
                         this.mainWindow.webContents.send('playlist-imported', result.playlist);
                     } else {
                         console.error(`[DownloadManager] ${ext} Import Error:`, result.error);
@@ -348,6 +352,11 @@ class DownloadManager {
             } else {
                 // Individual file import
                 try {
+                    // Now we definitely need a playlist, create one if still missing
+                    if (!targetPlaylistId) {
+                        targetPlaylistId = this._getSafeActivePlaylistId(true);
+                    }
+                    
                     const newItem = await shareManager.importSingleFile(filePath, targetPlaylistId);
                     responseData.newItems.push(newItem);
                 } catch (err) {
