@@ -115,6 +115,19 @@ const tutorialManager = {
             description: "Solucione problemas comuns e otimize o uso do player com estas dicas práticas.",
             steps: [
                 { 
+                    title: "Atalhos", 
+                    content: `<p>Utilize os seguintes atalhos para agilizar sua operação:</p>
+                              <table style="width: 100%; text-align: left; border-collapse: collapse; margin-top: 10px;">
+                                <tr><th>Atalho</th><th>Função</th></tr>
+                                <tr><td><b>Ctrl+ +</b></td><td>Ampliar página</td></tr>
+                                <tr><td><b>Ctrl+ -</b></td><td>Reduzir página</td></tr>
+                                <tr><td><b>Ctrl+ 0</b></td><td>Zoom original</td></tr>
+                                <tr><td><b>Espaço</b></td><td>Play/Pause</td></tr>
+                                <tr><td><b>Delete</b></td><td>Excluir item/playlist</td></tr>
+                              </table>`,
+                    action: null 
+                },
+                { 
                     title: "Dicas de Uso", 
                     content: `<p><b>Navegação:</b> O navegador integrado permite acesso a outros sites além do JW.ORG, funcionando como um navegador comum.</p>
                               <p><b>Atenção com áudio no navegador integrado:</b> Ao reproduzir áudios no navegador integrado, o som será transmitido. Certifique-se de parar o áudio antes de iniciar a playlist, para evitar a sobreposição de sons.</p>
