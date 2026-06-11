@@ -459,7 +459,7 @@ class App {
      * Ensures an active playlist exists, creating a default one if necessary.
      * @returns {string} The active playlist ID.
      */
-    _ensureActivePlaylist() {
+    _ensureActivePlaylist(createIfMissing = true) {
         const { currentPlaylistId, playlists } = this.store.getState();
         if (currentPlaylistId && playlists[currentPlaylistId]) {
             return currentPlaylistId;
@@ -472,6 +472,8 @@ class App {
             this.store.setCurrentPlaylistId(firstId);
             return firstId;
         }
+
+        if (!createIfMissing) return null;
 
         // Create a default playlist
         const newId = this.store.addPlaylist('Minha Playlist');
@@ -543,8 +545,9 @@ class App {
      * Handles file/playlist import via a file dialog.
      */
     async handleImport() {
-        // Ensure we have an active playlist before importing individual items
-        const currentPlaylistId = this._ensureActivePlaylist();
+        // We don't ensure a playlist here anymore because the import might be for a new playlist file (.jwmp/.jwlplaylist)
+        // Check if one exists but don't create it yet
+        let currentPlaylistId = this._ensureActivePlaylist(false);
 
         const result = await this.ipc.openFileDialog();
         if (!result) return;
@@ -561,6 +564,11 @@ class App {
 
         // Process individual item import
         if (result.newItems && result.newItems.length > 0) {
+            // Now we definitely need a playlist, so create one if still missing
+            if (!currentPlaylistId) {
+                currentPlaylistId = this._ensureActivePlaylist(true);
+            }
+            
             result.newItems.forEach(item => {
                 this._addOrUpdateItem(currentPlaylistId, item);
             });
