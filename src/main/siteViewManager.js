@@ -80,6 +80,15 @@ class SiteViewManager {
                 }));
                 menu.append(new MenuItem({ type: 'separator' }));
             }
+
+            if (params.editFlags.canPaste) {
+                menu.append(new MenuItem({
+                    label: 'Colar',
+                    click: () => this.siteView.webContents.paste()
+                }));
+                menu.append(new MenuItem({ type: 'separator' }));
+            }
+
             menu.append(new MenuItem({ 
                 label: 'Voltar', 
                 enabled: this.siteView.webContents.navigationHistory.canGoBack(), 
