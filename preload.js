@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onDownloadProgress: (callback) => ipcRenderer.on('download-progress', (_event, data) => callback(data)),
   onDownloadComplete: (callback) => ipcRenderer.on('download-complete', (_event, data) => callback(data)),
   onDownloadError: (callback) => ipcRenderer.on('download-error', (_event, data) => callback(data)),
+  cancelDownload: (downloadId) => ipcRenderer.invoke('cancel-download', downloadId),
 
   // --- Playback Control (Renderer -> Main) ---
   loadMedia: (data) => ipcRenderer.send('load-media', data),

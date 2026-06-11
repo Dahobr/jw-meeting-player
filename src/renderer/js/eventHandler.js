@@ -71,8 +71,11 @@ class EventHandler {
      */
     async executePlaylistDeletion(id) {
         const itemsToDelete = this.store.deletePlaylist(id);
-        // Delete associated files
+        // Delete associated files and cancel active downloads
         for (const item of itemsToDelete) {
+            if (item.status === 'downloading') {
+                await this.ipc.cancelDownload(item.id);
+            }
             if (item.filePath) await this.ipc.deleteFile(item.filePath);
         }
         // Delete associated playlist folder
@@ -84,7 +87,12 @@ class EventHandler {
      */
     async executeItemDeletion(playlistId, itemId) {
         const item = this.store.getItem(playlistId, itemId);
-        if (item && item.filePath) await this.ipc.deleteFile(item.filePath);
+        if (item) {
+            if (item.status === 'downloading') {
+                await this.ipc.cancelDownload(item.id);
+            }
+            if (item.filePath) await this.ipc.deleteFile(item.filePath);
+        }
         this.store.removeItem(playlistId, itemId);
     }
 
@@ -293,13 +301,7 @@ class EventHandler {
 
             onPlaylistDelete: async (id) => {
                 if (await this.app.showCustomConfirm('Deseja realmente excluir esta playlist?')) {
-                    const itemsToDelete = this.store.deletePlaylist(id);
-                    // Delete associated files
-                    for (const item of itemsToDelete) {
-                        if (item.filePath) await this.ipc.deleteFile(item.filePath);
-                    }
-                    // Delete associated playlist folder
-                    await this.ipc.deletePlaylistFolder(id);
+                    await this.executePlaylistDeletion(id);
                 }
             },
 
@@ -328,9 +330,7 @@ class EventHandler {
 
             onItemRemove: async (playlistId, itemId) => {
                 if (await this.app.showCustomConfirm('Deseja realmente excluir este arquivo?')) {
-                    const item = this.store.getItem(playlistId, itemId);
-                    if (item && item.filePath) await this.ipc.deleteFile(item.filePath);
-                    this.store.removeItem(playlistId, itemId);
+                    await this.executeItemDeletion(playlistId, itemId);
                 }
             },
 

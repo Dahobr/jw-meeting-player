@@ -34,6 +34,10 @@ class IPCClient {
         window.electronAPI.onDownloadError(callback);
     }
 
+    cancelDownload(downloadId) {
+        return window.electronAPI.cancelDownload(downloadId);
+    }
+
     // --- Playback Control ---
     loadMedia(data) {
         window.electronAPI.loadMedia(data);
