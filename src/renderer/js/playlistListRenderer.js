@@ -119,8 +119,19 @@ class PlaylistListRenderer {
                             <span class="item-title">${item.title || item.filename}</span>
                             <span class="item-type">Baixando... (${item.progress || 0}%)</span>
                         </div>
+                        <div class="item-actions">
+                            <button class="btn-delete-download btn-item-action" title="Cancelar Download">${this.icons.trash}</button>
+                        </div>
                     </div>
                 `;
+
+                DomUtils.query('.btn-delete-download', li).addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (this.callbacks.onItemRemove) {
+                        this.callbacks.onItemRemove(id, item.id);
+                    }
+                });
+
                 itemsList.appendChild(li);
                 return;
             }
@@ -214,8 +225,23 @@ class PlaylistListRenderer {
                     <span class="item-title">${filename}</span>
                     <span class="item-type">Baixando...</span>
                 </div>
+                <div class="item-actions">
+                    <button class="btn-delete-download btn-item-action" title="Cancelar Download">${this.icons.trash}</button>
+                </div>
             </div>
         `;
+
+        DomUtils.query('.btn-delete-download', li).addEventListener('click', (e) => {
+            e.stopPropagation();
+            const playlistId = DomUtils.get('current-playlist-id')?.value; // Fallback or context needed
+            // The eventHandler will catch this if we use a consistent class or trigger a callback
+            if (this.callbacks.onItemRemove) {
+                // For downloading items, we might not have the full playlistId here easily 
+                // but the callback usually handles the current one.
+                this.callbacks.onItemRemove(null, itemId);
+            }
+        });
+
         itemsList.appendChild(li);
     }
 

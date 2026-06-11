@@ -122,8 +122,9 @@ class PlaylistStore {
    * @returns {Object|null}
    */
   getItem(playlistId, itemId) {
-    if (this.playlists[playlistId]) {
-      return this.playlists[playlistId].items.find(item => item && item.id === itemId) || null;
+    const targetId = playlistId || this.currentPlaylistId;
+    if (this.playlists[targetId]) {
+      return this.playlists[targetId].items.find(item => item && item.id === itemId) || null;
     }
     return null;
   }

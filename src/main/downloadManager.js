@@ -15,7 +15,7 @@ const shareManager = require('./shareManager');
 class DownloadManager {
     constructor() {
         this.mainWindow = null;
-        this.activeDownloads = new Set();
+        this.activeDownloads = new Map();
         this.timeoutMap = new Map();
         this.DOWNLOAD_TIMEOUT_MS = 60000;
         this.lastReceivedBytes = new Map();
@@ -52,6 +52,9 @@ class DownloadManager {
                 this.mainWindow.webContents.downloadURL(url);
             }
         });
+
+        ipcMain.removeHandler('cancel-download');
+        ipcMain.handle('cancel-download', (event, downloadId) => this.cancelDownload(downloadId));
 
         if (mainWindow && mainWindow.webContents && mainWindow.webContents.session) {
             this.setupWillDownload(mainWindow.webContents.session);
@@ -142,6 +145,19 @@ class DownloadManager {
             this.lastReceivedBytes.delete(downloadId);
         }
     }
+    cancelDownload(downloadId) {
+        if (this.activeDownloads.has(downloadId)) {
+            console.log(`[DownloadManager] Cancelling download for ID: ${downloadId}`);
+            const item = this.activeDownloads.get(downloadId);
+            if (item && typeof item.cancel === 'function') {
+                item.cancel();
+            }
+            // Cleanup will be handled by the 'done' event listener in handleDownload
+            return true;
+        }
+        return false;
+    }
+
     async handleDownload(event, item, webContents) {
         const filename = item.getFilename();
         const url = item.getURL();
@@ -158,7 +174,7 @@ class DownloadManager {
             console.log(`[DownloadManager] Skipping duplicate download request: ${filename}`);
             return;
         }
-        this.activeDownloads.add(downloadId);
+        this.activeDownloads.set(downloadId, item);
 
         // Ensure we use a specific directory, never the root
         const targetPlaylistId = this._getSafeActivePlaylistId();
