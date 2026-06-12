@@ -203,7 +203,7 @@ const tutorialManager = {
                         warnEl.style.fontWeight = 'bold';
                         e.target.parentNode.insertBefore(warnEl, e.target.nextSibling);
                     }
-                    warnEl.textContent = 'Zoom não detectado ou botão de configurações não encontrado. Por favor, abra o Zoom e tente novamente.';
+                    warnEl.textContent = 'Zoom não detectado ou botão de configurações não encontrado. O Zoom pode demorar alguns segundos para abrir as configurações. Por favor, aguarde um momento e tente novamente caso a janela não abra.';
                     warnEl.style.display = 'block';
                 }
             } else if (e.target && e.target.classList.contains('toc-link')) {
