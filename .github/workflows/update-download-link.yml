@@ -10,6 +10,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Ensure we have the history to push
       - name: Update version in index.html
         run: |
           VERSION=${{ github.event.release.tag_name }}
@@ -27,4 +29,4 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/index.html
           git commit -m "docs: update download link to ${{ github.event.release.tag_name }}"
-          git push
+          git push origin main
