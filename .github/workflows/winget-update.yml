@@ -29,12 +29,12 @@ jobs:
               $assetsJson = '${{ toJSON(github.event.release.assets) }}'
               $version = "${{ github.event.release.tag_name }}".TrimStart('v')
           }
-          
+
           # JSONをPowerShellオブジェクトに変換
           $assets = $assetsJson | ConvertFrom-Json
           Write-Host "Assets found count: $($assets.Count)"
           $assets | ForEach-Object { Write-Host "Asset name: $($_.name)" }
-          
+
           # インストール版アセット（Setupを含む）のみを選択
           $setupAsset = $assets | Where-Object { $_.name -like "*Setup*" } | Select-Object -First 1
 
@@ -43,10 +43,18 @@ jobs:
               exit 1
           }
 
-          # URLプロパティの確認と取得
-          # GitHub CLIのJSON出力で見えているのは "browser_download_url" プロパティです
+          # URLプロパティの取得（経路でプロパティ名が異なる）
+          #   release webhook: .browser_download_url
+          #   gh CLI         : .url
           $assetUrl = $setupAsset.browser_download_url
-          $urlArg = "$($assetUrl)|x64"
+          if (-not $assetUrl) { $assetUrl = $setupAsset.url }
+
+          if (-not $assetUrl) {
+              Write-Error "Installer URL could not be resolved."
+              exit 1
+          }
+
+          $urlArg = "$assetUrl|x64"
 
           Write-Host "Using version: $version"
           Write-Host "Using asset: $($setupAsset.name)"
