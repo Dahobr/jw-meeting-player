@@ -1,0 +1,30 @@
+name: Update Download Link
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-link:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update version in index.html
+        run: |
+          VERSION=${{ github.event.release.tag_name }}
+          VERSION_CLEAN=${VERSION#v} # 'v1.7.0' -> '1.7.0'
+          # Replace link string in index.html
+          # Replace URL part
+          sed -i "s|jw-meeting-player-Setup-[0-9.]*\.exe|jw-meeting-player-Setup-${VERSION_CLEAN}.exe|g" docs/index.html
+          # Replace version tag
+          sed -i "s|v[0-9.]*\" class=\"btn\"|v${VERSION_CLEAN}\" class=\"btn\"|g" docs/index.html
+          # Replace button text
+          sed -i "s|Baixar JW Meeting Player v[0-9.]*|Baixar JW Meeting Player v${VERSION_CLEAN}|g" docs/index.html
+      - name: Commit and Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/index.html
+          git commit -m "docs: update download link to ${{ github.event.release.tag_name }}"
+          git push
