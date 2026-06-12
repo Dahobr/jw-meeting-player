@@ -282,6 +282,10 @@ class App {
      * Handles downloads, display status changes, and external playback commands.
      */
     setupIPCListeners() {
+        this.ipc.onSetActiveNav((key) => {
+            this.ui.updateNavActiveState(key);
+        });
+
         this.ipc.onRequestSaveImage(async (url) => {
             await this.saveBrowserImage(url);
         });

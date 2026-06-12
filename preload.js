@@ -50,6 +50,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onMoveItem: (callback) => ipcRenderer.on('move-item', (_event, data) => callback(data)),
   onShareResult: (callback) => ipcRenderer.on('share-result', (_event, data) => callback(data)),
   onPlaylistImported: (callback) => ipcRenderer.on('playlist-imported', (_event, data) => callback(data)),
+  onSetActiveNav: (callback) => ipcRenderer.on('set-active-nav', (_event, key) => callback(key)),
 
   // --- Storage ---
   savePlaylists: (data) => ipcRenderer.send('save-playlists', data),

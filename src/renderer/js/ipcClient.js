@@ -13,6 +13,10 @@ class IPCClient {
         window.electronAPI.onTriggerNavigation(callback);
     }
 
+    onSetActiveNav(callback) {
+        window.electronAPI.onSetActiveNav(callback);
+    }
+
     // --- Downloads ---
     downloadURL(url, id) {
         window.electronAPI.downloadURL(url, id);
