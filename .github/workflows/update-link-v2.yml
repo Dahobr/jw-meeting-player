@@ -12,31 +12,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.repository.default_branch }}  # 常にブランチ最新の上で作業
           fetch-depth: 0
-          persist-credentials: true
+
       - name: Update version in index.html
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # gh に必要
         run: |
-          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
-              echo "Manual trigger detected. Fetching latest release info..."
-              VERSION=$(gh release view --json tagName --jq .tagName)
-          } else {
-              VERSION="${{ github.event.release.tag_name }}"
-          }
-          
-          VERSION_CLEAN=${VERSION#v}
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual trigger detected. Fetching latest release info..."
+            VERSION=$(gh release view --json tagName --jq .tagName)
+          else
+            VERSION="${{ github.event.release.tag_name }}"
+          fi
+
+          VERSION_CLEAN="${VERSION#v}"
           echo "Using version: $VERSION_CLEAN"
-          
-          # Replace link string in index.html
-          # Replace URL part
+
+          if [ -z "$VERSION_CLEAN" ]; then
+            echo "VERSION could not be resolved." >&2
+            exit 1
+          fi
+
+          # 次のステップへ引き継ぐ
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
           sed -i "s|jw-meeting-player-Setup-[0-9.]*\.exe|jw-meeting-player-Setup-${VERSION_CLEAN}.exe|g" docs/index.html
-          # Replace version tag
           sed -i "s|v[0-9.]*\" class=\"btn\"|v${VERSION_CLEAN}\" class=\"btn\"|g" docs/index.html
-          # Replace button text
           sed -i "s|Baixar JW Meeting Player v[0-9.]*|Baixar JW Meeting Player v${VERSION_CLEAN}|g" docs/index.html
+
       - name: Commit and Push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/index.html
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
           git commit -m "docs: update download link to ${VERSION}"
-          git push origin HEAD:main
+          git push
