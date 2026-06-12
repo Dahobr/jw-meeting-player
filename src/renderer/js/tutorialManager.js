@@ -122,7 +122,6 @@ const tutorialManager = {
                                 <tr><td><b>Ctrl+ +</b></td><td>Ampliar página</td></tr>
                                 <tr><td><b>Ctrl+ -</b></td><td>Reduzir página</td></tr>
                                 <tr><td><b>Ctrl+ 0</b></td><td>Zoom original</td></tr>
-                                <tr><td><b>Espaço</b></td><td>Play/Pause</td></tr>
                                 <tr><td><b>Delete</b></td><td>Excluir item/playlist</td></tr>
                               </table>
                               <p style="margin-top: 15px;">
