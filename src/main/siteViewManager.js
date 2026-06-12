@@ -12,6 +12,8 @@ class SiteViewManager {
     constructor() {
         this.siteView = null;
         this.mainWindow = null;
+        this._gestureStart = null;
+        this._gesturePerformed = false;
     }
 
     init(mainWindow) {
@@ -47,6 +49,31 @@ class SiteViewManager {
             return { action: 'deny' };
         });
 
+        // Handle mouse gestures (Right-click drag for back/forward)
+        this.siteView.webContents.on('input-event', (event, input) => {
+            if (input.type === 'mouseDown' && input.button === 'right') {
+                this.siteView.webContents.focus();
+                this._gestureStart = { x: input.x, y: input.y };
+                this._gesturePerformed = false;
+            } else if (input.type === 'mouseUp' && input.button === 'right' && this._gestureStart) {
+                const deltaX = input.x - this._gestureStart.x;
+                const deltaY = input.y - this._gestureStart.y;
+                const threshold = 60;
+
+                // Check if horizontal movement is dominant and exceeds threshold
+                if (Math.abs(deltaX) > threshold && Math.abs(deltaX) > Math.abs(deltaY) * 2) {
+                    if (deltaX < 0 && this.siteView.webContents.navigationHistory.canGoBack()) {
+                        this.siteView.webContents.navigationHistory.goBack();
+                        this._gesturePerformed = true;
+                    } else if (deltaX > 0 && this.siteView.webContents.navigationHistory.canGoForward()) {
+                        this.siteView.webContents.navigationHistory.goForward();
+                        this._gesturePerformed = true;
+                    }
+                }
+                this._gestureStart = null;
+            }
+        });
+
         // Handle site-specific styles and behaviors after each load
         this.siteView.webContents.on('did-finish-load', () => {
             const url = this.siteView.webContents.getURL();
@@ -65,6 +92,10 @@ class SiteViewManager {
         });
 
         this.siteView.webContents.on('context-menu', (event, params) => {
+            if (this._gesturePerformed) {
+                this._gesturePerformed = false;
+                return;
+            }
             const menu = new Menu();
             if (params.mediaType === 'image') {
                 menu.append(new MenuItem({
