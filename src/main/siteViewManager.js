@@ -47,6 +47,23 @@ class SiteViewManager {
             return { action: 'deny' };
         });
 
+        // Handle site-specific styles and behaviors after each load
+        this.siteView.webContents.on('did-finish-load', () => {
+            const url = this.siteView.webContents.getURL();
+            
+            // Hide WOL hover preview popups and tooltips
+            if (url.includes('wol.jw.org')) {
+                this.siteView.webContents.insertCSS('.pnl-preview, .tooltipContainer { display: none !important; }');
+            }
+
+            // Ensure zoom is applied correctly based on the current site
+            if (url.includes('web.whatsapp.com')) {
+                this.siteView.webContents.executeJavaScript("document.body.style.zoom = '80%';");
+            } else {
+                this.siteView.webContents.executeJavaScript("document.body.style.zoom = '100%';");
+            }
+        });
+
         this.siteView.webContents.on('context-menu', (event, params) => {
             const menu = new Menu();
             if (params.mediaType === 'image') {
@@ -126,15 +143,6 @@ class SiteViewManager {
             const url = navUrls[key];
             if (url) {
                 view.webContents.loadURL(url);
-                
-                // Set zoom factor via CSS zoom after page load
-                view.webContents.once('did-finish-load', () => {
-                    if (key === 'whatsapp') {
-                        view.webContents.executeJavaScript("document.body.style.zoom = '80%';");
-                    } else {
-                        view.webContents.executeJavaScript("document.body.style.zoom = '100%';");
-                    }
-                });
             }
         });
 
