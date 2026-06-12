@@ -124,8 +124,11 @@ const tutorialManager = {
                                 <tr><td><b>Ctrl+ 0</b></td><td>Zoom original</td></tr>
                                 <tr><td><b>Espaço</b></td><td>Play/Pause</td></tr>
                                 <tr><td><b>Delete</b></td><td>Excluir item/playlist</td></tr>
-                                <tr><td><b>Clique Dir.+Arrastar</b></td><td>Navegação (Voltar/Avançar)</td></tr>
-                              </table>`,
+                              </table>
+                              <p style="margin-top: 15px;">
+                                <b>Mouse: Manter botão direito pressionado e arrastar</b><br>
+                                Esquerda: Voltar / Direita: Avançar
+                              </p>`,
                     action: null 
                 },
                 { 
