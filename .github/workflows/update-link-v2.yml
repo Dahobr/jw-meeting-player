@@ -12,6 +12,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Ensure we have the history to push
+          persist-credentials: true
       - name: Update version in index.html
         run: |
           VERSION=${{ github.event.release.tag_name }}
