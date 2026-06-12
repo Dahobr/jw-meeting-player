@@ -4,7 +4,7 @@
  * handling navigation, and integrating site-specific actions like media downloads.
  */
 
-const { ipcMain, WebContentsView, Menu, MenuItem } = require('electron');
+const { ipcMain, WebContentsView, Menu, MenuItem, shell } = require('electron');
 const path = require('path');
 const downloadManager = require('./downloadManager');
 
@@ -45,7 +45,18 @@ class SiteViewManager {
         this.siteView.webContents.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36");
 
         this.siteView.webContents.setWindowOpenHandler(({ url }) => {
-            this.siteView.webContents.loadURL(url);
+            if (url.includes('wol.jw.org')) {
+                this.mainWindow.webContents.send('set-active-nav', 'reunioes');
+                this.siteView.webContents.loadURL(url);
+            } else if (url.includes('docs.jw.org')) {
+                this.mainWindow.webContents.send('set-active-nav', 'esbocos');
+                this.siteView.webContents.loadURL(url);
+            } else if (url.includes('jw.org')) {
+                this.mainWindow.webContents.send('set-active-nav', 'videos');
+                this.siteView.webContents.loadURL(url);
+            } else {
+                shell.openExternal(url);
+            }
             return { action: 'deny' };
         });
 
