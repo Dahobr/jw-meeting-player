@@ -46,17 +46,19 @@ jobs:
           # URLプロパティの確認と取得
           # GitHub CLIのJSON出力で見えているのは "browser_download_url" プロパティです
           $assetUrl = $setupAsset.browser_download_url
+          $urlArg = "$($assetUrl)|x64"
 
           Write-Host "Using version: $version"
           Write-Host "Using asset: $($setupAsset.name)"
           Write-Host "Using URL: $assetUrl"
+          Write-Host "Using URL Arg: $urlArg"
 
           # WinGetCreateのインストール
           winget install --id Microsoft.WingetCreate --accept-source-agreements --accept-package-agreements
 
           # 更新とPR送信
           wingetcreate update Dahobr.JWMeetingPlayer `
-            --version $version `
-            --urls "$assetUrl|x64" `
+            --version "$version" `
+            --urls "$urlArg" `
             --token "$env:WINGET_GITHUB_TOKEN" `
             --submit
