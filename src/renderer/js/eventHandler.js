@@ -23,10 +23,6 @@ class EventHandler {
      */
     setupKeyboardListeners() {
         window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
-                e.preventDefault();
-                this.app.togglePlayback();
-            }
             if (e.key === 'Delete') {
                 this.handleDeleteAction();
             }
