@@ -51,6 +51,9 @@ class SiteViewManager {
             } else if (url.includes('docs.jw.org')) {
                 this.mainWindow.webContents.send('set-active-nav', 'esbocos');
                 this.siteView.webContents.loadURL(url);
+            } else if (url.includes('jw.org/pt/biblioteca/videos/#pt/categories/VODSJJMeetings')) {
+                this.mainWindow.webContents.send('set-active-nav', 'cantico');
+                this.siteView.webContents.loadURL(url);
             } else if (url.includes('jw.org')) {
                 this.mainWindow.webContents.send('set-active-nav', 'videos');
                 this.siteView.webContents.loadURL(url);
@@ -101,6 +104,24 @@ class SiteViewManager {
                 this.siteView.webContents.executeJavaScript("document.body.style.zoom = '100%';");
             }
         });
+
+        // Sync navigation button state on URL changes
+        const updateNavState = () => {
+            const url = this.siteView.webContents.getURL();
+            if (url.includes('wol.jw.org')) {
+                this.mainWindow.webContents.send('set-active-nav', 'reunioes');
+            } else if (url.includes('docs.jw.org')) {
+                this.mainWindow.webContents.send('set-active-nav', 'esbocos');
+            } else if (url.includes('jw.org/pt/biblioteca/videos/#pt/categories/VODSJJMeetings') || url.includes('jw.org/pt/biblioteca/videos/#pt/mediaitems/VODSJJMeetings')) {
+                this.mainWindow.webContents.send('set-active-nav', 'cantico');
+            } else if (url.includes('jw.org')) {
+                this.mainWindow.webContents.send('set-active-nav', 'videos');
+            } else if (url.includes('web.whatsapp.com')) {
+                this.mainWindow.webContents.send('set-active-nav', 'whatsapp');
+            }
+        };
+        this.siteView.webContents.on('did-navigate', updateNavState);
+        this.siteView.webContents.on('did-navigate-in-page', updateNavState);
 
         this.siteView.webContents.on('context-menu', (event, params) => {
             if (this._gesturePerformed) {
