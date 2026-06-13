@@ -123,7 +123,12 @@ function init() {
 
     if (updatePromise && typeof updatePromise.then === 'function') {
         updatePromise.then((result) => {
-            log(`checkForUpdatesAndNotify Promise resolved: ${result ? 'Update found' : 'No update found'}`);
+            // result が null の場合（更新なし）も明確に記録
+            if (result) {
+                log(`checkForUpdatesAndNotify Promise resolved: Update found (v${result.updateInfo.version})`);
+            } else {
+                log('checkForUpdatesAndNotify Promise resolved: No update found (up to date).');
+            }
         }).catch(err => {
             log(`checkForUpdatesAndNotify Promise REJECTED: ${err.stack || err}`);
         });
