@@ -4,7 +4,7 @@
  */
 
 const { autoUpdater } = require('electron-updater');
-const { dialog, app } = require('electron');
+const { dialog, app, shell } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
@@ -29,34 +29,78 @@ function log(message) {
 function init() {
     log('Initializing UpdateManager...');
 
-    // 1. Register listeners BEFORE checking for updates to ensure no events are missed.
+    // Assign detailed logger
+    autoUpdater.logger = {
+        info: (msg) => log(`[INFO] ${msg}`),
+        warn: (msg) => log(`[WARN] ${msg}`),
+        error: (msg) => log(`[ERROR] ${msg}`)
+    };
+
+    // Enable testing in development mode if dev-app-update.yml exists in the project root
+    if (!app.isPackaged) {
+        // Look for the config file in the project root (two levels up from src/main)
+        const devConfigPath = path.join(__dirname, '..', '..', 'dev-app-update.yml');
+        if (fs.existsSync(devConfigPath)) {
+            log(`Development config found at: ${devConfigPath}. Enabling forceDevUpdateConfig.`);
+            autoUpdater.forceDevUpdateConfig = true;
+            
+            try {
+                const pkgPath = path.join(__dirname, '..', '..', 'package.json');
+                const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+                autoUpdater.currentVersion = pkg.version;
+                log(`Dev Mode: Forcing version to ${pkg.version}`);
+            } catch (e) {
+                log(`Dev Mode: Version force failed: ${e.message}`);
+            }
+        } else {
+            log(`Dev Mode: dev-app-update.yml not found at ${devConfigPath}. Update check will be skipped.`);
+        }
+    }
+
+    // 1. Register listeners
     autoUpdater.on('checking-for-update', () => {
-        log('Checking for update...');
+        log('Event: Checking for update...');
     });
 
     autoUpdater.on('update-available', (info) => {
-        log(`Update available: ${info.version}`);
+        log(`Event: Update available: ${info.version}`);
     });
 
     autoUpdater.on('update-not-available', (info) => {
-        log('No update available.');
+        log('Event: No update available.');
     });
 
     autoUpdater.on('error', (err) => {
-        log(`Update error: ${err}`);
+        log(`Event: Error! ${err.stack || err}`);
+        
+        // If it's a code signing error or other critical update error, 
+        // we can notify the user and offer a manual download link.
+        if (err.message.includes('signature') || err.message.includes('sha512')) {
+            dialog.showMessageBox({
+                type: 'warning',
+                title: 'Erro na Atualização Automática',
+                message: 'Não foi possível validar a segurança da atualização automática. Por favor, baixe a nova versão manualmente no site oficial.',
+                buttons: ['OK', 'Abrir Site de Download'],
+                defaultId: 1
+            }).then((result) => {
+                if (result.response === 1) {
+                    shell.openExternal('https://dahobr.github.io/jw-meeting-player/');
+                }
+            });
+        }
     });
 
     autoUpdater.on('download-progress', (progressObj) => {
-        let logMsg = `Download speed: ${progressObj.bytesPerSecond}`;
-        logMsg += ` - Downloaded ${progressObj.percent}%`;
-        logMsg += ` (${progressObj.transferred}/${progressObj.total})`;
-        log(logMsg);
+        // Log progress every 20% to avoid log bloat
+        const percent = Math.round(progressObj.percent);
+        if (percent % 20 === 0) {
+            log(`Event: Download Progress ${percent}%`);
+        }
     });
 
     autoUpdater.on('update-downloaded', (info) => {
-        log(`Update downloaded: ${info.version}. Ready to install.`);
+        log(`Event: Update downloaded: ${info.version}.`);
         
-        // Notify the user that the update is ready (Translated to Portuguese).
         dialog.showMessageBox({
             type: 'info',
             title: 'Atualização Disponível',
@@ -73,10 +117,19 @@ function init() {
         });
     });
 
-    // 2. Now start the check
-    autoUpdater.checkForUpdatesAndNotify().catch(err => {
-        log(`Check for updates failed: ${err}`);
-    });
+    // 2. Start the check with explicit tracking
+    log('Calling autoUpdater.checkForUpdatesAndNotify()...');
+    const updatePromise = autoUpdater.checkForUpdatesAndNotify();
+
+    if (updatePromise && typeof updatePromise.then === 'function') {
+        updatePromise.then((result) => {
+            log(`checkForUpdatesAndNotify Promise resolved: ${result ? 'Update found' : 'No update found'}`);
+        }).catch(err => {
+            log(`checkForUpdatesAndNotify Promise REJECTED: ${err.stack || err}`);
+        });
+    } else {
+        log('Warning: checkForUpdatesAndNotify did not return a valid promise.');
+    }
 }
 
 module.exports = { init };
