@@ -194,17 +194,17 @@ class DownloadManager {
         }
 
         const finalFilename = path.basename(finalFilePath);
-        const allowedFileTypes = ['.mp4', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.jwmp', '.zip'];
+        const allowedFileTypes = ['.mp4', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg', '.jwmp', '.zip', '.jwlplaylist'];
 
         console.log(`[DownloadManager] Download requested: ${filename} -> ${finalFilename}`);
 
         if (allowedFileTypes.includes(path.extname(finalFilename).toLowerCase())) {
             const ext = path.extname(finalFilename).toLowerCase();
-            const isPlaylist = ext === '.jwmp' || ext === '.zip';
+            const isPlaylist = ext === '.jwmp' || ext === '.zip' || ext === '.jwlplaylist';
             
             if (isPlaylist) {
                 // Download to a temporary location for importing
-                const tempPath = path.join(app.getPath('temp'), `import_${Date.now()}.jwmp`);
+                const tempPath = path.join(app.getPath('temp'), `import_${Date.now()}${ext}`);
                 item.setSavePath(tempPath);
                 
                 item.on('done', async (event, state) => {
