@@ -139,11 +139,12 @@ class ShareManager {
                     items: []
                 };
 
-                // Add all images found in the ZIP
+                // Add all images found in the ZIP, excluding default thumbnails
                 const allowedImageTypes = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
                 for (const entry of zipEntries) {
                     const ext = path.extname(entry.entryName).toLowerCase();
-                    if (allowedImageTypes.includes(ext)) {
+                    const entryName = entry.entryName.toLowerCase();
+                    if (allowedImageTypes.includes(ext) && entryName !== 'default_thumbnail.png') {
                         playlistData.items.push({
                             title: path.basename(entry.entryName, ext),
                             mediaType: 'image',
