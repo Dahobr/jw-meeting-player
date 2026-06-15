@@ -1,6 +1,6 @@
 {
   "name": "jw-meeting-player",
-  "version": "1.7.2",
+  "version": "1.7.3",
   "description": "JW Meeting Player",
   "main": "main.js",
   "scripts": {
