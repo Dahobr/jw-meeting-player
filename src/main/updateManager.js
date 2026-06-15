@@ -36,14 +36,6 @@ function init() {
         error: (msg) => log(`[ERROR] ${msg}`)
     };
 
-    // Set custom User-Agent to avoid secondary rate limits
-    const pkg = require('../../package.json');
-    autoUpdater.requestHeaders = {
-        'User-Agent': `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 jw-meeting-player/${pkg.version}`
-    };
-    autoUpdater.currentVersion = pkg.version;
-    log(`UpdateManager: Using version ${pkg.version}`);
-
 
     // Enable testing in development mode if dev-app-update.yml exists in the project root
     // if (!app.isPackaged) {

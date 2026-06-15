@@ -19,13 +19,6 @@
     },
     "extraResources": [
       {
-        "from": "dist/bin/",
-        "to": "bin",
-        "filter": [
-          "**/*"
-        ]
-      },
-      {
         "from": "scripts/ZoomControlManager/ZoomControlManager.exe",
         "to": "bin/ZoomControlManager.exe"
       },
@@ -35,9 +28,8 @@
       }
     ],
     "publish": {
-      "provider": "github",
-      "owner": "Dahobr",
-      "repo": "jw-meeting-player"
+      "provider": "generic",
+      "url": "https://negociosuave.com.br/jwmp"
     }
   },
   "keywords": [],
