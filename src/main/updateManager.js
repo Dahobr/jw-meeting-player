@@ -36,26 +36,35 @@ function init() {
         error: (msg) => log(`[ERROR] ${msg}`)
     };
 
+    // Set custom User-Agent to avoid secondary rate limits
+    const pkg = require('../../package.json');
+    autoUpdater.requestHeaders = {
+        'User-Agent': `jw-meeting-player/${pkg.version}`
+    };
+    autoUpdater.currentVersion = pkg.version;
+    log(`UpdateManager: Using version ${pkg.version}`);
+
+
     // Enable testing in development mode if dev-app-update.yml exists in the project root
-    if (!app.isPackaged) {
-        // Look for the config file in the project root (two levels up from src/main)
-        const devConfigPath = path.join(__dirname, '..', '..', 'dev-app-update.yml');
-        if (fs.existsSync(devConfigPath)) {
-            log(`Development config found at: ${devConfigPath}. Enabling forceDevUpdateConfig.`);
-            autoUpdater.forceDevUpdateConfig = true;
+    // if (!app.isPackaged) {
+    //     // Look for the config file in the project root (two levels up from src/main)
+    //     const devConfigPath = path.join(__dirname, '..', '..', 'dev-app-update.yml');
+    //     if (fs.existsSync(devConfigPath)) {
+    //         log(`Development config found at: ${devConfigPath}. Enabling forceDevUpdateConfig.`);
+    //         autoUpdater.forceDevUpdateConfig = true;
             
-            try {
-                const pkgPath = path.join(__dirname, '..', '..', 'package.json');
-                const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-                autoUpdater.currentVersion = pkg.version;
-                log(`Dev Mode: Forcing version to ${pkg.version}`);
-            } catch (e) {
-                log(`Dev Mode: Version force failed: ${e.message}`);
-            }
-        } else {
-            log(`Dev Mode: dev-app-update.yml not found at ${devConfigPath}. Update check will be skipped.`);
-        }
-    }
+    //         try {
+    //             const pkgPath = path.join(__dirname, '..', '..', 'package.json');
+    //             const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    //             autoUpdater.currentVersion = pkg.version;
+    //             log(`Dev Mode: Forcing version to ${pkg.version}`);
+    //         } catch (e) {
+    //             log(`Dev Mode: Version force failed: ${e.message}`);
+    //         }
+    //     } else {
+    //         log(`Dev Mode: dev-app-update.yml not found at ${devConfigPath}. Update check will be skipped.`);
+    //     }
+    // }
 
     // 1. Register listeners
     autoUpdater.on('checking-for-update', () => {
