@@ -1,0 +1,36 @@
+name: Build and upload to R2
+
+on:
+  release:
+    types: [published]   # GitHubでリリースを「公開」した時に発火
+  workflow_dispatch:      # 手動実行も可能にしておくとテストが楽
+
+jobs:
+  build:
+    runs-on: windows-latest   # Windowsインストーラ(NSIS)はWindowsランナーで作るのが確実
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (publish never)
+        run: npx electron-builder --win --publish never
+
+      - name: Upload to Cloudflare R2
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+        run: |
+          aws s3 cp dist/ s3://jwmp-updates/jwmp/ --recursive \
+            --endpoint-url https://e96d24533e74528e19f701d791e8b90b.r2.cloudflarestorage.com \
+            --exclude "*" \
+            --include "latest.yml" \
+            --include "*.exe" \
+            --include "*.blockmap"

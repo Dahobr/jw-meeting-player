@@ -28,9 +28,8 @@
       }
     ],
     "publish": {
-      "provider": "github",
-      "owner": "Dahobr",
-      "repo": "jw-meeting-player"
+      "provider": "generic",
+      "url": "https://negociosuave.com.br/jwmp"
     }
   },
   "keywords": [],
