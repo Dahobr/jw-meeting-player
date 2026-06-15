@@ -37,8 +37,15 @@ jobs:
           # 次のステップへ引き継ぐ
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
-          sed -i "s|jw-meeting-player-Setup-[0-9.]*\.exe|jw-meeting-player-Setup-${VERSION_CLEAN}.exe|g" docs/index.html
-          sed -i "s|v[0-9.]*\" class=\"btn\"|v${VERSION_CLEAN}\" class=\"btn\"|g" docs/index.html
+          # Update index.html
+          # Target patterns: 
+          # 1. Full download URLs in href (including tag part)
+          # 2. Visible version text in buttons or labels
+          
+          # Replace the entire download URL to ensure the tag part (/download/vX.Y.Z/) and filename match
+          sed -i "s|https://github.com/Dahobr/jw-meeting-player/releases/download/v[0-9.]*/jw-meeting-player-Setup-[0-9.]*\.exe|https://github.com/Dahobr/jw-meeting-player/releases/download/v${VERSION_CLEAN}/jw-meeting-player-Setup-${VERSION_CLEAN}.exe|g" docs/index.html
+          
+          # Replace visible version labels in buttons
           sed -i "s|Baixar JW Meeting Player v[0-9.]*|Baixar JW Meeting Player v${VERSION_CLEAN}|g" docs/index.html
 
       - name: Commit and Push
