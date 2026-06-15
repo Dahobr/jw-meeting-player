@@ -19,13 +19,6 @@
     },
     "extraResources": [
       {
-        "from": "dist/bin/",
-        "to": "bin",
-        "filter": [
-          "**/*"
-        ]
-      },
-      {
         "from": "scripts/ZoomControlManager/ZoomControlManager.exe",
         "to": "bin/ZoomControlManager.exe"
       },
