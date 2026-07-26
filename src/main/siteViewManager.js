@@ -4,7 +4,7 @@
  * handling navigation, and integrating site-specific actions like media downloads.
  */
 
-const { ipcMain, WebContentsView, Menu, MenuItem, shell } = require('electron');
+const { ipcMain, WebContentsView, Menu, MenuItem, shell, net } = require('electron');
 const path = require('path');
 const downloadManager = require('./downloadManager');
 
@@ -56,6 +56,10 @@ class SiteViewManager {
                 this.siteView.webContents.loadURL(url);
             } else if (url.includes('jw.org')) {
                 this.mainWindow.webContents.send('set-active-nav', 'videos');
+                this.siteView.webContents.loadURL(url);
+            } else if (url.includes('jw-cdn.org') || url.includes('akamaihd.net') || /\.(jpe?g|png|gif|webp|bmp|svg)(\?|#|$)/i.test(url)) {
+                // Images/media (e.g. clicking an Esboços image) open on a CDN domain,
+                // not jw.org — keep them inside the view so they can be added to the playlist.
                 this.siteView.webContents.loadURL(url);
             } else {
                 shell.openExternal(url);
@@ -129,28 +133,15 @@ class SiteViewManager {
                 return;
             }
             const menu = new Menu();
-            if (params.mediaType === 'image') {
+            // On Esboços (docs.jw.org) thumbnails are links to a full-size image rather
+            // than inline <img> elements, so also treat an image link as addable and
+            // prefer its URL to grab the full-size image instead of the thumbnail.
+            const linkIsImage = params.linkURL && /\.(jpe?g|png|gif|webp|bmp|svg)(\?|#|$)/i.test(params.linkURL);
+            if (params.mediaType === 'image' || linkIsImage) {
+                const imageURL = linkIsImage ? params.linkURL : params.srcURL;
                 menu.append(new MenuItem({
                     label: 'Adicionar imagem à playlist',
-                    click: async () => {
-                        try {
-                            const base64Data = await this.siteView.webContents.executeJavaScript(`
-                                (async () => {
-                                    const response = await fetch("${params.srcURL}");
-                                    const blob = await response.blob();
-                                    return new Promise((resolve, reject) => {
-                                        const reader = new FileReader();
-                                        reader.onloadend = () => resolve(reader.result);
-                                        reader.onerror = reject;
-                                        reader.readAsDataURL(blob);
-                                    });
-                                })()
-                            `);
-                            downloadManager.saveBrowserImage(base64Data, params.srcURL);
-                        } catch (err) {
-                            console.error('[SiteViewManager] Failed to extract image:', err);
-                        }
-                    }
+                    click: () => this.saveImageToPlaylist(imageURL)
                 }));
                 menu.append(new MenuItem({ type: 'separator' }));
             } else if (params.mediaType === 'video') {
@@ -187,6 +178,56 @@ class SiteViewManager {
         this.mainWindow.contentView.addChildView(this.siteView);
 
         return this.siteView;
+    }
+
+    /**
+     * Fetches an image and adds it to the playlist. Shared by the reunioes and
+     * Esboços right-click "Adicionar imagem à playlist" actions.
+     *
+     * The request is made from the main process via Electron's net module (using
+     * the site view's session so cookies apply). Doing it here rather than with a
+     * page-context fetch() avoids CORS — Esboços images are served from a separate
+     * CDN (cfs*.jw-cdn.org) that does not send CORS headers.
+     * @param {string} srcURL - The URL of the image to fetch and save.
+     */
+    async saveImageToPlaylist(srcURL) {
+        try {
+            const base64Data = await this.fetchImageAsDataURL(srcURL);
+            downloadManager.saveBrowserImage(base64Data, srcURL);
+        } catch (err) {
+            console.error('[SiteViewManager] Failed to extract image:', err);
+        }
+    }
+
+    /**
+     * Downloads an image URL from the main process and resolves a base64 data URL.
+     * @param {string} url
+     * @returns {Promise<string>}
+     */
+    fetchImageAsDataURL(url) {
+        return new Promise((resolve, reject) => {
+            const request = net.request({
+                url,
+                session: this.siteView.webContents.session
+            });
+            request.on('response', (response) => {
+                if (response.statusCode < 200 || response.statusCode >= 300) {
+                    reject(new Error(`Image request failed with status ${response.statusCode}`));
+                    return;
+                }
+                const contentType = response.headers['content-type'];
+                const mime = (Array.isArray(contentType) ? contentType[0] : contentType) || 'image/jpeg';
+                const chunks = [];
+                response.on('data', (chunk) => chunks.push(chunk));
+                response.on('end', () => {
+                    const base64 = Buffer.concat(chunks).toString('base64');
+                    resolve(`data:${mime};base64,${base64}`);
+                });
+                response.on('error', reject);
+            });
+            request.on('error', reject);
+            request.end();
+        });
     }
 
     setupIpcHandlers() {
