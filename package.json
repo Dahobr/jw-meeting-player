@@ -29,7 +29,7 @@
     ],
     "publish": {
       "provider": "generic",
-      "url": "https://negociosuave.com.br/jwmp"
+      "url": "https://jwmp.negociosuave.com.br/jwmp"
     }
   },
   "keywords": [],
